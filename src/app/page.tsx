@@ -11,7 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { DailyHuntIcon, FacebookIcon, GoogleIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
+import { DailyHuntIcon, FacebookIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Search, Eye, LinkIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -24,7 +24,6 @@ const sourceIcons: Record<Source, React.ReactNode> = {
   Facebook: <FacebookIcon className="w-5 h-5" />,
   X: <XIcon className="w-5 h-5" />,
   YouTube: <YouTubeIcon className="w-5 h-5" />,
-  Google: <GoogleIcon className="w-5 h-5" />,
 };
 
 export default function Home() {
@@ -179,30 +178,30 @@ export default function Home() {
                               title={article.headline}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
-                              className="w-full h-full pointer-events-none"
+                              className="w-full h-full"
                           ></iframe>
                         </Link>
                       ) : (
                         article.imageUrls && article.imageUrls.length > 0 && (
-                          <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                           <Carousel className="w-full h-full pointer-events-none">
-                            <CarouselContent>
-                              {article.imageUrls.map((url, index) => (
-                                <CarouselItem key={index}>
-                                  <div className="relative w-full h-full aspect-video">
-                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="ಸುದ್ದಿ ಘಟನೆ"/>
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            {article.imageUrls.length > 1 && (
-                              <>
-                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                              </>
-                            )}
-                          </Carousel>
-                          </Link>
+                           <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                             <Carousel className="w-full h-full">
+                              <CarouselContent>
+                                {article.imageUrls.map((url, index) => (
+                                  <CarouselItem key={index}>
+                                    <div className="relative w-full h-full aspect-video">
+                                      <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                              {article.imageUrls.length > 1 && (
+                                <>
+                                  <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                  <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                                </>
+                              )}
+                            </Carousel>
+                           </Link>
                         )
                       )}
                     </div>

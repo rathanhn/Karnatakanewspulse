@@ -1,5 +1,5 @@
 
-export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube' | 'Google';
+export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
 
 export type NewsArticle = {
   id: string;
@@ -11,6 +11,7 @@ export type NewsArticle = {
   timestamp: Date;
   url: string;
   embedUrl?: string;
+  'data-ai-hint'?: string;
 };
 
 export const karnatakaDistricts: string[] = [
@@ -48,16 +49,6 @@ export const karnatakaDistricts: string[] = [
 ];
 
 export const mockNewsData: NewsArticle[] = [
-    {
-    id: '1',
-    district: 'ಬೆಂಗಳೂರು ನಗರ',
-    source: 'Google',
-    headline: 'ಬೆಂಗಳೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆ, ಹಲವೆಡೆ ಟ್ರಾಫಿಕ್ ಜಾಮ್',
-    content: 'ಮಂಗಳವಾರ ಸಂಜೆ ಬೆಂಗಳೂರಿನಲ್ಲಿ ಭಾರಿ ಮಳೆಯಾಗಿದ್ದು, ನಗರದ ಹಲವು ಭಾಗಗಳಲ್ಲಿ ಜಲಾವೃತ ಮತ್ತು ಟ್ರಾಫಿಕ್ ದಟ್ಟಣೆ ಉಂಟಾಗಿದೆ. ಮರತಹಳ್ಳಿ, ಸಿಲ್ಕ್ ಬೋರ್ಡ್, ಮತ್ತು ಕೋರಮಂಗಲದಂತಹ ಪ್ರದೇಶಗಳು ತೀವ್ರವಾಗಿ ಬಾಧಿತವಾಗಿವೆ.',
-    imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x401.png'],
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    url: 'https://news.google.com/articles/CBMiWWh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL2NpdGllcy9iZW5nYWx1cnUvaGVhdnktcmFpbnMtbGFzaC1iZW5nYWx1cnUtd2F0ZXJsb2dnaW5nLXRyYWZmaWMtc25hcmxzL2FydGljbGU2NjA5Mzc5OC5lY2XSAQA?hl=en-IN&gl=IN&ceid=IN%3Aen',
-  },
   {
     id: '2',
     district: 'ಮೈಸೂರು',
@@ -75,9 +66,10 @@ export const mockNewsData: NewsArticle[] = [
     source: 'X',
     headline: 'ಬೆಳಗಾವಿಯಲ್ಲಿ ಹೊಸ ಕೈಗಾರಿಕಾ ವಲಯ ಘೋಷಣೆ',
     content: 'ರಾಜ್ಯ ಸರ್ಕಾರವು ಈ ಭಾಗದಲ್ಲಿ ಉದ್ಯೋಗ ಮತ್ತು ಉತ್ಪಾದನೆಯನ್ನು ಹೆಚ್ಚಿಸಲು ಬೆಳಗಾವಿಯಲ್ಲಿ ಹೊಸ ಕೈಗಾರಿಕಾ ವಲಯವನ್ನು ಘೋಷಿಸಿದೆ.',
-    imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/601x400.png'],
+    imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
     url: 'https://x.com/search?q=Belagavi%20industrial%20zone&src=typed_query',
+    'data-ai-hint': 'ಕೈಗಾರಿಕಾ ವಲಯ'
   },
   {
     id: '4',
@@ -88,6 +80,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
     url: 'https://www.facebook.com/search/top/?q=Kambala%20Mangaluru',
+    'data-ai-hint': 'ಕಂಬಳ ಓಟ'
   },
   {
     id: '5',
@@ -95,9 +88,10 @@ export const mockNewsData: NewsArticle[] = [
     source: 'DailyHunt',
     headline: 'ಭಾರಿ ಮಳೆಯ ನಂತರ ಜೋಗ ಜಲಪಾತದಲ್ಲಿ ನೀರಿನ ಹರಿವು ಹೆಚ್ಚಳ',
     content: 'ಪಶ್ಚಿಮ ಘಟ್ಟಗಳಲ್ಲಿ ಭಾರಿ ಮಳೆಯಾಗುತ್ತಿರುವ ಹಿನ್ನೆಲೆಯಲ್ಲಿ ಪ್ರಸಿದ್ಧ ಜೋಗ ಜಲಪಾತವು ಹೆಚ್ಚಿದ ನೀರಿನ ಹರಿವಿನಿಂದ ಕಣ್ಮನ ಸೆಳೆಯುತ್ತಿದೆ.',
-    imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x402.png'],
+    imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
     url: 'https://www.dailyhunt.in/news/india/english/jog+falls-topics',
+    'data-ai-hint': 'ಜೋಗ ಜಲಪಾತ'
   },
   {
     id: '6',
@@ -111,16 +105,6 @@ export const mockNewsData: NewsArticle[] = [
     embedUrl: 'https://www.youtube.com/embed/yBEvpUtPA7U',
   },
   {
-    id: '7',
-    district: 'ಬಾಗಲಕೋಟೆ',
-    source: 'Google',
-    headline: 'ಯುನೆಸ್ಕೋ ವಿಶ್ವ ಪರಂಪರೆಯ ತಾಣ ಪಟ್ಟದಕಲ್ಲಿನಲ್ಲಿ ಪ್ರವಾಸಿಗರ ಸಂಖ್ಯೆ ಏರಿಕೆ',
-    content: 'ಪ್ರವಾಸೋದ್ಯಮ ಇಲಾಖೆಯ ಇತ್ತೀಚಿನ ಪ್ರಚಾರ ಚಟುವಟಿಕೆಗಳ ನಂತರ, ಪ್ರಾಚೀನ ಪಟ್ಟದಕಲ್ಲಿನ ದೇವಾಲಯಗಳು ಹೆಚ್ಚು ಪ್ರವಾಸಿಗರನ್ನು ಆಕರ್ಷಿಸುತ್ತಿವೆ.',
-    imageUrls: ['https://placehold.co/600x400.png'],
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    url: 'https://news.google.com/articles/CBMiXGh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL25hdGlvbmFsL2thcm5hdGFrYS9wYXR0YWRha2FsLXRvLWdldC1hLW5ldy1sb29rLWFzLWEtdG91cmlzdC1odWIvYXJ0aWNsZTY1NTU4NjUxLmVjZQ?hl=en-IN&gl=IN&ceid=IN%3Aen',
-  },
-  {
     id: '8',
     district: 'ಬಳ್ಳಾರಿ',
     source: 'DailyHunt',
@@ -129,6 +113,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/jsw+steel+ballari-topics',
+    'data-ai-hint': 'ಉಕ್ಕಿನ ಸ್ಥಾವರ'
   },
   {
     id: '9',
@@ -139,6 +124,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Bidriware%20artisans',
+    'data-ai-hint': 'ಬಿದರಿ ಕರಕುಶಲ'
   },
   {
     id: '10',
@@ -160,16 +146,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=chikkaballapur%20silk%20market&src=typed_query',
-  },
-  {
-    id: '12',
-    district: 'ಚಿಕ್ಕಮಗಳೂರು',
-    source: 'Google',
-    headline: 'ಕಾಫಿ ಬೆಳೆಗಾರರು ಈ ವರ್ಷ ಭರ್ಜರಿ ಫಸಲಿನ ನಿರೀಕ್ಷೆಯಲ್ಲಿದ್ದಾರೆ',
-    content: 'ಅನುಕೂಲಕರ ಹವಾಮಾನ ಪರಿಸ್ಥಿತಿಗಳಿಂದಾಗಿ, ಚಿಕ್ಕಮಗಳೂರಿನ ಕಾಫಿ ಬೆಳೆಗಾರರು ಈ ಋತುವಿನಲ್ಲಿ ಹೆಚ್ಚಿನ ಇಳುವರಿಯ ಭರ್ಜರಿ ಫಸಲನ್ನು ನಿರೀಕ್ಷಿಸುತ್ತಿದ್ದಾರೆ.',
-    imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/602x400.png'],
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    url: 'https://news.google.com/articles/CBMiamh0dHBzOi8vd3d3LmJ1c2luZXNzbGluZS5jb20vbWFya2V0cy9jb21tb2RpdGllcy9jb2ZmZWUtZXhwb3J0ZXJzLWV5ZS1oaWdoZXIgcHJpY2VzLWFtaWQtY3JvcC1jb25jZXJucy9hcnRpY2xlNjU4MDM0NTUuZWPAA?hl=en-IN&gl=IN&ceid=IN%3Aen',
+    'data-ai-hint': 'ರೇಷ್ಮೆ ಮಾರುಕಟ್ಟೆ'
   },
   {
     id: '13',
@@ -180,6 +157,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/kannada/chitradurga-topics',
+    'data-ai-hint': 'ಪವನ ಶಕ್ತಿ'
   },
   {
     id: '14',
@@ -190,6 +168,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Benne%20Dosa%20Festival%20Davanagere',
+    'data-ai-hint': 'ಬೆಣ್ಣೆ ದೋಸೆ'
   },
   {
     id: '15',
@@ -200,6 +179,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 30 * 60 * 1000),
     url: 'https://x.com/search?q=dharwad%20pedha%20gi%20tag&src=typed_query',
+    'data-ai-hint': 'ಧಾರವಾಡ ಪೇಢಾ'
   },
   {
     id: '16',
@@ -213,16 +193,6 @@ export const mockNewsData: NewsArticle[] = [
     embedUrl: 'https://www.youtube.com/embed/8qJ3i-yPz9g'
   },
   {
-    id: '17',
-    district: 'ಹಾಸನ',
-    source: 'Google',
-    headline: 'ಚಂದ್ರಯಾನ-3 ರಲ್ಲಿ ಹಾಸನದ ಇಸ್ರೋ ಮಾಸ್ಟರ್ ಕಂಟ್ರೋಲ್ ಫೆಸಿಲಿಟಿ ಪ್ರಮುಖ ಪಾತ್ರ',
-    content: 'ಚಂದ್ರಯಾನ-3 ಮಿಷನ್‌ನ ಉಪಗ್ರಹಗಳನ್ನು ಮೇಲ್ವಿಚಾರಣೆ ಮಾಡಲು ಮತ್ತು ನಿಯಂತ್ರಿಸಲು ಹಾಸನದಲ್ಲಿರುವ ಮಾಸ್ಟರ್ ಕಂಟ್ರೋಲ್ ಫೆಸಿಲಿಟಿ ನಿರ್ಣಾಯಕವಾಗಿದೆ.',
-    imageUrls: ['https://placehold.co/600x400.png'],
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    url: 'https://news.google.com/articles/CBMiemh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL25hdGlvbmFsL2thcm5hdGFrYS9pc3Jvcy1tY2YtaW4taGFzc2FuLXBsYXlzLWNydWNpYWwtcm9sZS1pbi1jaGFuZHJheWFhbi0zLW1pc3Npb24vYXJ0aWNsZTY3MTg5OTQ4LmVjZQ?hl=en-IN&gl=IN&ceid=IN%3Aen',
-  },
-  {
     id: '18',
     district: 'ಹಾವೇರಿ',
     source: 'DailyHunt',
@@ -231,6 +201,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/byadgi+chilli-topics',
+    'data-ai-hint': 'ಬ್ಯಾಡಗಿ ಮೆಣಸಿನಕಾಯಿ'
   },
   {
     id: '19',
@@ -241,6 +212,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Gulbarga%20Fort',
+    'data-ai-hint': 'ಗುಲ್ಬರ್ಗಾ ಕೋಟೆ'
   },
   {
     id: '20',
@@ -262,16 +234,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=Kolar%20Gold%20Fields&src=typed_query',
-  },
-  {
-    id: '22',
-    district: 'ಕೊಪ್ಪಳ',
-    source: 'Google',
-    headline: 'ಭಗವಾನ್ ಹನುಮಂತನ ಜನ್ಮಸ್ಥಳವೆಂದು ನಂಬಲಾದ ಅಂಜನಾದ್ರಿ ಬೆಟ್ಟಕ್ಕೆ ಭಕ್ತರ ದಂಡು',
-    content: 'ಭಗವಾನ್ ಹನುಮಂತನ ಜನ್ಮಸ್ಥಳವೆಂದು ನಂಬಲಾದ ಕೊಪ್ಪಳದ ಅಂಜನಾದ್ರಿ ಬೆಟ್ಟಕ್ಕೆ ಹೆಚ್ಚಿನ ಸಂಖ್ಯೆಯ ಭಕ್ತರು ವಿಶೇಷ ಪ್ರಾರ್ಥನೆಗಾಗಿ ಭೇಟಿ ನೀಡುತ್ತಿದ್ದಾರೆ.',
-    imageUrls: ['https://placehold.co/600x400.png'],
-    timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000),
-    url: 'https://news.google.com/articles/CBMiemh0dHBzOi8vd3d3LmRla2FubmV3cy5jb20vbmF0aW9uL2FuamFuYWRyaS1oaWxsLWJpcnRocGxhY2Utb2YtaGFudW1hbi13aWxsLWJlLWRldmVsb3BlZC1hdC1hLWNvc3Qtb2YtcnMxMjAtY3JvcmUtMTE3MTQ4OS5odG1s?hl=en-IN&gl=IN&ceid=IN%3Aen',
+    'data-ai-hint': 'ಚಿನ್ನದ ಗಣಿ'
   },
   {
     id: '23',
@@ -282,6 +245,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/kannada/mandya-topics',
+    'data-ai-hint': 'ಕಬ್ಬು ಪ್ರತಿಭಟನೆ'
   },
   {
     id: '24',
@@ -292,6 +256,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Raichur%20Thermal%20Power%20Station',
+    'data-ai-hint': 'ವಿದ್ಯುತ್ ಸ್ಥಾವರ'
   },
   {
     id: '25',
@@ -313,16 +278,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 45 * 60 * 1000),
     url: 'https://x.com/search?q=Pavagada%20Solar%20Park&src=typed_query',
-  },
-  {
-    id: '27',
-    district: 'ಉಡುಪಿ',
-    source: 'Google',
-    headline: 'ಉಡುಪಿ ಶ್ರೀ ಕೃಷ್ಣ ಮಠವು ಪರ್ಯಾಯ ಉತ್ಸವಕ್ಕೆ ಸಿದ್ಧತೆ',
-    content: 'ಪ್ರಸಿದ್ಧ ಉಡುಪಿ ಶ್ರೀ ಕೃಷ್ಣ ಮಠವು ದೇವಾಲಯದ ನಿರ್ವಹಣೆಯನ್ನು ಹಸ್ತಾಂತರಿಸುವ ದೈವಾರ್ಷಿಕ ಕಾರ್ಯಕ್ರಮವಾದ ಭವ್ಯ ಪರ್ಯಾಯ ಉತ್ಸವಕ್ಕೆ ಸಜ್ಜಾಗುತ್ತಿದೆ.',
-    imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x403.png'],
-    timestamp: new Date(Date.now() - 15 * 60 * 60 * 1000),
-    url: 'https://news.google.com/articles/CBMiamh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL2NpdGllcy9tYW5nYWx1cnUvdWR1cGktZ2VhcnMtdXAtZm9yLXB1dHRpZ2UtbXVzaHQuanRpY2xlNjYxMDU3NjUuZWPAA?hl=en-IN&gl=IN&ceid=IN%3Aen',
+    'data-ai-hint': 'ಸೋಲಾರ್ ಪಾರ್ಕ್'
   },
   {
     id: '28',
@@ -333,6 +289,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 3.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/project+seabird-topics',
+    'data-ai-hint': 'ನೌಕಾ ನೆಲೆ'
   },
   {
     id: '29',
@@ -343,6 +300,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/603x400.png'],
     timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top?q=Hampi%20Utsav',
+    'data-ai-hint': 'ಹಂಪಿ ಉತ್ಸವ'
   },
   {
     id: '30',
@@ -364,5 +322,6 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=Yadgir%20cement%20plant&src=typed_query',
+    'data-ai-hint': 'ಸಿಮೆಂಟ್ ಸ್ಥಾವರ'
   }
 ];

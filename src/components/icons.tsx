@@ -63,25 +63,3 @@ export const YouTubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <path fill="white" d="M10 15.5v-7l6 3.5-6 3.5z" />
   </svg>
 );
-
-export const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="none" {...props}>
-    <rect width="20" height="20" x="2" y="2" rx="4" ry="4" fill="#FFFFFF" stroke="#E0E0E0" strokeWidth="1" />
-    <path
-      fill="#4285F4"
-      d="M20.57 12.37c0-.79-.07-1.54-.2-2.27h-8.37v4.3h4.8c-.2 1.48-1.24 2.76-2.92 3.65v2.8h3.58c2.09-1.92 3.3-4.66 3.3-7.78z"
-    />
-    <path
-      fill="#34A853"
-      d="M12 21c2.43 0 4.47-.8 5.96-2.18l-3.58-2.8c-.8.54-1.83.86-2.96.86-2.27 0-4.2-1.52-4.88-3.54H3.45v2.88C5.03 19.13 8.27 21 12 21z"
-    />
-    <path
-      fill="#FBBC05"
-      d="M7.12 13.32c-.15-.42-.24-.87-.24-1.32s.09-.9.24-1.32V7.8H3.45c-.66 1.3-1.05 2.78-1.05 4.38s.39 3.08 1.05 4.38l3.67-2.88z"
-    />
-    <path
-      fill="#EA4335"
-      d="M12 6.84c1.32 0 2.5.45 3.44 1.34l3.12-3.12C16.91 3.27 14.7 2 12 2c-3.73 0-6.97 1.87-8.55 4.62l3.67 2.88c.68-2.02 2.61-3.54 4.88-3.54z"
-    />
-  </svg>
-);
