@@ -79,8 +79,8 @@ export default function Home() {
             console.error("AI refinement failed:", error);
             toast({
                 variant: "destructive",
-                title: "AI ದೋಷ",
-                description: "AI-ಚಾಲಿತ ಸಲಹೆಗಳನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+                title: "AI Error",
+                description: "Failed to get AI-powered suggestions.",
             });
         }
     });
@@ -112,10 +112,10 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 mb-2">
                 <NewsIcon className="w-10 h-10 text-primary" />
                 <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-                    ಕರ್ನಾಟಕ ನ್ಯೂಸ್ ಪಲ್ಸ್
+                    Karnataka News Pulse
                 </h1>
             </div>
-          <p className="text-muted-foreground font-headline text-lg">ನಿಮ್ಮ ನೈಜ-ಸಮಯದ ಜಿಲ್ಲಾವಾರು ಸುದ್ದಿ ಕೇಂದ್ರ</p>
+          <p className="text-muted-foreground font-headline text-lg">Your real-time district-wise news hub</p>
         </div>
       </header>
       
@@ -124,14 +124,14 @@ export default function Home() {
           <aside className="w-full md:w-80">
             <Card className="shadow-lg sticky top-8">
               <CardHeader>
-                <CardTitle className="font-headline">ಫಿಲ್ಟರ್ ಮತ್ತು ಹುಡುಕಾಟ</CardTitle>
+                <CardTitle className="font-headline">Filter & Search</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ</label>
+                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
                   <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
                     <SelectTrigger id="district-select" className="w-full">
-                      <SelectValue placeholder="ಒಂದು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" />
+                      <SelectValue placeholder="Select a district" />
                     </SelectTrigger>
                     <SelectContent>
                       {karnatakaDistricts.map((district) => (
@@ -147,7 +147,7 @@ export default function Home() {
                   <Input
                     id="search-input"
                     type="text"
-                    placeholder="ಸುದ್ದಿ ಹುಡುಕಿ..."
+                    placeholder="Search news..."
                     className="pr-10"
                     onChange={(e) => handleSearch(e.target.value)}
                     value={searchTerm}
@@ -222,14 +222,14 @@ export default function Home() {
                             <DialogTrigger asChild>
                                 <Button variant="ghost" size="sm" className="p-0 h-auto text-xs" onClick={() => handleReadMoreClick(article)}>
                                     <Eye className="w-4 h-4 mr-1"/>
-                                    ಮತ್ತಷ್ಟು ಓದಿ
+                                    Read More
                                 </Button>
                             </DialogTrigger>
                         </Dialog>
                         <Button variant="ghost" size="sm" asChild  className="p-0 h-auto text-xs">
                           <Link href={article.url} target="_blank" rel="noopener noreferrer">
                               <LinkIcon className="w-4 h-4 mr-1"/>
-                              ಮೂಲ ನೋಡಿ
+                              View Source
                           </Link>
                         </Button>
                         <div className="flex items-center gap-1">
@@ -242,7 +242,7 @@ export default function Home() {
                 ))
               ) : (
                 <div className="md:col-span-2 xl:grid-cols-3 text-center py-16">
-                  <p className="text-muted-foreground text-lg">ಯಾವುದೇ ಸುದ್ದಿ ಲೇಖನಗಳು ಕಂಡುಬಂದಿಲ್ಲ. ನಿಮ್ಮ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಹೊಂದಿಸಲು ಪ್ರಯತ್ನಿಸಿ.</p>
+                  <p className="text-muted-foreground text-lg">No news articles found. Try adjusting your filters.</p>
                 </div>
               )}
             </div>

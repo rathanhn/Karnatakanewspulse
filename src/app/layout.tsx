@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'ಕರ್ನಾಟಕ ನ್ಯೂಸ್ ಪಲ್ಸ್',
-  description: 'ಕರ್ನಾಟಕಕ್ಕಾಗಿ ನೈಜ-ಸಮಯದ, ಜಿಲ್ಲಾವಾರು ಸುದ್ದಿ ನವೀಕರಣಗಳು',
+  title: 'Karnataka News Pulse',
+  description: 'Real-time, district-wise news updates for Karnataka',
 };
 
 export default function RootLayout({
