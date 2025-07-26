@@ -217,7 +217,7 @@ export default function Home() {
                               {article.imageUrls.map((url, index) => (
                                 <CarouselItem key={index}>
                                   <div className="relative aspect-video w-full">
-                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} layout="fill" objectFit="cover" data-ai-hint="news media"/>
+                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="news media"/>
                                   </div>
                                 </CarouselItem>
                               ))}
@@ -275,8 +275,7 @@ export default function Home() {
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl">{selectedArticle.headline}</DialogTitle>
-                    <DialogDescription asChild>
-                      <div className="flex items-center gap-4 pt-2">
+                     <div className="flex items-center gap-4 pt-2">
                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             {sourceIcons[selectedArticle.source]}
                             <span>{selectedArticle.source}</span>
@@ -286,7 +285,6 @@ export default function Home() {
                             <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
                          </div>
                       </div>
-                    </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 text-sm text-foreground">
                     <p>{selectedArticle.content}</p>
