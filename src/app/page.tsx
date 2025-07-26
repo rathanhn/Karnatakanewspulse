@@ -262,7 +262,7 @@ export default function Home() {
                          </div>
                       </div>
                 </DialogHeader>
-                <div className="py-4 text-sm text-foreground">
+                <div className="py-4 text-sm text-foreground max-h-[60vh] overflow-y-auto">
                     <p>{selectedArticle.content}</p>
                 </div>
                 <DialogClose />
