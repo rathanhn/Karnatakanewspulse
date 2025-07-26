@@ -16,6 +16,7 @@ import { Clock, Search, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const sourceIcons: Record<Source, React.ReactNode> = {
   DailyHunt: <DailyHuntIcon className="w-5 h-5" />,
@@ -198,20 +199,38 @@ export default function Home() {
               {filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
-                    <CardHeader className="p-0">
-                      <div className="relative aspect-video w-full">
-                        {article.source === 'YouTube' ? (
-                            <iframe
-                                src={article.url}
-                                title={article.headline}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                                className="w-full h-full"
-                            ></iframe>
-                        ) : (
-                           article.imageUrl && <Image src={article.imageUrl} alt={article.headline} layout="fill" objectFit="cover" data-ai-hint="news media"/>
-                        )}
-                      </div>
+                    <CardHeader className="p-0 relative">
+                      {article.source === 'YouTube' ? (
+                        <div className="relative aspect-video w-full">
+                          <iframe
+                              src={article.url}
+                              title={article.headline}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="w-full h-full"
+                          ></iframe>
+                        </div>
+                      ) : (
+                        article.imageUrls && article.imageUrls.length > 0 && (
+                           <Carousel className="w-full">
+                            <CarouselContent>
+                              {article.imageUrls.map((url, index) => (
+                                <CarouselItem key={index}>
+                                  <div className="relative aspect-video w-full">
+                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} layout="fill" objectFit="cover" data-ai-hint="news media"/>
+                                  </div>
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            {article.imageUrls.length > 1 && (
+                              <>
+                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                              </>
+                            )}
+                          </Carousel>
+                        )
+                      )}
                     </CardHeader>
                     <CardContent className="p-4 flex-grow">
                       <Badge variant="secondary" className="mb-2">{article.district}</Badge>
@@ -276,5 +295,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
