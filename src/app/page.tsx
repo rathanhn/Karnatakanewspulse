@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { DailyHuntIcon, FacebookIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Search, Eye, LinkIcon } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -234,7 +234,7 @@ export default function Home() {
                         </Button>
                         <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3"/>
-                            <span>{formatDistanceToNow(article.timestamp, { addSuffix: true })}</span>
+                            <span>{format(article.timestamp, 'dd MMM, hh:mm a')}</span>
                         </div>
                        </div>
                     </CardFooter>
@@ -261,7 +261,7 @@ export default function Home() {
                          </div>
                          <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3"/>
-                            <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
+                            <span>{format(selectedArticle.timestamp, 'dd MMM, hh:mm a')}</span>
                          </div>
                       </div>
                 </DialogHeader>
