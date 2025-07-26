@@ -214,7 +214,9 @@ export default function Home() {
                             <CarouselContent>
                               {article.imageUrls.map((url, index) => (
                                 <CarouselItem key={index}>
+                                  <div className="relative w-full h-full aspect-video">
                                     <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="news media"/>
+                                  </div>
                                 </CarouselItem>
                               ))}
                             </CarouselContent>
@@ -282,12 +284,16 @@ export default function Home() {
                          </div>
                       </div>
                 </DialogHeader>
-                <div className="py-4 text-sm text-foreground">
-                    <p>{selectedArticle.content}</p>
-                </div>
+                <DialogDescription asChild>
+                  <div className="py-4 text-sm text-foreground">
+                      <p>{selectedArticle.content}</p>
+                  </div>
+                </DialogDescription>
             </DialogContent>
         </Dialog>
       )}
     </div>
   );
 }
+
+    
