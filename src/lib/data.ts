@@ -1,3 +1,4 @@
+
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube' | 'Google';
 
 export type NewsArticle = {
@@ -64,7 +65,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The city of Mysuru is gearing up for its world-famous Dasara celebrations. Officials have announced that this year\'s Jumboo Savari will feature 12 elephants and a host of cultural troupes. A special video showcasing the preparations was released.',
     imageUrl: 'https://placehold.co/600x400.png',
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-    url: '#',
+    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   },
   {
     id: '3',
@@ -114,7 +115,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The biennial Paryaya festival at Udupi Sri Krishna Matha concluded with a series of religious rituals and cultural programs. A live stream on YouTube attracted thousands of devotees from around the world.',
     imageUrl: 'https://placehold.co/600x400.png',
     timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    url: '#',
+    url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
   },
   {
     id: '8',

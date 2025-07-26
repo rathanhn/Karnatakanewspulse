@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
@@ -192,8 +193,18 @@ export default function Home() {
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
                     <CardHeader className="p-0">
-                      <div className="relative h-48 w-full">
-                         <Image src={article.imageUrl} alt={article.headline} layout="fill" objectFit="cover" data-ai-hint="news media"/>
+                      <div className="relative aspect-video w-full">
+                        {article.source === 'YouTube' ? (
+                            <iframe
+                                src={article.url}
+                                title={article.headline}
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                className="w-full h-full"
+                            ></iframe>
+                        ) : (
+                           <Image src={article.imageUrl} alt={article.headline} layout="fill" objectFit="cover" data-ai-hint="news media"/>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="p-4 flex-grow">
