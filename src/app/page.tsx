@@ -80,8 +80,8 @@ export default function Home() {
             console.error("AI refinement failed:", error);
             toast({
                 variant: "destructive",
-                title: "AI Error",
-                description: "Could not get AI-powered suggestions.",
+                title: "AI ದೋಷ",
+                description: "AI-ಚಾಲಿತ ಸಲಹೆಗಳನ್ನು ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
             });
         }
     });
@@ -184,12 +184,13 @@ export default function Home() {
                         </Link>
                       ) : (
                         article.imageUrls && article.imageUrls.length > 0 && (
-                           <Carousel className="w-full h-full">
+                          <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                           <Carousel className="w-full h-full pointer-events-none">
                             <CarouselContent>
                               {article.imageUrls.map((url, index) => (
                                 <CarouselItem key={index}>
                                   <div className="relative w-full h-full aspect-video">
-                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="ಸುದ್ದಿ ಮಾಧ್ಯಮ"/>
+                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="ಸುದ್ದಿ ಘಟನೆ"/>
                                   </div>
                                 </CarouselItem>
                               ))}
@@ -201,6 +202,7 @@ export default function Home() {
                               </>
                             )}
                           </Carousel>
+                          </Link>
                         )
                       )}
                     </div>
