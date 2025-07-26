@@ -275,15 +275,17 @@ export default function Home() {
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl">{selectedArticle.headline}</DialogTitle>
-                    <DialogDescription className="flex items-center gap-4 pt-2">
-                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {sourceIcons[selectedArticle.source]}
-                          <span>{selectedArticle.source}</span>
-                       </div>
-                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="w-3 h-3"/>
-                          <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
-                       </div>
+                    <DialogDescription asChild>
+                      <div className="flex items-center gap-4 pt-2">
+                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {sourceIcons[selectedArticle.source]}
+                            <span>{selectedArticle.source}</span>
+                         </div>
+                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Clock className="w-3 h-3"/>
+                            <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
+                         </div>
+                      </div>
                     </DialogDescription>
                 </DialogHeader>
                 <div className="py-4 text-sm text-foreground">
