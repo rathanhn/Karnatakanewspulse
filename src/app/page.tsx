@@ -113,10 +113,10 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 mb-2">
                 <NewsIcon className="w-10 h-10 text-primary" />
                 <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-                    Karnataka News Pulse
+                    ಕರ್ನಾಟಕ ನ್ಯೂಸ್ ಪಲ್ಸ್
                 </h1>
             </div>
-          <p className="text-muted-foreground font-headline text-lg">Your real-time district-wise news hub</p>
+          <p className="text-muted-foreground font-headline text-lg">ನಿಮ್ಮ ನೈಜ-ಸಮಯದ ಜಿಲ್ಲಾವಾರು ಸುದ್ದಿ ಕೇಂದ್ರ</p>
         </div>
       </header>
       
@@ -125,14 +125,14 @@ export default function Home() {
           <aside className="w-full md:w-80">
             <Card className="shadow-lg sticky top-8">
               <CardHeader>
-                <CardTitle className="font-headline">Filter & Search</CardTitle>
+                <CardTitle className="font-headline">ಫಿಲ್ಟರ್ ಮತ್ತು ಹುಡುಕಾಟ</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
+                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">ಜಿಲ್ಲೆ ಆಯ್ಕೆಮಾಡಿ</label>
                   <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
                     <SelectTrigger id="district-select" className="w-full">
-                      <SelectValue placeholder="Select a district" />
+                      <SelectValue placeholder="ಒಂದು ಜಿಲ್ಲೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ" />
                     </SelectTrigger>
                     <SelectContent>
                       {karnatakaDistricts.map((district) => (
@@ -148,7 +148,7 @@ export default function Home() {
                   <Input
                     id="search-input"
                     type="text"
-                    placeholder="Search news..."
+                    placeholder="ಸುದ್ದಿ ಹುಡುಕಿ..."
                     className="pr-10"
                     onChange={(e) => handleSearch(e.target.value)}
                     value={searchTerm}
@@ -187,7 +187,7 @@ export default function Home() {
                               {article.imageUrls.map((url, index) => (
                                 <CarouselItem key={index}>
                                   <div className="relative w-full h-full aspect-video">
-                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="news media"/>
+                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="ಸುದ್ದಿ ಮಾಧ್ಯಮ"/>
                                   </div>
                                 </CarouselItem>
                               ))}
@@ -219,14 +219,14 @@ export default function Home() {
                             <DialogTrigger asChild>
                                 <Button variant="ghost" size="sm" className="p-0 h-auto text-xs" onClick={() => handleReadMoreClick(article)}>
                                     <Eye className="w-4 h-4 mr-1"/>
-                                    Read More
+                                    ಮತ್ತಷ್ಟು ಓದಿ
                                 </Button>
                             </DialogTrigger>
                         </Dialog>
                         <Button variant="ghost" size="sm" asChild  className="p-0 h-auto text-xs">
                           <Link href={article.url} target="_blank" rel="noopener noreferrer">
                               <LinkIcon className="w-4 h-4 mr-1"/>
-                              View Source
+                              ಮೂಲ ನೋಡಿ
                           </Link>
                         </Button>
                         <div className="flex items-center gap-1">
@@ -239,7 +239,7 @@ export default function Home() {
                 ))
               ) : (
                 <div className="md:col-span-2 xl:grid-cols-3 text-center py-16">
-                  <p className="text-muted-foreground text-lg">No news articles found. Try adjusting your filters.</p>
+                  <p className="text-muted-foreground text-lg">ಯಾವುದೇ ಸುದ್ದಿ ಲೇಖನಗಳು ಕಂಡುಬಂದಿಲ್ಲ. ನಿಮ್ಮ ಫಿಲ್ಟರ್‌ಗಳನ್ನು ಹೊಂದಿಸಲು ಪ್ರಯತ್ನಿಸಿ.</p>
                 </div>
               )}
             </div>

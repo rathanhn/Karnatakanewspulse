@@ -24,7 +24,7 @@ export function AiSummary({ summary, suggestions, onSuggestionClick, isLoading }
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-headline text-accent">
           <Lightbulb className="w-6 h-6" />
-          <span>AI-Powered Search Insights</span>
+          <span>AI-ಚಾಲಿತ ಹುಡುಕಾಟ ಒಳನೋಟಗಳು</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -41,11 +41,11 @@ export function AiSummary({ summary, suggestions, onSuggestionClick, isLoading }
         ) : (
           <>
             <div>
-              <h4 className="font-semibold mb-2 text-card-foreground">Summary</h4>
+              <h4 className="font-semibold mb-2 text-card-foreground">ಸಾರಾಂಶ</h4>
               <p className="text-sm text-muted-foreground">{summary}</p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2 text-card-foreground">Refine your search</h4>
+              <h4 className="font-semibold mb-2 text-card-foreground">ನಿಮ್ಮ ಹುಡುಕಾಟವನ್ನು ಪರಿಷ್ಕರಿಸಿ</h4>
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion) => (
                   <Badge
