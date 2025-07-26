@@ -27,13 +27,10 @@ const sourceIcons: Record<Source, React.ReactNode> = {
   Google: <GoogleIcon className="w-5 h-5" />,
 };
 
-const sources: Source[] = ['DailyHunt', 'Facebook', 'X', 'YouTube', 'Google'];
-
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState<string>(karnatakaDistricts[0]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeFilters, setActiveFilters] = useState<Source[]>([]);
   const [aiResult, setAiResult] = useState<RefineSearchSuggestionsOutput | null>(null);
   const [isAiLoading, startAiTransition] = useTransition();
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
@@ -47,18 +44,12 @@ export default function Home() {
   const filteredNews = useMemo(() => {
     return mockNewsData
       .filter((article) => article.district === selectedDistrict)
-      .filter((article) => activeFilters.length === 0 || activeFilters.includes(article.source))
       .filter((article) =>
         article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
-  }, [selectedDistrict, activeFilters, searchTerm]);
+  }, [selectedDistrict, searchTerm]);
 
-  const handleFilterToggle = (source: Source) => {
-    setActiveFilters((prev) =>
-      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
-    );
-  };
   
   const handleSearch = (query: string) => {
     if (!query.trim()) {
@@ -166,26 +157,6 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
-            
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="font-headline">Filter by Source</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-wrap gap-2">
-                {sources.map((source) => (
-                  <Button
-                    key={source}
-                    variant={activeFilters.includes(source) ? "default" : "secondary"}
-                    onClick={() => handleFilterToggle(source)}
-                    className="flex items-center gap-2"
-                  >
-                    {sourceIcons[source]}
-                    {source}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-
           </aside>
 
           <main className="lg:col-span-3">
