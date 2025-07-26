@@ -11,7 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { DailyHuntIcon, FacebookIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
+import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { Clock, Search, Eye, LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -110,7 +110,7 @@ export default function Home() {
       <header className="py-6 border-b border-border/50">
         <div className="container mx-auto px-4 text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-                <NewsIcon className="w-10 h-10 text-primary" />
+                <KarnatakaMapIcon className="w-10 h-10" />
                 <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
                     Karnataka News Pulse
                 </h1>
