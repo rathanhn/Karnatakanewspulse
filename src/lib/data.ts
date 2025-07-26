@@ -56,7 +56,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'Bengaluru witnessed heavy rainfall on Tuesday evening, leading to waterlogging and traffic congestion in several parts of the city. Areas like Marathahalli, Silk Board, and Koramangala were heavily affected.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x401.png'],
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiWWh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL2NpdGllcy9iZW5nYWx1cnUvaGVhdnktcmFpbnMtbGFzaC1iZW5nYWx1cnUtd2F0ZXJsb2dnaW5nLXRyYWZmaWMtc25hcmxzL2FydGljbGU2NjA5Mzc5OC5lY2XSAQA?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '2',
@@ -77,7 +77,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The state government has announced a new industrial zone in Belagavi to boost employment and manufacturing in the region.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/601x400.png'],
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=Belagavi%20industrial%20zone&src=typed_query',
   },
   {
     id: '4',
@@ -87,7 +87,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The annual Kambala buffalo race was held in a village near Mangaluru, attracting thousands of spectators from across the state.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top/?q=Kambala%20Mangaluru',
   },
   {
     id: '5',
@@ -97,7 +97,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The iconic Jog Falls is a sight to behold with increased water flow following heavy rainfall in the Western Ghats.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x402.png'],
     timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/english/jog+falls-topics',
   },
   {
     id: '6',
@@ -118,7 +118,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The ancient temples of Pattadakal are attracting more tourists after recent promotional activities by the tourism department.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiXGh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL25hdGlvbmFsL2thcm5hdGFrYS9wYXR0YWRha2FsLXRvLWdldC1hLW5ldy1sb29rLWFzLWEtdG91cmlzdC1odWIvYXJ0aWNsZTY1NTU4NjUxLmVjZQ?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '8',
@@ -128,7 +128,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The steel plants in Ballari have reported a record production this quarter, contributing significantly to the state\'s economy.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/english/jsw+steel+ballari-topics',
   },
   {
     id: '9',
@@ -138,7 +138,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The famous Bidriware artisans of Bidar are seeking government intervention to promote their craft and improve their livelihoods.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top/?q=Bidriware%20artisans',
   },
   {
     id: '10',
@@ -159,7 +159,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A new state-of-the-art silk cocoon market was inaugurated today, aiming to provide better prices for sericulture farmers.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=chikkaballapur%20silk%20market&src=typed_query',
   },
   {
     id: '12',
@@ -169,7 +169,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'With favorable weather conditions, coffee growers in Chikkamagaluru are expecting a high-yield bumper crop this season.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/602x400.png'],
     timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiamh0dHBzOi8vd3d3LmJ1c2luZXNzbGluZS5jb20vbWFya2V0cy9jb21tb2RpdGllcy9jb2ZmZWUtZXhwb3J0ZXJzLWV5ZS1oaWdoZXIgcHJpY2VzLWFtaWQtY3JvcC1jb25jZXJucy9hcnRpY2xlNjU4MDM0NTUuZWPAA?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '13',
@@ -179,7 +179,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A new wind energy project was launched to harness the high wind potential in the areas surrounding the historic Chitradurga Fort.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000),
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/kannada/chitradurga-topics',
   },
   {
     id: '14',
@@ -189,7 +189,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The annual Benne Dosa festival saw thousands of food lovers throng to Davanagere to taste the city\'s famous butter dosa.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top/?q=Benne%20Dosa%20Festival%20Davanagere',
   },
   {
     id: '15',
@@ -199,7 +199,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The famous Dharwad Pedha has been awarded the GI tag, recognizing its unique origin and quality.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=dharwad%20pedha%20gi%20tag&src=typed_query',
   },
   {
     id: '16',
@@ -209,8 +209,8 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A detailed walkthrough of the ancient and architecturally significant Trikuteshwara temple in Gadag.',
     imageUrls: [],
     timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    url: 'https://www.youtube.com/watch?v=kru0f_9Yk3I',
+    embedUrl: 'https://www.youtube.com/embed/kru0f_9Yk3I'
   },
   {
     id: '17',
@@ -220,7 +220,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The Master Control Facility in Hassan is crucial for monitoring and controlling the satellites of the Chandrayaan-3 mission.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiemh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL25hdGlvbmFsL2thcm5hdGFrYS9pc3Jvcy1tY2YtaW4taGFzc2FuLXBsYXlzLWNydWNpYWwtcm9sZS1pbi1jaGFuZHJheWFhbi0zLW1pc3Npb24vYXJ0aWNsZTY3MTg5OTQ4LmVjZQ?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '18',
@@ -230,7 +230,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The price of the famous Byadgi chilli has seen a sharp increase in the Haveri market due to high demand and low supply.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000),
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/english/byadgi+chilli-topics',
   },
   {
     id: '19',
@@ -240,7 +240,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The state government has announced a major project to restore and develop the historic Gulbarga Fort into a prime tourist destination.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top/?q=Gulbarga%20Fort',
   },
   {
     id: '20',
@@ -261,7 +261,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'Speculation is rife about the possible resumption of gold mining in the historic Kolar Gold Fields after a recent government survey.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=Kolar%20Gold%20Fields&src=typed_query',
   },
   {
     id: '22',
@@ -271,7 +271,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A large number of devotees are visiting Anjanadri Hills in Koppala, believed to be the birthplace of Lord Hanuman, for special prayers.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 9 * 60 * 60 * 1000),
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiemh0dHBzOi8vd3d3LmRla2FubmV3cy5jb20vbmF0aW9uL2FuamFuYWRyaS1oaWxsLWJpcnRocGxhY2Utb2YtaGFudW1hbi13aWxsLWJlLWRldmVsb3BlZC1hdC1hLWNvc3Qtb2YtcnMxMjAtY3JvcmUtMTE3MTQ4OS5odG1s?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '23',
@@ -281,7 +281,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'Farmers in Mandya are protesting, demanding a higher price for their sugarcane produce from the sugar factories in the region.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/kannada/mandya-topics',
   },
   {
     id: '24',
@@ -291,7 +291,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The Raichur Thermal Power Station has ramped up its electricity production to meet the increasing power demand in the state.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top/?q=Raichur%20Thermal%20Power%20Station',
   },
   {
     id: '25',
@@ -312,7 +312,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The Pavagada Solar Park in Tumakuru district has exceeded its power generation targets for the year, setting a new benchmark.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 45 * 60 * 1000),
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=Pavagada%20Solar%20Park&src=typed_query',
   },
   {
     id: '27',
@@ -322,7 +322,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The famous Udupi Sri Krishna Matha is gearing up for the grand Paryaya festival, a biennial event that marks the handover of temple management.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/600x403.png'],
     timestamp: new Date(Date.now() - 15 * 60 * 60 * 1000),
-    url: 'https://news.google.com',
+    url: 'https://news.google.com/articles/CBMiamh0dHBzOi8vd3d3LnRoZWhpbmR1LmNvbS9uZXdzL2NpdGllcy9tYW5nYWx1cnUvdWR1cGktZ2VhcnMtdXAtZm9yLXB1dHRpZ2UtbXVzaHQuanRpY2xlNjYxMDU3NjUuZWPAA?hl=en-IN&gl=IN&ceid=IN%3Aen',
   },
   {
     id: '28',
@@ -332,7 +332,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The Indian Navy is expanding its base in Karwar under the second phase of Project Seabird, which will make it one of the largest naval bases in Asia.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 3.5 * 24 * 60 * 60 * 1000),
-    url: 'https://www.dailyhunt.in',
+    url: 'https://www.dailyhunt.in/news/india/english/project+seabird-topics',
   },
   {
     id: '29',
@@ -342,7 +342,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'The dates for the annual Hampi Utsav have been announced. The cultural extravaganza will feature artists and performers from all over the country.',
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/603x400.png'],
     timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
-    url: 'https://www.facebook.com',
+    url: 'https://www.facebook.com/search/top?q=Hampi%20Utsav',
   },
   {
     id: '30',
@@ -363,6 +363,6 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A leading cement manufacturer has announced plans to set up a new plant in Yadagiri, promising development and jobs for the region.',
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    url: 'https://x.com',
+    url: 'https://x.com/search?q=Yadgir%20cement%20plant&src=typed_query',
   }
 ];
