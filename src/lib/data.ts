@@ -1,5 +1,8 @@
 
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
+export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment';
+
+export const newsCategories: Category[] = ['General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
 
 export type NewsArticle = {
   id: string;
@@ -11,6 +14,7 @@ export type NewsArticle = {
   timestamp: Date;
   url: string;
   embedUrl?: string;
+  category: Category;
   'data-ai-hint'?: string;
 };
 
@@ -59,6 +63,7 @@ export const mockNewsData: NewsArticle[] = [
     timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
     url: 'https://www.youtube.com/watch?v=sQx_C_s_iak',
     embedUrl: 'https://www.youtube.com/embed/sQx_C_s_iak',
+    category: 'General',
   },
   {
     id: '3',
@@ -69,7 +74,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
     url: 'https://x.com/search?q=Belagavi%20industrial%20zone&src=typed_query',
-    'data-ai-hint': 'industrial zone'
+    'data-ai-hint': 'industrial zone',
+    category: 'Business',
   },
   {
     id: '4',
@@ -80,7 +86,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
     url: 'https://www.facebook.com/search/top/?q=Kambala%20Mangaluru',
-    'data-ai-hint': 'Kambala race'
+    'data-ai-hint': 'Kambala race',
+    category: 'Sports',
   },
   {
     id: '5',
@@ -91,7 +98,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
     url: 'https://www.dailyhunt.in/news/india/english/jog+falls-topics',
-    'data-ai-hint': 'Jog Falls'
+    'data-ai-hint': 'Jog Falls',
+    category: 'General',
   },
   {
     id: '6',
@@ -103,6 +111,7 @@ export const mockNewsData: NewsArticle[] = [
     timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
     url: 'https://www.youtube.com/watch?v=yBEvpUtPA7U',
     embedUrl: 'https://www.youtube.com/embed/yBEvpUtPA7U',
+    category: 'Entertainment',
   },
   {
     id: '8',
@@ -113,7 +122,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/jsw+steel+ballari-topics',
-    'data-ai-hint': 'steel plant'
+    'data-ai-hint': 'steel plant',
+    category: 'Business',
   },
   {
     id: '9',
@@ -124,7 +134,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Bidriware%20artisans',
-    'data-ai-hint': 'Bidriware craft'
+    'data-ai-hint': 'Bidriware craft',
+    category: 'General',
   },
   {
     id: '10',
@@ -136,6 +147,7 @@ export const mockNewsData: NewsArticle[] = [
     timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000),
     url: 'https://www.youtube.com/watch?v=T_pG7J0O-jQ',
     embedUrl: 'https://www.youtube.com/embed/T_pG7J0O-jQ',
+    category: 'Crime',
   },
   {
     id: '11',
@@ -146,7 +158,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=chikkaballapur%20silk%20market&src=typed_query',
-    'data-ai-hint': 'silk market'
+    'data-ai-hint': 'silk market',
+    category: 'Business',
   },
   {
     id: '13',
@@ -157,7 +170,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/kannada/chitradurga-topics',
-    'data-ai-hint': 'wind energy'
+    'data-ai-hint': 'wind energy',
+    category: 'Technology',
   },
   {
     id: '14',
@@ -168,7 +182,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Benne%20Dosa%20Festival%20Davanagere',
-    'data-ai-hint': 'butter dosa'
+    'data-ai-hint': 'butter dosa',
+    category: 'Entertainment',
   },
   {
     id: '15',
@@ -179,7 +194,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 30 * 60 * 1000),
     url: 'https://x.com/search?q=dharwad%20pedha%20gi%20tag&src=typed_query',
-    'data-ai-hint': 'Dharwad Pedha'
+    'data-ai-hint': 'Dharwad Pedha',
+    category: 'General',
   },
   {
     id: '16',
@@ -190,7 +206,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: [],
     timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
     url: 'https://www.youtube.com/watch?v=8qJ3i-yPz9g',
-    embedUrl: 'https://www.youtube.com/embed/8qJ3i-yPz9g'
+    embedUrl: 'https://www.youtube.com/embed/8qJ3i-yPz9g',
+    category: 'Entertainment'
   },
   {
     id: '18',
@@ -201,7 +218,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/byadgi+chilli-topics',
-    'data-ai-hint': 'Byadgi chilli'
+    'data-ai-hint': 'Byadgi chilli',
+    category: 'Business'
   },
   {
     id: '19',
@@ -212,7 +230,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Gulbarga%20Fort',
-    'data-ai-hint': 'Gulbarga Fort'
+    'data-ai-hint': 'Gulbarga Fort',
+    category: 'Politics',
   },
   {
     id: '20',
@@ -223,7 +242,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: [],
     timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
     url: 'https://www.youtube.com/watch?v=Fj2V7kH3qfA',
-    embedUrl: 'https://www.youtube.com/embed/Fj2V7kH3qfA'
+    embedUrl: 'https://www.youtube.com/embed/Fj2V7kH3qfA',
+    category: 'General'
   },
   {
     id: '21',
@@ -234,7 +254,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=Kolar%20Gold%20Fields&src=typed_query',
-    'data-ai-hint': 'gold mine'
+    'data-ai-hint': 'gold mine',
+    category: 'Business',
   },
   {
     id: '23',
@@ -245,7 +266,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/kannada/mandya-topics',
-    'data-ai-hint': 'sugarcane protest'
+    'data-ai-hint': 'sugarcane protest',
+    category: 'Politics',
   },
   {
     id: '24',
@@ -256,7 +278,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top/?q=Raichur%20Thermal%20Power%20Station',
-    'data-ai-hint': 'power station'
+    'data-ai-hint': 'power station',
+    category: 'Technology',
   },
   {
     id: '25',
@@ -267,7 +290,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: [],
     timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
     url: 'https://www.youtube.com/watch?v=J8_Z2q6g5YQ',
-    embedUrl: 'https://www.youtube.com/embed/J8_Z2q6g5YQ'
+    embedUrl: 'https://www.youtube.com/embed/J8_Z2q6g5YQ',
+    category: 'Sports',
   },
   {
     id: '26',
@@ -278,7 +302,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 45 * 60 * 1000),
     url: 'https://x.com/search?q=Pavagada%20Solar%20Park&src=typed_query',
-    'data-ai-hint': 'solar park'
+    'data-ai-hint': 'solar park',
+    category: 'Technology',
   },
   {
     id: '28',
@@ -289,7 +314,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 3.5 * 24 * 60 * 60 * 1000),
     url: 'https://www.dailyhunt.in/news/india/english/project+seabird-topics',
-    'data-ai-hint': 'naval base'
+    'data-ai-hint': 'naval base',
+    category: 'Politics',
   },
   {
     id: '29',
@@ -300,7 +326,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png', 'https://placehold.co/603x400.png'],
     timestamp: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
     url: 'https://www.facebook.com/search/top?q=Hampi%20Utsav',
-    'data-ai-hint': 'Hampi festival'
+    'data-ai-hint': 'Hampi festival',
+    category: 'Entertainment',
   },
   {
     id: '30',
@@ -311,7 +338,8 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: [],
     timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
     url: 'https://www.youtube.com/watch?v=R-9iR-zY4M4',
-    embedUrl: 'https://www.youtube.com/embed/R-9iR-zY4M4'
+    embedUrl: 'https://www.youtube.com/embed/R-9iR-zY4M4',
+    category: 'Entertainment'
   },
   {
     id: '31',
@@ -322,6 +350,7 @@ export const mockNewsData: NewsArticle[] = [
     imageUrls: ['https://placehold.co/600x400.png'],
     timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
     url: 'https://x.com/search?q=Yadgir%20cement%20plant&src=typed_query',
-    'data-ai-hint': 'cement plant'
+    'data-ai-hint': 'cement plant',
+    category: 'Business',
   }
 ];

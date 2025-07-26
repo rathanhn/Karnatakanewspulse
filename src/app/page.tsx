@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { karnatakaDistricts, mockNewsData, NewsArticle, Source } from '@/lib/data';
+import { karnatakaDistricts, mockNewsData, NewsArticle, Source, newsCategories, Category } from '@/lib/data';
 import { refineSearchSuggestions, RefineSearchSuggestionsOutput } from '@/ai/flows/refine-search-suggestions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const sourceIcons: Record<Source, React.ReactNode> = {
   DailyHunt: <DailyHuntIcon className="w-5 h-5" />,
@@ -33,6 +34,7 @@ export default function Home() {
   const [aiResult, setAiResult] = useState<RefineSearchSuggestionsOutput | null>(null);
   const [isAiLoading, startAiTransition] = useTransition();
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category>(newsCategories[0]);
 
   const { toast } = useToast();
 
@@ -43,11 +45,12 @@ export default function Home() {
   const filteredNews = useMemo(() => {
     return mockNewsData
       .filter((article) => article.district === selectedDistrict)
+      .filter((article) => article.category === selectedCategory)
       .filter((article) =>
         article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
-  }, [selectedDistrict, searchTerm]);
+  }, [selectedDistrict, searchTerm, selectedCategory]);
 
   
   const handleSearch = (query: string) => {
@@ -110,7 +113,7 @@ export default function Home() {
       <header className="py-6 border-b border-border/50">
         <div className="container mx-auto px-4 text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-                <KarnatakaMapIcon className="w-10 h-10" />
+                <KarnatakaMapIcon className="w-10 h-10 waving-flag" />
                 <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
                     Karnataka News Pulse
                 </h1>
@@ -166,6 +169,14 @@ export default function Home() {
               onSuggestionClick={handleSuggestionClick}
             />
 
+            <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)} className="w-full mb-4">
+              <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+                {newsCategories.map(category => (
+                   <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
@@ -206,7 +217,10 @@ export default function Home() {
                       )}
                     </div>
                     <CardContent className="p-4 flex-grow">
-                      <Badge variant="secondary" className="mb-2">{article.district}</Badge>
+                      <div className="flex justify-between items-center mb-2">
+                        <Badge variant="secondary" >{article.district}</Badge>
+                        <Badge variant="outline" className="border-primary/50 text-primary">{article.category}</Badge>
+                      </div>
                       <h3 className="text-lg font-bold font-headline leading-tight mb-2 text-card-foreground">
                         {article.headline}
                       </h3>
@@ -241,8 +255,8 @@ export default function Home() {
                   </Card>
                 ))
               ) : (
-                <div className="md:col-span-2 xl:grid-cols-3 text-center py-16">
-                  <p className="text-muted-foreground text-lg">No news articles found. Try adjusting your filters.</p>
+                <div className="md:col-span-2 xl:col-span-3 text-center py-16">
+                  <p className="text-muted-foreground text-lg">No news articles found for this category. Try adjusting your filters.</p>
                 </div>
               )}
             </div>
@@ -263,6 +277,7 @@ export default function Home() {
                             <Clock className="w-3 h-3"/>
                             <span>{format(selectedArticle.timestamp, 'dd MMM, hh:mm a')}</span>
                          </div>
+                         <Badge variant="outline" className="border-primary/50 text-primary">{selectedArticle.category}</Badge>
                       </div>
                 </DialogHeader>
                 <div className="py-4 text-sm text-foreground max-h-[60vh] overflow-y-auto">
