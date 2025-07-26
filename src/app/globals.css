@@ -86,3 +86,14 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes wave-flag {
+    0% { transform: skewX(0) rotate(0); }
+    50% { transform: skewX(-10deg) rotate(-2deg); }
+    100% { transform: skewX(0) rotate(0); }
+}
+
+.waving-flag {
+    animation: wave-flag 4s ease-in-out infinite;
+    transform-origin: bottom left;
+}

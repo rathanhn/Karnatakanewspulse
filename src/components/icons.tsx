@@ -64,10 +64,11 @@ export const YouTubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const KarnatakaMapIcon = (props: React.SVGProps<SVGSVGElement>) => (
+export const KarnatakaMapIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 100 60"
+        className={`waving-flag ${className}`}
         {...props}
     >
         <rect width="100" height="30" y="0" fill="#FFDD00" />
