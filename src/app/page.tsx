@@ -173,13 +173,15 @@ export default function Home() {
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
                     <div className="relative aspect-video w-full bg-muted">
                       {article.source === 'YouTube' ? (
+                        <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
                           <iframe
                               src={article.embedUrl}
                               title={article.headline}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
-                              className="w-full h-full"
+                              className="w-full h-full pointer-events-none"
                           ></iframe>
+                        </Link>
                       ) : (
                         article.imageUrls && article.imageUrls.length > 0 && (
                            <Carousel className="w-full h-full">
