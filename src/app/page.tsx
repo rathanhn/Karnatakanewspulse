@@ -18,6 +18,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 
 const sourceIcons: Record<Source, React.ReactNode> = {
   DailyHunt: <DailyHuntIcon className="w-5 h-5" />,
@@ -107,6 +115,7 @@ export default function Home() {
   }
   
   return (
+    <SidebarProvider>
     <div className="bg-background min-h-screen font-body text-foreground">
       <header className="py-6 border-b border-border/50">
         <div className="container mx-auto px-4 text-center">
@@ -121,45 +130,50 @@ export default function Home() {
       </header>
       
       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-12">
-          <aside className="lg:col-span-1 space-y-8 sticky top-8 self-start">
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="font-headline">Filter & Search</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
-                  <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
-                    <SelectTrigger id="district-select" className="w-full">
-                      <SelectValue placeholder="Select a district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {karnatakaDistricts.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+        <div className="flex">
+          <Sidebar collapsible="icon">
+             <SidebarContent>
+                <Card className="shadow-lg h-full">
+                <SidebarHeader>
+                    <CardTitle className="font-headline flex items-center justify-between">
+                        Filter & Search
+                        <SidebarTrigger/>
+                    </CardTitle>
+                </SidebarHeader>
+                <CardContent className="space-y-6">
+                    <div>
+                    <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
+                    <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
+                        <SelectTrigger id="district-select" className="w-full">
+                        <SelectValue placeholder="Select a district" />
+                        </SelectTrigger>
+                        <SelectContent>
+                        {karnatakaDistricts.map((district) => (
+                            <SelectItem key={district} value={district}>
+                            {district}
+                            </SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
 
-                <div className="relative">
-                  <Input
-                    id="search-input"
-                    type="text"
-                    placeholder="Search news..."
-                    className="pr-10"
-                    onChange={(e) => handleSearch(e.target.value)}
-                    value={searchTerm}
-                  />
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-          </aside>
+                    <div className="relative">
+                    <Input
+                        id="search-input"
+                        type="text"
+                        placeholder="Search news..."
+                        className="pr-10"
+                        onChange={(e) => handleSearch(e.target.value)}
+                        value={searchTerm}
+                    />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    </div>
+                </CardContent>
+                </Card>
+             </SidebarContent>
+          </Sidebar>
 
-          <main className="lg:col-span-3">
+          <SidebarInset className="flex-1">
              <AiSummary
               isLoading={isAiLoading}
               summary={aiResult?.summary ?? ''}
@@ -243,7 +257,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-          </main>
+          </SidebarInset>
         </div>
       </div>
        {selectedArticle && (
@@ -270,5 +284,6 @@ export default function Home() {
         </Dialog>
       )}
     </div>
+    </SidebarProvider>
   );
 }
