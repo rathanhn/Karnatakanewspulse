@@ -145,7 +145,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A leopard was sighted near a village on the fringes of the Biligiriranga Hills Tiger Reserve, prompting forest officials to issue an alert.',
     imageUrls: [],
     timestamp: new Date(Date.now() - 10 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/embed/observer',
+    url: 'https://www.youtube.com/embed/fKEaG_0-G5E',
   },
   {
     id: '11',
@@ -205,7 +205,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A detailed walkthrough of the ancient and architecturally significant Trikuteshwara temple in Gadag.',
     imageUrls: [],
     timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/embed/gadag-temple',
+    url: 'https://www.youtube.com/embed/C2845-vj3MA',
   },
   {
     id: '17',
@@ -245,7 +245,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'Heavy monsoon rains have triggered several landslides in the hilly district of Kodagu, affecting transportation and daily life.',
     imageUrls: [],
     timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/embed/kodagu-landslide',
+    url: 'https://www.youtube.com/embed/jNQXAC9IVRw',
   },
   {
     id: '21',
@@ -295,7 +295,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'Experience the thrill of rock climbing in Ramanagara, the place made famous by the movie "Sholay".',
     imageUrls: [],
     timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/embed/ramanagara-climbing',
+    url: 'https://www.youtube.com/embed/qN3yIzVsqr4',
   },
   {
     id: '26',
@@ -345,7 +345,7 @@ export const mockNewsData: NewsArticle[] = [
     content: 'A historical tour of the Gol Gumbaz, the mausoleum of king Mohammed Adil Shah, which has one of the biggest domes in the world.',
     imageUrls: [],
     timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-    url: 'https://www.youtube.com/embed/gol-gumbaz',
+    url: 'https://www.youtube.com/embed/O-dC-b2tW6A',
   },
   {
     id: '31',

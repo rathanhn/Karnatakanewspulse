@@ -199,9 +199,8 @@ export default function Home() {
               {filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
-                    <CardHeader className="p-0 relative">
+                    <div className="relative aspect-video w-full bg-muted">
                       {article.source === 'YouTube' ? (
-                        <div className="relative aspect-video w-full">
                           <iframe
                               src={article.url}
                               title={article.headline}
@@ -209,16 +208,13 @@ export default function Home() {
                               allowFullScreen
                               className="w-full h-full"
                           ></iframe>
-                        </div>
                       ) : (
                         article.imageUrls && article.imageUrls.length > 0 && (
-                           <Carousel className="w-full">
+                           <Carousel className="w-full h-full">
                             <CarouselContent>
                               {article.imageUrls.map((url, index) => (
                                 <CarouselItem key={index}>
-                                  <div className="relative aspect-video w-full">
                                     <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint="news media"/>
-                                  </div>
                                 </CarouselItem>
                               ))}
                             </CarouselContent>
@@ -231,7 +227,7 @@ export default function Home() {
                           </Carousel>
                         )
                       )}
-                    </CardHeader>
+                    </div>
                     <CardContent className="p-4 flex-grow">
                       <Badge variant="secondary" className="mb-2">{article.district}</Badge>
                       <h3 className="text-lg font-bold font-headline leading-tight mb-2 text-card-foreground">
@@ -275,12 +271,12 @@ export default function Home() {
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                     <DialogTitle className="font-headline text-2xl">{selectedArticle.headline}</DialogTitle>
-                     <div className="flex items-center gap-4 pt-2">
-                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                     <div className="flex items-center gap-4 pt-2 text-sm text-muted-foreground">
+                         <div className="flex items-center gap-2">
                             {sourceIcons[selectedArticle.source]}
                             <span>{selectedArticle.source}</span>
                          </div>
-                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                         <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3"/>
                             <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
                          </div>
