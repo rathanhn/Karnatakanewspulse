@@ -203,7 +203,7 @@ export default function Home() {
                                 className="w-full h-full"
                             ></iframe>
                         ) : (
-                           <Image src={article.imageUrl} alt={article.headline} layout="fill" objectFit="cover" data-ai-hint="news media"/>
+                           article.imageUrl && <Image src={article.imageUrl} alt={article.headline} layout="fill" objectFit="cover" data-ai-hint="news media"/>
                         )}
                       </div>
                     </CardHeader>
