@@ -25,9 +25,9 @@ const GeneratedNewsArticleSchema = z.object({
   source: sourceEnum.describe("The social media source of the news (e.g., 'X', 'YouTube')."),
   headline: z.string().describe('A compelling, realistic headline for the news article, in English.'),
   content: z.string().describe('The full content of the news article (2-3 paragraphs), in English.'),
-  url: z.string().url().describe('A realistic, plausible URL for the news source (e.g., a YouTube or X.com link).'),
+  url: z.string().describe('A realistic, plausible URL for the news source (e.g., a YouTube or X.com link).'),
   'data-ai-hint': z.string().describe('A 1-2 word hint for generating a relevant image (e.g., "political rally", "cricket match").'),
-  embedUrl: z.string().url().optional().describe("If the source is YouTube, a valid YouTube embed URL. Otherwise, this should be omitted."),
+  embedUrl: z.string().optional().describe("If the source is YouTube, a valid YouTube embed URL. Otherwise, this should be omitted."),
 });
 export type GeneratedNewsArticle = z.infer<typeof GeneratedNewsArticleSchema>;
 
