@@ -3,16 +3,17 @@
 
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { karnatakaDistricts, mockNewsData, NewsArticle, Source } from '@/lib/data';
 import { refineSearchSuggestions, RefineSearchSuggestionsOutput } from '@/ai/flows/refine-search-suggestions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { DailyHuntIcon, FacebookIcon, GoogleIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -202,7 +203,7 @@ export default function Home() {
                     <div className="relative aspect-video w-full bg-muted">
                       {article.source === 'YouTube' ? (
                           <iframe
-                              src={article.url}
+                              src={article.embedUrl}
                               title={article.headline}
                               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen
@@ -251,6 +252,12 @@ export default function Home() {
                                 </Button>
                             </DialogTrigger>
                         </Dialog>
+                        <Button variant="ghost" size="sm" asChild  className="p-0 h-auto text-xs">
+                          <Link href={article.url} target="_blank" rel="noopener noreferrer">
+                              <LinkIcon className="w-4 h-4 mr-1"/>
+                              View Source
+                          </Link>
+                        </Button>
                         <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3"/>
                             <span>{formatDistanceToNow(article.timestamp, { addSuffix: true })}</span>
@@ -260,7 +267,7 @@ export default function Home() {
                   </Card>
                 ))
               ) : (
-                <div className="md:col-span-2 xl:col-span-3 text-center py-16">
+                <div className="md:col-span-2 xl:grid-cols-3 text-center py-16">
                   <p className="text-muted-foreground text-lg">No news articles found. Try adjusting your filters.</p>
                 </div>
               )}
@@ -284,16 +291,13 @@ export default function Home() {
                          </div>
                       </div>
                 </DialogHeader>
-                <DialogDescription asChild>
-                  <div className="py-4 text-sm text-foreground">
-                      <p>{selectedArticle.content}</p>
-                  </div>
-                </DialogDescription>
+                <div className="py-4 text-sm text-foreground">
+                    <p>{selectedArticle.content}</p>
+                </div>
+                <DialogClose />
             </DialogContent>
         </Dialog>
       )}
     </div>
   );
 }
-
-    
