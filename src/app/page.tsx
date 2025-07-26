@@ -1,24 +1,28 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useTransition } from 'react';
+import React, { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { karnatakaDistricts, mockNewsData, NewsArticle, Source, newsCategories, Category } from '@/lib/data';
+import { karnatakaDistricts, NewsArticle, Source, newsCategories, Category } from '@/lib/data';
 import { refineSearchSuggestions, RefineSearchSuggestionsOutput } from '@/ai/flows/refine-search-suggestions';
+import { generateNews, GeneratedNewsArticle } from '@/ai/flows/generate-news';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye, LinkIcon } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper } from 'lucide-react';
 import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 const sourceIcons: Record<Source, React.ReactNode> = {
   DailyHunt: <DailyHuntIcon className="w-5 h-5" />,
@@ -26,6 +30,26 @@ const sourceIcons: Record<Source, React.ReactNode> = {
   X: <XIcon className="w-5 h-5" />,
   YouTube: <YouTubeIcon className="w-5 h-5" />,
 };
+
+const NewsCardSkeleton = () => (
+    <Card className="flex flex-col overflow-hidden shadow-lg bg-card">
+        <Skeleton className="relative aspect-video w-full bg-muted" />
+        <CardContent className="p-4 flex-grow">
+            <div className="flex justify-between items-center mb-2">
+                <Skeleton className="h-5 w-1/4" />
+                <Skeleton className="h-5 w-1/4" />
+            </div>
+            <Skeleton className="h-6 w-full mb-2" />
+            <Skeleton className="h-4 w-5/6" />
+        </CardContent>
+        <CardFooter className="p-4 bg-secondary/50">
+            <div className="flex justify-between items-center w-full">
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-5 w-1/4" />
+            </div>
+        </CardFooter>
+    </Card>
+);
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
@@ -35,22 +59,57 @@ export default function Home() {
   const [isAiLoading, startAiTransition] = useTransition();
   const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<Category>(newsCategories[0]);
+  
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [isNewsLoading, startNewsTransition] = useTransition();
 
   const { toast } = useToast();
 
+  const fetchNews = useCallback((district: string, category: Category) => {
+    startNewsTransition(async () => {
+        try {
+            const result = await generateNews({ district, category });
+            const articles: NewsArticle[] = result.articles.map((article, index) => ({
+                id: `${district}-${category}-${index}-${Date.now()}`,
+                district,
+                category,
+                timestamp: new Date(),
+                imageUrls: article.source === 'YouTube' ? [] : ['https://placehold.co/600x400.png'],
+                ...article,
+            }));
+            setNews(articles);
+        } catch (error) {
+            console.error("Failed to generate news:", error);
+            toast({
+                variant: "destructive",
+                title: "AI Error",
+                description: "Failed to generate real-time news articles.",
+            });
+            setNews([]); // Clear news on error
+        }
+    });
+  }, [toast]);
+
+
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    fetchNews(selectedDistrict, selectedCategory);
+  }, []); // Fetch on initial mount
+
+  useEffect(() => {
+    if (isMounted) {
+      fetchNews(selectedDistrict, selectedCategory);
+    }
+  }, [selectedDistrict, selectedCategory, fetchNews, isMounted]);
 
   const filteredNews = useMemo(() => {
-    return mockNewsData
-      .filter((article) => article.district === selectedDistrict)
-      .filter((article) => article.category === selectedCategory)
+    if (isNewsLoading) return [];
+    return news
       .filter((article) =>
         article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
         article.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
-  }, [selectedDistrict, searchTerm, selectedCategory]);
+  }, [news, searchTerm, isNewsLoading]);
 
   
   const handleSearch = (query: string) => {
@@ -157,6 +216,11 @@ export default function Home() {
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
+
+                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} disabled={isNewsLoading} className="w-full">
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isNewsLoading ? 'animate-spin' : ''}`} />
+                    {isNewsLoading ? 'Refreshing News...' : 'Refresh News'}
+                </Button>
               </CardContent>
             </Card>
           </aside>
@@ -178,11 +242,18 @@ export default function Home() {
             </Tabs>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredNews.length > 0 ? (
+              {isNewsLoading ? (
+                 <>
+                    <NewsCardSkeleton />
+                    <NewsCardSkeleton />
+                    <NewsCardSkeleton />
+                    <NewsCardSkeleton />
+                 </>
+              ) : filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
                     <div className="relative aspect-video w-full bg-muted">
-                      {article.source === 'YouTube' ? (
+                      {article.source === 'YouTube' && article.embedUrl ? (
                         <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
                           <iframe
                               src={article.embedUrl}
@@ -255,8 +326,10 @@ export default function Home() {
                   </Card>
                 ))
               ) : (
-                <div className="md:col-span-2 xl:col-span-3 text-center py-16">
-                  <p className="text-muted-foreground text-lg">No news articles found for this category. Try adjusting your filters.</p>
+                <div className="md:col-span-2 xl:col-span-3 text-center py-16 flex flex-col items-center gap-4">
+                  <Newspaper className="w-16 h-16 text-muted-foreground/50"/>
+                  <p className="text-muted-foreground text-lg">No news articles found.</p>
+                  <p className="text-muted-foreground text-sm">Try selecting a different category or refreshing the news.</p>
                 </div>
               )}
             </div>
