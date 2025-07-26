@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { DailyHuntIcon, FacebookIcon, GoogleIcon, NewsIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search } from 'lucide-react';
+import { Clock, Search, Eye } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +34,7 @@ export default function Home() {
   const [activeFilters, setActiveFilters] = useState<Source[]>([]);
   const [aiResult, setAiResult] = useState<RefineSearchSuggestionsOutput | null>(null);
   const [isAiLoading, startAiTransition] = useTransition();
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
 
   const { toast } = useToast();
 
@@ -102,6 +104,10 @@ export default function Home() {
     document.getElementById('search-input')?.focus();
     handleSearch(suggestion);
   };
+  
+  const handleReadMoreClick = (article: NewsArticle) => {
+    setSelectedArticle(article);
+  }
 
   if (!isMounted) {
     return null;
@@ -219,9 +225,19 @@ export default function Home() {
                           {sourceIcons[article.source]}
                           <span>{article.source}</span>
                        </div>
-                       <div className="flex items-center gap-1">
-                          <Clock className="w-3 h-3"/>
-                          <span>{formatDistanceToNow(article.timestamp, { addSuffix: true })}</span>
+                       <div className="flex items-center gap-4">
+                        <Dialog>
+                            <DialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="p-0 h-auto text-xs" onClick={() => handleReadMoreClick(article)}>
+                                    <Eye className="w-4 h-4 mr-1"/>
+                                    Read More
+                                </Button>
+                            </DialogTrigger>
+                        </Dialog>
+                        <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3"/>
+                            <span>{formatDistanceToNow(article.timestamp, { addSuffix: true })}</span>
+                        </div>
                        </div>
                     </CardFooter>
                   </Card>
@@ -235,6 +251,30 @@ export default function Home() {
           </main>
         </div>
       </div>
+       {selectedArticle && (
+        <Dialog open={!!selectedArticle} onOpenChange={(isOpen) => !isOpen && setSelectedArticle(null)}>
+            <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                    <DialogTitle className="font-headline text-2xl">{selectedArticle.headline}</DialogTitle>
+                    <DialogDescription className="flex items-center gap-4 pt-2">
+                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {sourceIcons[selectedArticle.source]}
+                          <span>{selectedArticle.source}</span>
+                       </div>
+                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="w-3 h-3"/>
+                          <span>{formatDistanceToNow(selectedArticle.timestamp, { addSuffix: true })}</span>
+                       </div>
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="py-4 text-sm text-foreground">
+                    <p>{selectedArticle.content}</p>
+                </div>
+            </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
+
+    
