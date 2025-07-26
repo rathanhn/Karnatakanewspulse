@@ -91,6 +91,12 @@ export default function Home() {
     });
   }
 
+  const handleDistrictChange = (district: string) => {
+    setSelectedDistrict(district);
+    setSearchTerm('');
+    setAiResult(null);
+  }
+
   const handleSuggestionClick = (suggestion: string) => {
     document.getElementById('search-input')?.focus();
     handleSearch(suggestion);
@@ -124,7 +130,7 @@ export default function Home() {
               <CardContent className="space-y-6">
                 <div>
                   <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
-                  <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                  <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
                     <SelectTrigger id="district-select" className="w-full">
                       <SelectValue placeholder="Select a district" />
                     </SelectTrigger>
@@ -145,7 +151,7 @@ export default function Home() {
                     placeholder="Search news..."
                     className="pr-10"
                     onChange={(e) => handleSearch(e.target.value)}
-                    defaultValue={searchTerm}
+                    value={searchTerm}
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
