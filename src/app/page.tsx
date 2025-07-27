@@ -21,7 +21,6 @@ import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
@@ -262,14 +261,6 @@ export default function Home() {
               onSuggestionClick={handleSuggestionClick}
             />
 
-            <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)} className="w-full mb-4">
-              <TabsList className="grid w-full grid-cols-4 md:grid-cols-4 lg:grid-cols-8">
-                {newsCategories.map(category => (
-                   <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {isNewsLoading ? (
                  <>
@@ -392,5 +383,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     
