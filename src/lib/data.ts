@@ -1,9 +1,8 @@
 
-
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
-export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment';
+export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
-export const newsCategories: Category[] = ['General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
+export const newsCategories: Category[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
 
 export type NewsArticle = {
   id: string;

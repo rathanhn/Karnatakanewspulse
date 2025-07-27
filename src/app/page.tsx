@@ -234,7 +234,7 @@ export default function Home() {
             />
 
             <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)} className="w-full mb-4">
-              <TabsList className="grid w-full grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+              <TabsList className="grid w-full grid-cols-4 md:grid-cols-4 lg:grid-cols-8">
                 {newsCategories.map(category => (
                    <TabsTrigger key={category} value={category}>{category}</TabsTrigger>
                 ))}
