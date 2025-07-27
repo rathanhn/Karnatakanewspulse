@@ -164,6 +164,10 @@ export default function Home() {
     setSelectedArticle(article);
   }
 
+  const handleCategoryChange = (category: Category) => {
+    setSelectedCategory(category);
+  }
+
   if (!isMounted) {
     return null;
   }
@@ -194,6 +198,13 @@ export default function Home() {
                     <DropdownMenuItem asChild>
                         <Link href="/">Home</Link>
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Categories</DropdownMenuLabel>
+                    {newsCategories.map((category) => (
+                      <DropdownMenuItem key={category} onSelect={() => handleCategoryChange(category)}>
+                        {category}
+                      </DropdownMenuItem>
+                    ))}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -381,3 +392,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
