@@ -301,6 +301,12 @@ export default function Home() {
                                                     {sourceIcons[article.source]}
                                                     <span>{article.source}</span>
                                                 </div>
+                                                <Button variant="ghost" size="sm" asChild className="p-0 h-auto text-xs">
+                                                  <Link href={article.url} target="_blank" rel="noopener noreferrer">
+                                                      <LinkIcon className="w-4 h-4 mr-1"/>
+                                                      View Source
+                                                  </Link>
+                                                </Button>
                                                 <div className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3"/>
                                                     <span>{format(article.timestamp, 'dd MMM, hh:mm a')}</span>
@@ -460,5 +466,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
