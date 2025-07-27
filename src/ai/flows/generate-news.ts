@@ -23,8 +23,8 @@ const sourceEnum = z.enum(['DailyHunt', 'Facebook', 'X', 'YouTube']);
 
 const GeneratedNewsArticleSchema = z.object({
   source: sourceEnum.describe("The social media source of the news (e.g., 'X', 'YouTube')."),
-  headline: z.string().describe('A compelling, realistic headline for the news article, in English.'),
-  content: z.string().describe('The full content of the news article (2-3 paragraphs), in English.'),
+  headline: z.string().describe('A compelling, realistic headline for the news article, in Kannada.'),
+  content: z.string().describe('The full content of the news article (2-3 paragraphs), in Kannada.'),
   url: z.string().describe('A realistic, plausible URL for the news source (e.g., a YouTube or X.com link).'),
   'data-ai-hint': z.string().describe('A 1-2 word hint for generating a relevant image (e.g., "political rally", "cricket match").'),
   embedUrl: z.string().optional().describe("If the source is YouTube, a valid YouTube embed URL. Otherwise, this should be omitted."),
@@ -48,12 +48,12 @@ const prompt = ai.definePrompt({
   name: 'generateNewsPrompt',
   input: {schema: GenerateNewsInputSchema},
   output: {schema: GenerateNewsOutputSchema},
-  prompt: `You are a news generation service for Karnataka, India. Your task is to generate 4 diverse, realistic, and recent news articles in English.
+  prompt: `You are a news generation service for Karnataka, India. Your task is to generate 4 diverse, realistic, and recent news articles in Kannada.
 
   Instructions:
-  1.  The news must be for the specified 'district' and 'category'.
+  1.  The news must be for the specified 'district' and 'category'. The headlines and content MUST be in the Kannada language.
   2.  If the input 'district' is 'Karnataka', you must generate news from a variety of different districts across the state and you MUST populate the 'district' field in each generated article object with the correct district name.
-  3.  If the input 'district' is a specific district (e.g., 'Mysuru'), generate news only for that district. The content must be directly related to events, people, or places within that specific district.
+  3.  If the input 'district' is a specific district (e.g., 'Mysuru'), all generated news content must be directly related to events, people, or places within that specific district.
   4.  If the category is 'Trending', please generate the most important and talked-about news stories from the last 24 hours, covering a mix of topics like politics, sports, and local events.
   5.  Generate a variety of news items from different plausible social media sources (X, Facebook, YouTube, DailyHunt).
   6.  For each article, create a realistic headline, detailed content (2-3 paragraphs), a valid-looking source URL, and a 2-word hint for image generation.
