@@ -48,18 +48,19 @@ const prompt = ai.definePrompt({
   name: 'generateNewsPrompt',
   input: {schema: GenerateNewsInputSchema},
   output: {schema: GenerateNewsOutputSchema},
-  prompt: `You are a news generation service for Karnataka, India. Your task is to generate 4 diverse, realistic, and recent news articles in Kannada.
+  prompt: `You are a news generation service for Karnataka, India. Your task is to generate 4 diverse, realistic, and recent news articles in Kannada, sourcing your information from well-known Kannada news channels and content creators.
 
   Instructions:
-  1.  The news must be for the specified 'district' and 'category'. The headlines and content MUST be in the Kannada language.
-  2.  If the input 'district' is 'Karnataka', you must generate news from a variety of different districts across the state and you MUST populate the 'district' field in each generated article object with the correct district name.
-  3.  If the input 'district' is a specific district (e.g., 'Mysuru'), all generated news content must be directly related to events, people, or places within that specific district.
-  4.  If the category is 'Trending', please generate the most important and talked-about news stories from the last 24 hours, covering a mix of topics like politics, sports, and local events.
-  5.  Generate a variety of news items from different plausible social media sources (X, Facebook, YouTube, DailyHunt).
-  6.  For each article, create a realistic headline, detailed content (2-3 paragraphs), a valid-looking source URL, and a 2-word hint for image generation.
-  7.  If the source is YouTube, you MUST provide a valid YouTube embed URL in the 'embedUrl' field. For other sources, omit it.
-  8.  The content should be engaging and reflect recent, believable events for the specified location and topic.
-  9.  Ensure the output strictly follows the provided JSON schema. Do not add any extra fields.`,
+  1.  Generate content as if it is from popular and trusted Kannada news sources like TV9 Kannada, Public TV, Suvarna News, Prajavani, Udayavani, or other respected Kannada content creators.
+  2.  The news must be for the specified 'district' and 'category'. The headlines and content MUST be in the Kannada language.
+  3.  If the input 'district' is 'Karnataka', you must generate news from a variety of different districts across the state and you MUST populate the 'district' field in each generated article object with the correct district name.
+  4.  If the input 'district' is a specific district (e.g., 'Mysuru'), all generated news content must be directly related to events, people, or places within that specific district.
+  5.  If the category is 'Trending', please generate the most important and talked-about news stories from the last 24 hours, covering a mix of topics like politics, sports, and local events.
+  6.  Generate a variety of news items from different plausible social media sources (X, Facebook, YouTube, DailyHunt).
+  7.  For each article, create a realistic headline, detailed content (2-3 paragraphs), a valid-looking source URL, and a 2-word hint for image generation.
+  8.  If the source is YouTube, you MUST provide a valid YouTube embed URL in the 'embedUrl' field. For other sources, omit it.
+  9.  The content should be engaging and reflect recent, believable events for the specified location and topic.
+  10. Ensure the output strictly follows the provided JSON schema. Do not add any extra fields.`,
 });
 
 const generateNewsFlow = ai.defineFlow(
