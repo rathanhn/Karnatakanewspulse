@@ -13,9 +13,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu } from 'lucide-react';
 import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -170,14 +171,37 @@ export default function Home() {
   return (
     <div className="bg-background min-h-screen font-body text-foreground">
       <header className="py-6 border-b border-border/50">
-        <div className="container mx-auto px-4 text-center">
-            <div className="flex items-center justify-center gap-3 mb-2">
-                <KarnatakaMapIcon className="w-10 h-10 waving-flag" />
-                <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-                    Karnataka News Pulse
-                </h1>
+        <div className="container mx-auto px-4 flex justify-between items-center">
+            <div className="flex-1">
+                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <KarnatakaMapIcon className="w-10 h-10 waving-flag" />
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
+                        Karnataka News Pulse
+                    </h1>
+                </div>
+              <p className="text-muted-foreground font-headline text-lg text-center md:text-left">Your real-time district-wise news hub</p>
             </div>
-          <p className="text-muted-foreground font-headline text-lg">Your real-time district-wise news hub</p>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <Menu className="h-6 w-6" />
+                        <span className="sr-only">Open menu</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                        <Link href="/">Home</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/login">Login</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/register">Register</Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
       
