@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useMemo, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { karnatakaDistricts, NewsArticle, Source, newsCategories, Category } from '@/lib/data';
 import { refineSearchSuggestions, RefineSearchSuggestionsOutput } from '@/ai/flows/refine-search-suggestions';
 import { generateNews, GeneratedNewsArticle } from '@/ai/flows/generate-news';
@@ -16,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu, ArrowLeft, TrendingUp } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu, ArrowLeft, TrendingUp, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +67,7 @@ export default function Home() {
   const [isHighlightLoading, startHighlightTransition] = useTransition();
 
   const { toast } = useToast();
+  const router = useRouter();
 
   const fetchNews = useCallback((district: string, category: Category) => {
     startNewsTransition(async () => {
@@ -197,6 +199,15 @@ export default function Home() {
     setAiResult(null);
   }
 
+  const handleLogout = () => {
+    // In a real app, you'd clear session/token here
+    toast({
+      title: 'Logged out',
+      description: 'You have been successfully logged out.',
+    });
+    router.push('/login');
+  };
+
   if (!isMounted) {
     return null;
   }
@@ -229,6 +240,11 @@ export default function Home() {
                         {category}
                       </DropdownMenuItem>
                     ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -428,3 +444,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
