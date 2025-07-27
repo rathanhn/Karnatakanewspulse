@@ -74,7 +74,7 @@ export default function Home() {
                 district,
                 category,
                 timestamp: new Date(),
-                imageUrls: article.source === 'YouTube' ? [] : ['https://placehold.co/600x400.png'],
+                imageUrls: ['https://placehold.co/600x400.png'], // Always use placeholder for all sources
                 ...article,
             }));
             setNews(articles);
@@ -274,38 +274,26 @@ export default function Home() {
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
                     <div className="relative aspect-video w-full bg-muted">
-                      {article.source === 'YouTube' && article.embedUrl ? (
-                        <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                          <iframe
-                              src={article.embedUrl}
-                              title={article.headline}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                              className="w-full h-full"
-                          ></iframe>
-                        </Link>
-                      ) : (
-                        article.imageUrls && article.imageUrls.length > 0 && (
-                           <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                             <Carousel className="w-full h-full">
-                              <CarouselContent>
-                                {article.imageUrls.map((url, index) => (
-                                  <CarouselItem key={index}>
-                                    <div className="relative w-full h-full aspect-video">
-                                      <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
-                                    </div>
-                                  </CarouselItem>
-                                ))}
-                              </CarouselContent>
-                              {article.imageUrls.length > 1 && (
-                                <>
-                                  <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                  <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                                </>
-                              )}
-                            </Carousel>
-                           </Link>
-                        )
+                      {article.imageUrls && article.imageUrls.length > 0 && (
+                         <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                           <Carousel className="w-full h-full">
+                            <CarouselContent>
+                              {article.imageUrls.map((url, index) => (
+                                <CarouselItem key={index}>
+                                  <div className="relative w-full h-full aspect-video">
+                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
+                                  </div>
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            {article.imageUrls.length > 1 && (
+                              <>
+                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                              </>
+                            )}
+                          </Carousel>
+                         </Link>
                       )}
                     </div>
                     <CardContent className="p-4 flex-grow">
@@ -384,3 +372,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
