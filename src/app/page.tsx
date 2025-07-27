@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu, ArrowLeft } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu, ArrowLeft, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +63,9 @@ export default function Home() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [isNewsLoading, startNewsTransition] = useTransition();
 
+  const [highlightedNews, setHighlightedNews] = useState<NewsArticle[]>([]);
+  const [isHighlightLoading, startHighlightTransition] = useTransition();
+
   const { toast } = useToast();
 
   const fetchNews = useCallback((district: string, category: Category) => {
@@ -89,11 +92,32 @@ export default function Home() {
         }
     });
   }, [toast]);
-
+  
+  const fetchHighlightedNews = useCallback(() => {
+    startHighlightTransition(async () => {
+        try {
+            const result = await generateNews({ district: "Karnataka", category: 'Trending' });
+            const articles: NewsArticle[] = result.articles.map((article, index) => ({
+                id: `highlight-${index}-${Date.now()}`,
+                district: article.district || 'Karnataka',
+                category: 'Trending',
+                timestamp: new Date(),
+                imageUrls: ['https://placehold.co/600x400.png'],
+                ...article,
+            }));
+            setHighlightedNews(articles);
+        } catch (error) {
+            console.error("Failed to generate highlighted news:", error);
+            // Don't show a toast for this, as it's a background feature
+        }
+    });
+  }, []);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    fetchHighlightedNews();
+  }, [fetchHighlightedNews]);
+
 
   useEffect(() => {
     if (isMounted && selectedDistrict) {
@@ -220,8 +244,8 @@ export default function Home() {
       
       <div className="container mx-auto px-4 py-8">
         {!selectedDistrict ? (
-            <div className="flex flex-col items-center justify-center pt-16">
-                <Card className="w-full max-w-md shadow-lg">
+            <div className="flex flex-col items-center justify-center pt-8">
+                <Card className="w-full max-w-md shadow-lg mb-12">
                     <CardHeader>
                         <CardTitle className="text-center font-headline text-2xl">Select a District</CardTitle>
                     </CardHeader>
@@ -240,6 +264,58 @@ export default function Home() {
                         </Select>
                     </CardContent>
                 </Card>
+
+                <div className="w-full max-w-5xl">
+                    <h2 className="text-3xl font-headline font-bold text-center mb-6 flex items-center justify-center gap-3">
+                        <TrendingUp className="w-8 h-8 text-accent" />
+                        Recent Highlights
+                    </h2>
+                     <Carousel
+                        opts={{
+                            align: "start",
+                            loop: true,
+                        }}
+                        className="w-full"
+                    >
+                        <CarouselContent>
+                           {(isHighlightLoading ? Array(4).fill(0) : highlightedNews).map((article, index) => (
+                                <CarouselItem key={isHighlightLoading ? `skeleton-${index}` : article.id} className="md:basis-1/2 lg:basis-1/3">
+                                    <div className="p-1 h-full">
+                                    {isHighlightLoading ? <NewsCardSkeleton/> : (
+                                         <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card h-full">
+                                            <div className="relative aspect-video w-full bg-muted">
+                                                {article.imageUrls && article.imageUrls.length > 0 && (
+                                                    <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                                                        <Image src={article.imageUrls[0]} alt={article.headline} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
+                                                    </Link>
+                                                )}
+                                            </div>
+                                            <CardContent className="p-4 flex-grow">
+                                                <Badge variant="secondary" className="mb-2">{article.district}</Badge>
+                                                <h3 className="text-lg font-bold font-headline leading-tight mb-2 text-card-foreground">
+                                                    {article.headline}
+                                                </h3>
+                                            </CardContent>
+                                            <CardFooter className="p-4 bg-secondary/50 flex justify-between items-center text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    {sourceIcons[article.source]}
+                                                    <span>{article.source}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <Clock className="w-3 h-3"/>
+                                                    <span>{format(article.timestamp, 'dd MMM, hh:mm a')}</span>
+                                                </div>
+                                            </CardFooter>
+                                        </Card>
+                                    )}
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+                        <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+                    </Carousel>
+                </div>
             </div>
         ) : (
           <main>
