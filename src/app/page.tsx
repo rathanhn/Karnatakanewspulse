@@ -194,12 +194,6 @@ export default function Home() {
                     <DropdownMenuItem asChild>
                         <Link href="/">Home</Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/login">Login</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                        <Link href="/register">Register</Link>
-                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
