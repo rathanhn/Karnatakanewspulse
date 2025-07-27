@@ -1,4 +1,3 @@
-
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
 export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
@@ -10,7 +9,6 @@ export type NewsArticle = {
   source: Source;
   headline: string;
   content: string;
-  imageUrls: string[];
   timestamp: Date;
   url: string;
   embedUrl?: string;

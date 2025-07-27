@@ -33,7 +33,6 @@ const sourceIcons: Record<Source, React.ReactNode> = {
 
 const NewsCardSkeleton = () => (
     <Card className="flex flex-col overflow-hidden shadow-lg bg-card">
-        <Skeleton className="relative aspect-video w-full bg-muted" />
         <CardContent className="p-4 flex-grow">
             <div className="flex justify-between items-center mb-2">
                 <Skeleton className="h-5 w-1/4" />
@@ -77,7 +76,6 @@ export default function Home() {
                 district,
                 category,
                 timestamp: new Date(),
-                imageUrls: [`https://placehold.co/600x400.png`],
                 ...article,
             }));
             setNews(articles);
@@ -102,7 +100,6 @@ export default function Home() {
                 district: article.district || 'Karnataka',
                 category: 'Trending',
                 timestamp: new Date(),
-                imageUrls: [`https://placehold.co/600x400.png`],
                 ...article,
             }));
             setHighlightedNews(articles);
@@ -278,13 +275,6 @@ export default function Home() {
                                     <div className="p-1 h-full">
                                     {isHighlightLoading ? <NewsCardSkeleton/> : (
                                          <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card h-full">
-                                            <div className="relative aspect-video w-full bg-muted">
-                                                {article.imageUrls && article.imageUrls.length > 0 && (
-                                                    <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                                                        <Image src={article.imageUrls[0]} alt={article.headline} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
-                                                    </Link>
-                                                )}
-                                            </div>
                                             <CardContent className="p-4 flex-grow">
                                                 <Badge variant="secondary" className="mb-2">{article.district}</Badge>
                                                 <h3 className="text-lg font-bold font-headline leading-tight mb-2 text-card-foreground">
@@ -362,29 +352,6 @@ export default function Home() {
               ) : filteredNews.length > 0 ? (
                 filteredNews.map((article) => (
                   <Card key={article.id} className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-card">
-                    <div className="relative aspect-video w-full bg-muted">
-                      {article.imageUrls && article.imageUrls.length > 0 && (
-                         <Link href={article.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
-                           <Carousel className="w-full h-full">
-                            <CarouselContent>
-                              {article.imageUrls.map((url, index) => (
-                                <CarouselItem key={index}>
-                                  <div className="relative w-full h-full aspect-video">
-                                    <Image src={url} alt={`${article.headline} image ${index + 1}`} fill={true} className="object-cover" data-ai-hint={article['data-ai-hint']}/>
-                                  </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                            {article.imageUrls.length > 1 && (
-                              <>
-                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                              </>
-                            )}
-                          </Carousel>
-                         </Link>
-                      )}
-                    </div>
                     <CardContent className="p-4 flex-grow">
                       <div className="flex justify-between items-center mb-2">
                         <Badge variant="secondary" >{article.district}</Badge>
@@ -461,5 +428,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
