@@ -1,6 +1,7 @@
 // src/app/register/page.tsx
 'use client';
 
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,13 +14,27 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {
+  const { toast } = useToast();
+  const router = useRouter();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Form submitted');
     // In a real app, you would handle form submission here,
     // e.g., send data to an API endpoint.
+    
+    // Show success notification
+    toast({
+      title: 'Success!',
+      description: 'You have signed up successfully.',
+    });
+
+    // Redirect to login page after a short delay
+    setTimeout(() => {
+      router.push('/login');
+    }, 1000); 
   };
 
   return (
