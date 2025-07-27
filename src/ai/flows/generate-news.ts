@@ -50,7 +50,7 @@ const prompt = ai.definePrompt({
   prompt: `You are a news generation service for Karnataka, India. Your task is to generate 4 diverse, realistic, and recent news articles in English.
 
   Instructions:
-  1.  The news must be for the district of {{{district}}} and the category of {{{category}}}.
+  1.  The news must be for the district of {{{district}}} and the category of {{{category}}}. It is crucial that the generated news content is directly related to events, people, or places within this specific district.
   2.  If the category is 'Trending', please generate the most important and talked-about news stories from the last 24 hours for that district, covering a mix of topics like politics, sports, and local events.
   3.  Generate a variety of news items from different plausible social media sources (X, Facebook, YouTube, DailyHunt).
   4.  For each article, create a realistic headline, detailed content (2-3 paragraphs), a valid-looking source URL, and a 2-word hint for image generation.
