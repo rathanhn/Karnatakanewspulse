@@ -165,6 +165,7 @@ export default function Home() {
 
   const handleCategoryChange = (category: Category) => {
     setSelectedCategory(category);
+    fetchNews(selectedDistrict, category);
   }
 
   if (!isMounted) {
@@ -383,7 +384,3 @@ export default function Home() {
     </div>
   );
 }
-
-    
-
-    
