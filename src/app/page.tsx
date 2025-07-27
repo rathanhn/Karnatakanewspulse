@@ -77,7 +77,7 @@ export default function Home() {
                 district,
                 category,
                 timestamp: new Date(),
-                imageUrls: [`https://placehold.co/600x400.png?text=${encodeURIComponent(article.headline)}`],
+                imageUrls: [`https://placehold.co/600x400.png`],
                 ...article,
             }));
             setNews(articles);
@@ -102,7 +102,7 @@ export default function Home() {
                 district: article.district || 'Karnataka',
                 category: 'Trending',
                 timestamp: new Date(),
-                imageUrls: [`https://placehold.co/600x400.png?text=${encodeURIComponent(article.headline)}`],
+                imageUrls: [`https://placehold.co/600x400.png`],
                 ...article,
             }));
             setHighlightedNews(articles);
@@ -461,3 +461,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
