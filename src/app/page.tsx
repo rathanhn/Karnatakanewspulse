@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DailyHuntIcon, FacebookIcon, KarnatakaMapIcon, XIcon, YouTubeIcon } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu } from 'lucide-react';
+import { Clock, Search, Eye, LinkIcon, RefreshCw, Newspaper, Menu, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { AiSummary } from '@/components/ai-summary';
 import { useToast } from '@/hooks/use-toast';
@@ -53,7 +53,7 @@ const NewsCardSkeleton = () => (
 
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
-  const [selectedDistrict, setSelectedDistrict] = useState<string>(karnatakaDistricts[0]);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [aiResult, setAiResult] = useState<RefineSearchSuggestionsOutput | null>(null);
   const [isAiLoading, startAiTransition] = useTransition();
@@ -93,11 +93,10 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
-    fetchNews(selectedDistrict, selectedCategory);
-  }, []); // Fetch on initial mount
+  }, []);
 
   useEffect(() => {
-    if (isMounted) {
+    if (isMounted && selectedDistrict) {
       fetchNews(selectedDistrict, selectedCategory);
     }
   }, [selectedDistrict, selectedCategory, fetchNews, isMounted]);
@@ -165,7 +164,16 @@ export default function Home() {
 
   const handleCategoryChange = (category: Category) => {
     setSelectedCategory(category);
-    fetchNews(selectedDistrict, category);
+    if (selectedDistrict) {
+        fetchNews(selectedDistrict, category);
+    }
+  }
+
+  const resetDistrict = () => {
+    setSelectedDistrict(null);
+    setNews([]);
+    setSearchTerm('');
+    setAiResult(null);
   }
 
   if (!isMounted) {
@@ -211,30 +219,36 @@ export default function Home() {
       </header>
       
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          <aside className="w-full md:w-80">
-            <Card className="shadow-lg sticky top-8">
-              <CardHeader>
-                <CardTitle className="font-headline">Filter & Search</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <label htmlFor="district-select" className="block text-sm font-medium mb-2">Select District</label>
-                  <Select value={selectedDistrict} onValueChange={handleDistrictChange}>
-                    <SelectTrigger id="district-select" className="w-full">
-                      <SelectValue placeholder="Select a district" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {karnatakaDistricts.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="relative">
+        {!selectedDistrict ? (
+            <div className="flex flex-col items-center justify-center pt-16">
+                <Card className="w-full max-w-md shadow-lg">
+                    <CardHeader>
+                        <CardTitle className="text-center font-headline text-2xl">Select a District</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                         <Select onValueChange={handleDistrictChange}>
+                            <SelectTrigger id="district-select" className="w-full text-lg h-12">
+                                <SelectValue placeholder="Choose your district to see news" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {karnatakaDistricts.map((district) => (
+                                <SelectItem key={district} value={district}>
+                                    {district}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </CardContent>
+                </Card>
+            </div>
+        ) : (
+          <main>
+             <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
+                <Button variant="outline" onClick={resetDistrict}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Change District
+                </Button>
+                <div className="relative w-full md:max-w-sm">
                   <Input
                     id="search-input"
                     type="text"
@@ -245,16 +259,12 @@ export default function Home() {
                   />
                   <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
-
-                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} disabled={isNewsLoading} className="w-full">
+                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} disabled={isNewsLoading} className="w-full md:w-auto">
                     <RefreshCw className={`w-4 h-4 mr-2 ${isNewsLoading ? 'animate-spin' : ''}`} />
-                    {isNewsLoading ? 'Refreshing News...' : 'Refresh News'}
+                    {isNewsLoading ? 'Refreshing...' : 'Refresh'}
                 </Button>
-              </CardContent>
-            </Card>
-          </aside>
+            </div>
 
-          <main className="flex-1">
              <AiSummary
               isLoading={isAiLoading}
               summary={aiResult?.summary ?? ''}
@@ -265,6 +275,8 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {isNewsLoading ? (
                  <>
+                    <NewsCardSkeleton />
+                    <NewsCardSkeleton />
                     <NewsCardSkeleton />
                     <NewsCardSkeleton />
                     <NewsCardSkeleton />
@@ -343,7 +355,7 @@ export default function Home() {
               )}
             </div>
           </main>
-        </div>
+        )}
       </div>
        {selectedArticle && (
         <Dialog open={!!selectedArticle} onOpenChange={(isOpen) => !isOpen && setSelectedArticle(null)}>
