@@ -77,7 +77,7 @@ export default function Home() {
                 district,
                 category,
                 timestamp: new Date(),
-                imageUrls: ['https://placehold.co/600x400.png'], // Always use placeholder for all sources
+                imageUrls: [`https://placehold.co/600x400.png?text=${encodeURIComponent(article.headline)}`],
                 ...article,
             }));
             setNews(articles);
@@ -102,7 +102,7 @@ export default function Home() {
                 district: article.district || 'Karnataka',
                 category: 'Trending',
                 timestamp: new Date(),
-                imageUrls: ['https://placehold.co/600x400.png'],
+                imageUrls: [`https://placehold.co/600x400.png?text=${encodeURIComponent(article.headline)}`],
                 ...article,
             }));
             setHighlightedNews(articles);
@@ -225,13 +225,8 @@ export default function Home() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Navigation</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                        <Link href="/">Home</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
                     <DropdownMenuLabel>Categories</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     {newsCategories.map((category) => (
                       <DropdownMenuItem key={category} onSelect={() => handleCategoryChange(category)}>
                         {category}
