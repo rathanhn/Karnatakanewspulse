@@ -42,7 +42,48 @@ export type GenerateNewsOutput = z.infer<typeof GenerateNewsOutputSchema>;
 export async function generateNews(
   input: GenerateNewsInput
 ): Promise<GenerateNewsOutput> {
-  return generateNewsFlow(input);
+  // Retry logic: Attempt to call the flow up to 3 times if it fails.
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      const result = await generateNewsFlow(input);
+      // If the AI returns an empty array for a specific district, it means no news was found.
+      // This is a valid success case, so we return it directly.
+      if (input.district !== 'Karnataka' && result.articles.length === 0) {
+        return result;
+      }
+      // If the AI returns articles, ensure they are correctly filtered for the requested district.
+      // This is a critical safeguard.
+      if (input.district !== 'Karnataka') {
+        const filteredArticles = result.articles.filter(
+          (article) => article.district === input.district
+        );
+        if (filteredArticles.length > 0) {
+          return { articles: filteredArticles };
+        }
+        // If after filtering no articles remain, it's considered a failed attempt for this loop.
+      } else {
+        // For state-wide search, if we get any articles, it's a success.
+        if (result.articles.length > 0) {
+          return result;
+        }
+      }
+    } catch (error) {
+      console.error(`Attempt ${attempts + 1} failed:`, error);
+      if (attempts >= 2) {
+        // If all attempts fail, re-throw the last error.
+        throw error;
+      }
+    }
+    attempts++;
+    // Optional: add a small delay between retries
+    if (attempts < 3) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+  // If the loop completes without returning, it means all attempts failed to find relevant news.
+  // Return an empty array to prevent errors on the frontend.
+  return { articles: [] };
 }
 
 const prompt = ai.definePrompt({
@@ -52,7 +93,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert Kannada news aggregator. Your primary role is to scan social media (X, Facebook, YouTube) and major Kannada news channels (e.g., TV9 Kannada, Public TV, Suvarna News, Prajavani, Udayavani) to find and report on real, verifiable, and recent events.
 
   **Crucial Instructions:**
-  1.  **District-Specific News ONLY**: If a specific 'district' is provided (e.g., 'Chikkaballapur'), you MUST find and generate news that has actually occurred in that specific district. Do not provide state-level news or news from other districts. If you cannot find any verifiable news for the selected district and category, you MUST return an empty array for 'articles'. This is a strict requirement.
+  1.  **District-Specific News ONLY**: If a specific 'district' is provided (e.g., 'Chikkaballapur'), you MUST find and generate news that has actually occurred in that specific district. Prioritize news about local governance, civic issues, protests, and significant local incidents. Do not provide state-level news or news from other districts. If you cannot find any verifiable news for the selected district and category, you MUST return an empty array for 'articles'. This is a strict requirement.
   2.  **State-Wide News**: If the 'district' is 'Karnataka', you must generate a diverse set of news articles from various districts across the state. For each article in this case, you MUST populate the 'district' field with the correct district name.
   3.  **No Invented News**: You must not invent news. All articles must be based on credible, recent events. The headlines and content must be in the Kannada language.
   4.  **Trending News**: If the 'category' is 'Trending', generate the most talked-about news from the last 24 hours for the specified location, covering a mix of relevant topics.
