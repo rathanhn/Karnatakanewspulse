@@ -4,7 +4,7 @@ import { GeneratedNewsArticle } from "@/ai/flows/generate-news";
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
 export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
-export const newsCategories: (Category | 'All')[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
+export const newsCategories: (Category)[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
 
 export type NewsArticle = GeneratedNewsArticle & {
   id: string;

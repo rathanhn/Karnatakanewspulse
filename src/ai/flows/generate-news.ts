@@ -65,7 +65,6 @@ const generateNewsFlow = ai.defineFlow(
     name: 'generateNewsFlow',
     inputSchema: GenerateNewsInputSchema,
     outputSchema: GenerateNewsOutputSchema,
-    retries: 3,
   },
   async input => {
     const {output} = await prompt(input);
