@@ -80,7 +80,7 @@ export default function Dashboard() {
                     category,
                     timestamp: new Date(),
                     ...article,
-                    district: article.district!, // Non-null assertion as we have filtered
+                    district: article.district!,
                 }));
             setNews(articles);
         } catch (error) {
@@ -452,3 +452,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
