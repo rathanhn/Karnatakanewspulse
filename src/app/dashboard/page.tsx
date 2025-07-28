@@ -1,14 +1,24 @@
-
+// src/app/dashboard/page.tsx
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import { ArticlesByCategoryChart } from '@/components/dashboard/articles-by-category-chart';
+import { ArticlesBySourceChart } from '@/components/dashboard/articles-by-source-chart';
+import { ArticlesOverTimeChart } from '@/components/dashboard/articles-over-time-chart';
+import { KarnatakaMapChart } from '@/components/dashboard/karnataka-map-chart';
+import { OverviewStats } from '@/components/dashboard/overview-stats';
+import { TopDistrictsChart } from '@/components/dashboard/top-districts-chart';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { KarnatakaMapIcon } from '@/components/icons';
-import { Menu, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-
+import { LogOut, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -23,42 +33,42 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="bg-background min-h-screen font-body text-foreground">
-      <header className="py-6 border-b border-border/50">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-            <div className="flex-1">
-                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                    <KarnatakaMapIcon className="w-10 h-10 waving-flag" />
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary">
-                        Karnataka News Pulse
-                    </h1>
-                </div>
-              <p className="text-muted-foreground font-headline text-lg text-center md:text-left">Your real-time district-wise news hub</p>
-            </div>
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                        <Menu className="h-6 w-6" />
-                        <span className="sr-only">Open menu</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+    <div className="min-h-screen w-full bg-background font-sans text-foreground">
+      <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <h1 className="text-2xl font-bold text-primary">
+            Karnataka District-wise News Pulse
+          </h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
-      
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center pt-8">
-            <h2 className="text-2xl font-headline">Dashboard is clear.</h2>
+      <main className="container mx-auto flex-1 space-y-8 p-4 md:p-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <OverviewStats />
         </div>
-      </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <KarnatakaMapChart />
+          <TopDistrictsChart />
+          <ArticlesByCategoryChart />
+          <ArticlesBySourceChart />
+          <ArticlesOverTimeChart />
+        </div>
+      </main>
     </div>
   );
 }
