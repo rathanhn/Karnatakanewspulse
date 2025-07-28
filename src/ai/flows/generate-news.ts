@@ -71,6 +71,14 @@ const generateNewsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
+    // Safeguard: Ensure district is populated correctly
+    if (output) {
+        output.articles.forEach(article => {
+            if (input.district !== 'Karnataka') {
+                article.district = input.district;
+            }
+        });
+    }
     return output!;
   }
 );

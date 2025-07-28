@@ -73,13 +73,15 @@ export default function Dashboard() {
     startNewsTransition(async () => {
         try {
             const result = await generateNews({ district, category });
-            const articles: NewsArticle[] = result.articles.map((article, index) => ({
-                id: `${district}-${category}-${index}-${Date.now()}`,
-                district,
-                category,
-                timestamp: new Date(),
-                ...article,
-            }));
+            const articles: NewsArticle[] = result.articles
+                .filter(article => district === 'Karnataka' || article.district === district)
+                .map((article, index) => ({
+                    id: `${district}-${category}-${index}-${Date.now()}`,
+                    district: article.district || district,
+                    category,
+                    timestamp: new Date(),
+                    ...article,
+                }));
             setNews(articles);
         } catch (error) {
             console.error("Failed to generate news:", error);
