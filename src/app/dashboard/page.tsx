@@ -65,6 +65,8 @@ export default function Dashboard() {
 
   const [highlightedNews, setHighlightedNews] = useState<NewsArticle[]>([]);
   const [isHighlightLoading, startHighlightTransition] = useTransition();
+  
+  const [districtNewsStatus, setDistrictNewsStatus] = useState<Record<string, boolean>>({});
 
   const { toast } = useToast();
   const router = useRouter();
@@ -74,7 +76,7 @@ export default function Dashboard() {
         try {
             const result = await generateNews({ district, category });
             const articles: NewsArticle[] = (result.articles || [])
-                .filter(article => article.district === district) // Strict filtering
+                .filter(article => article.district === district)
                 .map((article, index) => ({
                     id: `${district}-${category}-${index}-${Date.now()}`,
                     category,
@@ -88,7 +90,7 @@ export default function Dashboard() {
             toast({
                 variant: "destructive",
                 title: "AI Error",
-                description: "Failed to generate real-time news articles.",
+                description: "Failed to generate real-time news articles. The AI model may be overloaded.",
             });
             setNews([]);
         }
@@ -107,9 +109,19 @@ export default function Dashboard() {
                 ...article,
             }));
             setHighlightedNews(articles);
+            
+            // Update news status based on highlights
+            const status: Record<string, boolean> = {};
+            karnatakaDistricts.forEach(d => status[d] = false);
+            articles.forEach(article => {
+                if (article.district && status[article.district] !== undefined) {
+                    status[article.district] = true;
+                }
+            });
+            setDistrictNewsStatus(status);
+
         } catch (error) {
             console.error("Failed to generate highlighted news:", error);
-            // Don't show a toast for this, as it's a background feature
         }
     });
   }, []);
@@ -156,7 +168,7 @@ export default function Dashboard() {
         .filter(article => article.headline.toLowerCase().includes(query.toLowerCase()) || article.content.toLowerCase().includes(query.toLowerCase()))
         .map(a => `${a.headline}: ${a.content}`).join('\n\n');
 
-    if (searchResultsText.length < 50) { // Not enough content to summarize
+    if (searchResultsText.length < 50) { 
         return;
     }
 
@@ -164,7 +176,7 @@ export default function Dashboard() {
         try {
             const result = await refineSearchSuggestions({
                 initialQuery: query,
-                searchResults: searchResultsText.substring(0, 10000) // Limit context size
+                searchResults: searchResultsText.substring(0, 10000)
             });
             setAiResult(result);
         } catch (error) {
@@ -208,7 +220,6 @@ export default function Dashboard() {
   }
 
   const handleLogout = () => {
-    // In a real app, you'd clear session/token here
     toast({
       title: 'Logged out',
       description: 'You have been successfully logged out.',
@@ -273,7 +284,10 @@ export default function Dashboard() {
                             <SelectContent>
                                 {karnatakaDistricts.map((district) => (
                                 <SelectItem key={district} value={district}>
-                                    {district}
+                                    <div className="flex items-center gap-2">
+                                        <span className={`h-2 w-2 rounded-full ${districtNewsStatus[district] ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                                        <span>{district}</span>
+                                    </div>
                                 </SelectItem>
                                 ))}
                             </SelectContent>
@@ -452,3 +466,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
