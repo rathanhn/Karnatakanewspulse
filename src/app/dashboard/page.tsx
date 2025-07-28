@@ -19,6 +19,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { LogOut, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -49,6 +50,9 @@ export default function Dashboard() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
+               <DropdownMenuItem onSelect={() => router.push('/news')}>
+                View News Feed
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
@@ -62,11 +66,21 @@ export default function Dashboard() {
           <OverviewStats />
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <KarnatakaMapChart />
-          <TopDistrictsChart />
-          <ArticlesByCategoryChart />
-          <ArticlesBySourceChart />
-          <ArticlesOverTimeChart />
+          <Link href="/news" className="col-span-1 md:col-span-2 lg:col-span-2 block hover:opacity-80 transition-opacity">
+            <KarnatakaMapChart />
+          </Link>
+          <Link href="/news" className="col-span-1 md:col-span-2 lg:col-span-2 block hover:opacity-80 transition-opacity">
+            <TopDistrictsChart />
+          </Link>
+          <Link href="/news" className="col-span-1 md:col-span-2 lg:col-span-3 block hover:opacity-80 transition-opacity">
+            <ArticlesByCategoryChart />
+          </Link>
+          <Link href="/news" className="col-span-1 md:col-span-2 lg:col-span-4 block hover:opacity-80 transition-opacity">
+            <ArticlesBySourceChart />
+          </Link>
+          <Link href="/news" className="col-span-1 md:col-span-2 lg:col-span-3 block hover:opacity-80 transition-opacity">
+            <ArticlesOverTimeChart />
+          </Link>
         </div>
       </main>
     </div>

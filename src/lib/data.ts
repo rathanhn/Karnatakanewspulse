@@ -1,20 +1,17 @@
+// src/lib/data.ts
+import { GeneratedNewsArticle } from "@/ai/flows/generate-news";
+
 export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
 export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
-export const newsCategories: Category[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
+export const newsCategories: (Category | 'All')[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
 
-export type NewsArticle = {
+export type NewsArticle = GeneratedNewsArticle & {
   id: string;
-  district: string;
-  source: Source;
-  headline: string;
-  content: string;
   timestamp: Date;
-  url: string;
-  embedUrl?: string;
   category: Category;
-  'data-ai-hint'?: string;
 };
+
 
 export const karnatakaDistricts: string[] = [
   'Bagalkote',
