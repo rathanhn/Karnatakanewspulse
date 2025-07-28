@@ -128,12 +128,19 @@ export default function Dashboard() {
 
   const filteredNews = useMemo(() => {
     if (isNewsLoading) return [];
-    return news
-      .filter((article) =>
-        article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.content.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-  }, [news, searchTerm, isNewsLoading]);
+    if (!selectedDistrict) return [];
+    
+    let districtNews = news.filter(article => article.district === selectedDistrict);
+
+    if (searchTerm) {
+        return districtNews.filter(article =>
+            article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            article.content.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+    
+    return districtNews;
+  }, [news, selectedDistrict, searchTerm, isNewsLoading]);
 
   
   const handleSearch = (query: string) => {
@@ -446,5 +453,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-    
