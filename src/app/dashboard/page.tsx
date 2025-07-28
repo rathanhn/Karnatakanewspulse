@@ -74,13 +74,13 @@ export default function Dashboard() {
         try {
             const result = await generateNews({ district, category });
             const articles: NewsArticle[] = result.articles
-                .filter(article => article.district === district) // Strict filtering
+                .filter(article => article.district === district)
                 .map((article, index) => ({
                     id: `${district}-${category}-${index}-${Date.now()}`,
-                    district: article.district!, // Non-null assertion as we filtered
                     category,
                     timestamp: new Date(),
                     ...article,
+                    district: article.district!, // Non-null assertion as we have filtered
                 }));
             setNews(articles);
         } catch (error) {
@@ -90,7 +90,7 @@ export default function Dashboard() {
                 title: "AI Error",
                 description: "Failed to generate real-time news articles.",
             });
-            setNews([]); // Clear news on error
+            setNews([]);
         }
     });
   }, [toast]);
