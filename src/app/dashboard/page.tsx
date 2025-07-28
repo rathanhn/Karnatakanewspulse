@@ -74,7 +74,7 @@ export default function Dashboard() {
         try {
             const result = await generateNews({ district, category });
             const articles: NewsArticle[] = result.articles
-                .filter(article => district === 'Karnataka' || article.district === district)
+                .filter(article => article.district === district)
                 .map((article, index) => ({
                     id: `${district}-${category}-${index}-${Date.now()}`,
                     district: article.district || district,
@@ -446,3 +446,5 @@ export default function Dashboard() {
     </div>
   );
 }
+
+    
