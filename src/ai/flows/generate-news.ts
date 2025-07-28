@@ -1,3 +1,4 @@
+
 // src/ai/flows/generate-news.ts
 'use server';
 /**
@@ -71,7 +72,7 @@ const generateNewsFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    // Safeguard: Ensure district is populated correctly
+    // Safeguard: Ensure district is populated correctly for specific district requests.
     if (output) {
         output.articles.forEach(article => {
             if (input.district !== 'Karnataka') {

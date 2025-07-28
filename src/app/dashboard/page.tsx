@@ -129,15 +129,16 @@ export default function Dashboard() {
   const filteredNews = useMemo(() => {
     if (isNewsLoading || !selectedDistrict) return [];
 
-    // The news state is already pre-filtered, so we just apply search term
+    let newsToFilter = news;
+
     if (searchTerm) {
-        return news.filter(article =>
+        return newsToFilter.filter(article =>
             article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
             article.content.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
     
-    return news;
+    return newsToFilter;
   }, [news, selectedDistrict, searchTerm, isNewsLoading]);
 
   
