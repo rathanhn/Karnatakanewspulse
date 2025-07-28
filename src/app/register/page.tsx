@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
     // Redirect to login page after a short delay
     setTimeout(() => {
-      router.push('/login');
+      router.push('/');
     }, 1000); 
   };
 
@@ -85,7 +85,7 @@ export default function RegisterPage() {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href="/login" className="underline">
+            <Link href="/" className="underline">
               Sign in
             </Link>
           </div>
