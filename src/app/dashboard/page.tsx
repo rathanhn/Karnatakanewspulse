@@ -25,8 +25,8 @@ export default function Dashboard() {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleLogout = () => {
-    toast({
+  const handleLogout = async () => {
+    await toast({
       title: 'Logged out',
       description: 'You have been successfully logged out.',
     });
