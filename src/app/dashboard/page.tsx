@@ -74,10 +74,10 @@ export default function Dashboard() {
         try {
             const result = await generateNews({ district, category });
             const articles: NewsArticle[] = result.articles
-                .filter(article => article.district === district)
+                .filter(article => article.district === district) // Strict filtering
                 .map((article, index) => ({
                     id: `${district}-${category}-${index}-${Date.now()}`,
-                    district: article.district || district,
+                    district: article.district!, // Non-null assertion as we filtered
                     category,
                     timestamp: new Date(),
                     ...article,
@@ -127,19 +127,17 @@ export default function Dashboard() {
   }, [selectedDistrict, selectedCategory, fetchNews, isMounted]);
 
   const filteredNews = useMemo(() => {
-    if (isNewsLoading) return [];
-    if (!selectedDistrict) return [];
-    
-    let districtNews = news.filter(article => article.district === selectedDistrict);
+    if (isNewsLoading || !selectedDistrict) return [];
 
+    // The news state is already pre-filtered, so we just apply search term
     if (searchTerm) {
-        return districtNews.filter(article =>
+        return news.filter(article =>
             article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
             article.content.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
     
-    return districtNews;
+    return news;
   }, [news, selectedDistrict, searchTerm, isNewsLoading]);
 
   
