@@ -37,7 +37,7 @@ export default function LoginPage() {
             title: 'Login successful!',
             description: 'Welcome back.',
           });
-          router.push('/dashboard');
+          router.push('/home');
         }
       } catch (error: any) {
         toast({
@@ -62,7 +62,7 @@ export default function LoginPage() {
         title: 'Login successful!',
         description: 'Welcome back.',
       });
-      router.push('/dashboard');
+      router.push('/home');
     } catch (error: any) {
       toast({
         title: 'Login Failed',

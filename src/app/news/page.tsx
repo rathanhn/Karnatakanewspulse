@@ -129,7 +129,7 @@ function NewsContent() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
              <div className="flex items-center gap-2">
-                <Link href="/dashboard" className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                <Link href="/home" className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                     <KarnatakaMapIcon className="w-10 h-10"/>
                     <h1 className='hidden sm:block'>Karnataka News Pulse</h1>
                 </Link>
@@ -174,7 +174,7 @@ function NewsContent() {
               </Select>
             </form>
              <Button asChild variant="ghost">
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/home">Home</Link>
             </Button>
           </div>
         </div>

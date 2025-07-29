@@ -39,7 +39,7 @@ export default function RegisterPage() {
             title: 'Sign up successful!',
             description: 'Welcome!',
           });
-          router.push('/dashboard');
+          router.push('/home');
         }
       } catch (error: any) {
         toast({
@@ -68,7 +68,7 @@ export default function RegisterPage() {
         description: 'You have signed up successfully.',
       });
 
-      router.push('/dashboard');
+      router.push('/home');
     } catch (error: any) {
         toast({
             title: 'Registration Failed',
