@@ -1,17 +1,23 @@
 // src/lib/data.ts
-import { GeneratedNewsArticle } from "@/ai/flows/generate-news";
 
-export type Source = 'DailyHunt' | 'Facebook' | 'X' | 'YouTube';
+export type Source = string; // Can be any string from NewsData.io
 export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
 export const newsCategories: (Category)[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
 
-export type NewsArticle = GeneratedNewsArticle & {
+export interface NewsArticle {
   id: string;
+  headline: string;
+  content: string | null;
+  url: string;
+  imageUrl: string | null;
+  embedUrl?: string;
   timestamp: Date;
+  source: Source;
+  district: string;
   category: Category;
-};
-
+  'data-ai-hint'?: string;
+}
 
 export const karnatakaDistricts: string[] = [
   'Bagalkote',
@@ -46,6 +52,3 @@ export const karnatakaDistricts: string[] = [
   'Vijayapura',
   'Yadgir',
 ];
-
-// Mock data is no longer used for displaying news, but kept for type reference.
-export const mockNewsData: NewsArticle[] = [];

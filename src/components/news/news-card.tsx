@@ -25,6 +25,7 @@ import {
   FacebookIcon,
   XIcon,
   YouTubeIcon,
+  NewsIcon,
 } from '@/components/icons';
 import { ExternalLink, BookOpen } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -33,20 +34,14 @@ type NewsCardProps = {
   article: NewsArticle;
 };
 
-const SourceIcon = ({ source, className }: { source: NewsArticle['source'], className?: string }) => {
+const SourceIcon = ({ source, className }: { source: string, className?: string }) => {
   const props = { className: className || 'w-6 h-6' };
-  switch (source) {
-    case 'DailyHunt':
-      return <DailyHuntIcon {...props} />;
-    case 'Facebook':
-      return <FacebookIcon {...props} />;
-    case 'X':
-      return <XIcon {...props} />;
-    case 'YouTube':
-      return <YouTubeIcon {...props} />;
-    default:
-      return null;
-  }
+  const lowerSource = source.toLowerCase();
+  if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
+  if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
+  if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
+  if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
+  return <NewsIcon {...props} />;
 };
 
 export function NewsCard({ article }: NewsCardProps) {
@@ -57,18 +52,21 @@ export function NewsCard({ article }: NewsCardProps) {
     timeStyle: 'short',
   }).format(new Date(article.timestamp));
 
+  const imageUrl = article.imageUrl || `https://placehold.co/600x400.png`;
+
   return (
     <>
       <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 bg-card border-accent/20">
         <CardHeader>
            <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden">
              <Image
-                src={`https://placehold.co/600x400.png`}
+                src={imageUrl}
                 alt={article.headline}
                 data-ai-hint={article['data-ai-hint'] || 'news event'}
                 layout="fill"
                 objectFit="cover"
                 className="transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; }}
             />
             {article.embedUrl && (
                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -98,6 +96,7 @@ export function NewsCard({ article }: NewsCardProps) {
               variant="secondary"
               className="w-full"
               onClick={() => setIsDialogOpen(true)}
+              disabled={!article.content}
             >
               <BookOpen />
               Read More
@@ -145,11 +144,12 @@ export function NewsCard({ article }: NewsCardProps) {
             ) : (
                 <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
                     <Image
-                        src={`https://placehold.co/800x400.png`}
+                        src={imageUrl}
                         alt={article.headline}
                         data-ai-hint={article['data-ai-hint'] || 'news event'}
                         layout="fill"
                         objectFit="cover"
+                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400.png'; }}
                     />
                 </div>
             )}

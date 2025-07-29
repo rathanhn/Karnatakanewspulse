@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType } from '@/lib/data';
-import { generateNews, GeneratedNewsArticle } from '@/ai/flows/generate-news';
+import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category } from '@/lib/data';
+import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 export default function NewsPage() {
   const router = useRouter();
   const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
-  const [selectedCategory, setSelectedCategory] = useState('Trending');
+  const [selectedCategory, setSelectedCategory] = useState<Category>('Trending');
   const [searchTerm, setSearchTerm] = useState('');
   const [news, setNews] = useState<NewsArticleType[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
@@ -38,32 +38,14 @@ export default function NewsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await generateNews({
+      const result = await fetchNewsFromAPI({
         district: selectedDistrict,
         category: selectedCategory,
       });
-
-      const transformedNews = result.articles.map((article: GeneratedNewsArticle, index: number) => ({
-        ...article,
-        id: `${Date.now()}-${index}`,
-        timestamp: new Date(),
-        category: selectedCategory as NewsArticleType['category'],
-        // Ensure district is correctly assigned, especially for state-wide searches
-        district: article.district || selectedDistrict,
-      }));
-
-      // Strict filtering on the client-side as a final safeguard
-      const districtFilteredNews =
-        selectedDistrict === 'Karnataka'
-          ? transformedNews
-          : transformedNews.filter(
-              (article) => article.district === selectedDistrict
-            );
-      
-      setNews(districtFilteredNews);
+      setNews(result);
     } catch (err: any) {
       console.error('Error fetching news:', err);
-      setError('Failed to fetch news. The AI model may be overloaded. Please try again later.');
+      setError('Failed to fetch news. Please check your connection or API key and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +67,7 @@ export default function NewsPage() {
     const results = news.filter(
       (article) =>
         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
-        article.content.toLowerCase().includes(lowerCaseSearchTerm)
+        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
     );
     setFilteredNews(results);
 
@@ -164,7 +146,7 @@ export default function NewsPage() {
                   ))}
                 </SelectContent>
               </Select>
-               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+               <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)}>
                 <SelectTrigger className="w-[220px]">
                   <LayoutGrid className="w-5 h-5 mr-2" />
                   <SelectValue placeholder="Select Category" />
