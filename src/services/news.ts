@@ -31,6 +31,11 @@ const gNewsCategoryMapping: Record<Category, string | null> = {
     Entertainment: 'entertainment',
 };
 
+const isPaidPlanMessage = (text: string | null): boolean => {
+    if (!text) return false;
+    return text.toLowerCase().includes('only available in paid plans');
+}
+
 async function fetchFromNewsDataIO({ district, category, query }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
@@ -55,19 +60,22 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
     }
     const data = await response.json();
     if (data.status === 'success' && data.results) {
-      return data.results.map((item: any): NewsArticle => ({
-        id: item.article_id,
-        headline: item.title,
-        content: item.content || item.description || null,
-        url: item.link,
-        imageUrl: item.image_url,
-        embedUrl: item.video_url,
-        timestamp: new Date(item.pubDate),
-        source: item.source_id || 'Unknown Source',
-        district: district, // Tentative district
-        category: category,
-        'data-ai-hint': item.keywords ? item.keywords.join(' ') : item.title.split(' ').slice(0, 2).join(' '),
-      }));
+      return data.results.map((item: any): NewsArticle => {
+        const content = item.content || item.description;
+        return {
+            id: item.article_id,
+            headline: item.title,
+            content: isPaidPlanMessage(content) ? null : content,
+            url: item.link,
+            imageUrl: item.image_url,
+            embedUrl: item.video_url,
+            timestamp: new Date(item.pubDate),
+            source: item.source_id || 'Unknown Source',
+            district: district, // Tentative district
+            category: category,
+            'data-ai-hint': item.keywords ? item.keywords.join(' ') : item.title.split(' ').slice(0, 2).join(' '),
+        }
+      });
     }
     return [];
   } catch (error) {
@@ -99,18 +107,21 @@ async function fetchFromGNews({ district, category, query }: { district: string,
     }
     const data = await response.json();
     if (data.articles) {
-      return data.articles.map((item: any): NewsArticle => ({
-        id: item.url,
-        headline: item.title,
-        content: item.content || item.description || null,
-        url: item.url,
-        imageUrl: item.image,
-        timestamp: new Date(item.publishedAt),
-        source: item.source.name || 'Unknown Source',
-        district: district, // Tentative district
-        category: category,
-         'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
-      }));
+      return data.articles.map((item: any): NewsArticle => {
+        const content = item.content || item.description;
+        return {
+            id: item.url,
+            headline: item.title,
+            content: isPaidPlanMessage(content) ? null : content,
+            url: item.url,
+            imageUrl: item.image,
+            timestamp: new Date(item.publishedAt),
+            source: item.source.name || 'Unknown Source',
+            district: district, // Tentative district
+            category: category,
+            'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
+        }
+      });
     }
     return [];
   } catch (error) {
