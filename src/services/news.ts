@@ -4,11 +4,13 @@
 import { NewsArticle, Category } from '@/lib/data';
 import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, Timestamp, limit } from "firebase/firestore";
 
 interface FetchNewsOptions {
   district: string;
   category: Category;
+  limit?: number;
+  sources?: 'api' | 'user' | 'all';
 }
 
 const newsDataCategoryMapping: Record<Category, string | null> = {
@@ -134,7 +136,7 @@ async function fetchFromGNews({ district, category, query: queryParam }: { distr
   }
 }
 
-export async function fetchUserSubmittedNews({ district }: { district: string }): Promise<NewsArticle[]> {
+export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { district: string, limit?: number }): Promise<NewsArticle[]> {
     try {
         const newsCollection = collection(db, "news");
         
@@ -148,6 +150,10 @@ export async function fetchUserSubmittedNews({ district }: { district: string })
                where("district", "==", district), 
                orderBy("timestamp", "desc")
            );
+        }
+
+        if(queryLimit) {
+            q = query(q, limit(queryLimit));
         }
        
         const querySnapshot = await getDocs(q);
@@ -170,40 +176,51 @@ export async function fetchUserSubmittedNews({ district }: { district: string })
 /**
  * Fetches news from external APIs and combines it with user-submitted news.
  */
-export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  // 1. Fetch user-submitted news from Firestore. This happens for all categories.
-  const userArticles = await fetchUserSubmittedNews({ district });
+export async function fetchNewsFromAPI({ district, category, limit, sources = 'all' }: FetchNewsOptions): Promise<NewsArticle[]> {
+  
+  let userArticles: NewsArticle[] = [];
+  let uniqueApiArticles: NewsArticle[] = [];
+  
+  // 1. Fetch user-submitted news if requested
+  if (sources === 'all' || sources === 'user') {
+     userArticles = await fetchUserSubmittedNews({ district, limit });
+  }
 
   // 2. If the category is "User Submitted", we only return those articles.
   if (category === 'User Submitted') {
       return userArticles;
   }
-
-  // 3. Fetch from external APIs for other categories.
-  const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
   
-  const [newsDataArticles, gNewsArticles] = await Promise.all([
-    fetchFromNewsDataIO({ district, category, query }),
-    fetchFromGNews({ district, category, query }),
-  ]);
-  const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
+  // 3. Fetch from external APIs if requested
+  if (sources === 'all' || sources === 'api') {
+      const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
+      
+      const [newsDataArticles, gNewsArticles] = await Promise.all([
+        fetchFromNewsDataIO({ district, category, query }),
+        fetchFromGNews({ district, category, query }),
+      ]);
+      const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
 
-  // De-duplicate API articles based on URL
-  const uniqueArticlesMap = new Map<string, NewsArticle>();
-  for (const article of combinedApiArticles) {
-    if (article.url && !uniqueArticlesMap.has(article.url)) {
-      uniqueArticlesMap.set(article.url, article);
-    }
-  }
-  let uniqueApiArticles = Array.from(uniqueArticlesMap.values());
+      // De-duplicate API articles based on URL
+      const uniqueArticlesMap = new Map<string, NewsArticle>();
+      for (const article of combinedApiArticles) {
+        if (article.url && !uniqueArticlesMap.has(article.url)) {
+          uniqueArticlesMap.set(article.url, article);
+        }
+      }
+      uniqueApiArticles = Array.from(uniqueArticlesMap.values());
 
-  // Use AI to filter and ensure relevance to the district if there are articles.
-  if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
-      try {
-          const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
-          uniqueApiArticles = filteredResult.articles;
-      } catch (error) {
-          console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
+      // Use AI to filter and ensure relevance to the district if there are articles.
+      if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
+          try {
+              const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
+              uniqueApiArticles = filteredResult.articles;
+          } catch (error) {
+              console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
+          }
+      }
+      if (limit) {
+        uniqueApiArticles = uniqueApiArticles.slice(0, limit);
       }
   }
   

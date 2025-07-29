@@ -1,7 +1,7 @@
 // src/lib/data.ts
 import { z } from 'zod';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc } from "firebase/firestore";
 
 
 export type Source = string;
@@ -91,6 +91,42 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
     }
 };
 
+export const getNewsArticleById = async (id: string): Promise<NewsArticle | null> => {
+    try {
+        const docRef = doc(db, "news", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const timestamp = data.timestamp as Timestamp;
+            return {
+                ...data,
+                id: docSnap.id,
+                timestamp: timestamp ? timestamp.toDate() : new Date(),
+            } as NewsArticle;
+        } else {
+            console.log("No such document!");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error fetching document: ", error);
+        throw new Error("Could not fetch news article.");
+    }
+};
+
+export const updateUserNews = async (id: string, data: Partial<AddUserNewsData>) => {
+    try {
+        const docRef = doc(db, "news", id);
+        await updateDoc(docRef, {
+            ...data,
+            timestamp: serverTimestamp() // Optionally update timestamp on edit
+        });
+    } catch (error) {
+        console.error("Error updating document: ", error);
+        throw new Error("Could not update news article.");
+    }
+};
+
 export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArticle[]> => {
     try {
         const q = query(collection(db, "news"), where("userId", "==", userId), orderBy("timestamp", "desc"));
@@ -106,8 +142,6 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
         });
         return articles;
     } catch (e) {
-        console.error("Error fetching user news:", e);
-        // Fallback for when the index is not ready
          if (e instanceof Error && e.message.includes("The query requires an index")) {
             console.warn("Firestore index not found. Fetching without sorting. Please create the required index in the Firebase console.");
             const qWithoutSort = query(collection(db, "news"), where("userId", "==", userId));
@@ -124,6 +158,7 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
             // Manual sort in JS as a fallback
             return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         }
+        console.error("Error fetching user news:", e);
         throw e;
     }
 }

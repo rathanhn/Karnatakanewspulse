@@ -26,6 +26,7 @@ import {
 
 function PostCard({ post, onDelete }: { post: NewsArticle, onDelete: (id: string) => void }) {
     const { toast } = useToast();
+    const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
@@ -58,9 +59,11 @@ function PostCard({ post, onDelete }: { post: NewsArticle, onDelete: (id: string
                 <p className="line-clamp-3">{post.content}</p>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-                 <Button variant="outline" size="sm" disabled>
-                    <Edit className="mr-2" />
-                    Edit
+                 <Button variant="outline" size="sm" asChild>
+                    <Link href={`/news/edit/${post.id}`}>
+                        <Edit className="mr-2" />
+                        Edit
+                    </Link>
                 </Button>
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -160,7 +163,25 @@ export default function MyPostsPage() {
                 </div>
 
                 {isLoading ? (
-                    <p>Loading your posts...</p>
+                    <div className="grid gap-6">
+                        {[...Array(3)].map((_, i) => (
+                            <Card key={i}>
+                                <CardHeader>
+                                    <div className="h-6 bg-muted rounded w-3/4"></div>
+                                    <div className="h-4 bg-muted rounded w-1/2 mt-2"></div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                                    <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                                </CardContent>
+                                <CardFooter className="flex justify-end gap-2">
+                                    <div className="h-10 w-24 bg-muted rounded"></div>
+                                    <div className="h-10 w-24 bg-muted rounded"></div>
+                                </CardFooter>
+                            </Card>
+                        ))}
+                    </div>
                 ) : posts.length === 0 ? (
                     <div className="text-center py-16 border-2 border-dashed rounded-lg">
                         <h3 className="text-xl font-semibold">No posts yet!</h3>

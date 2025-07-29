@@ -7,10 +7,10 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
-import { fetchNewsFromAPI } from '@/services/news';
+import { fetchNewsFromAPI, fetchUserSubmittedNews } from '@/services/news';
 import { NewsArticle } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { Newspaper, Lightbulb, Map, BarChart } from 'lucide-react';
+import { Newspaper, Lightbulb, Map, BarChart, Users } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 
 const features = [
@@ -40,30 +40,43 @@ export default function SplashPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [latestNews, setLatestNews] = useState<NewsArticle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userNews, setUserNews] = useState<NewsArticle[]>([]);
+  const [isLatestLoading, setIsLatestLoading] = useState(true);
+  const [isUserNewsLoading, setIsUserNewsLoading] = useState(true);
+
 
   useEffect(() => {
-    const getLatestNews = async () => {
-      setIsLoading(true);
+    const getNews = async () => {
+      setIsLatestLoading(true);
+      setIsUserNewsLoading(true);
       try {
-        const news = await fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending' });
-        setLatestNews(news.slice(0, 4)); // Get top 4 articles
+        const [apiNews, communityNews] = await Promise.all([
+             fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending', sources: 'api', limit: 4 }),
+             fetchUserSubmittedNews({ district: 'Karnataka', limit: 4})
+        ]);
+        setLatestNews(apiNews);
+        setUserNews(communityNews);
       } catch (error) {
-        console.error("Failed to fetch latest news:", error);
+        console.error("Failed to fetch news:", error);
       } finally {
-        setIsLoading(false);
+        setIsLatestLoading(false);
+        setIsUserNewsLoading(false);
       }
     };
-    getLatestNews();
+    getNews();
   }, []);
 
-  const handleNewsClick = () => {
+  const handleNewsClick = (e: React.MouseEvent<HTMLDivElement>) => {
+     // Prevent navigation if a button inside the card was clicked
+    if ((e.target as HTMLElement).closest('button, a')) {
+      return;
+    }
     toast({
       title: 'Login Required',
       description: 'Please log in or register to read the full story.',
       variant: 'destructive',
     });
-    router.push('/');
+    router.push('/login');
   };
 
   return (
@@ -117,15 +130,39 @@ export default function SplashPage() {
           </div>
         </section>
 
+        {/* Community News Section */}
+        {(isUserNewsLoading || userNews.length > 0) && (
+            <section id="community-news" className="py-20 bg-card/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-3xl font-bold text-center mb-12 flex items-center justify-center gap-2">
+                    <Users />
+                    Community News
+                </h2>
+                <div
+                  className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+                   onClick={handleNewsClick}
+                >
+                  {isUserNewsLoading
+                    ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
+                    : userNews.map((article) => (
+                        <div key={article.id} className="cursor-pointer">
+                          <NewsCard article={article} />
+                        </div>
+                      ))}
+                </div>
+              </div>
+            </section>
+        )}
+
         {/* Latest News Section */}
-        <section id="latest-news" className="py-20 bg-card/50">
+        <section id="latest-news" className="py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Latest News Headlines</h2>
             <div
               className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
               onClick={handleNewsClick}
             >
-              {isLoading
+              {isLatestLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : latestNews.map((article) => (
                     <div key={article.id} className="cursor-pointer">
