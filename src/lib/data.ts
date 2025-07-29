@@ -93,10 +93,9 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
 
 export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArticle[]> => {
     try {
-        // The orderBy clause was removed temporarily to prevent a crash.
         // A composite index is required in Firestore to filter by one field (userId) and order by another (timestamp).
         // The user must create this index in the Firebase console using the link from the error message.
-        const q = query(collection(db, "news"), where("userId", "==", userId));
+        const q = query(collection(db, "news"), where("userId", "==", userId), orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         const articles = querySnapshot.docs.map(doc => {
             const data = doc.data();
@@ -106,12 +105,21 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
                 timestamp: data.timestamp?.toDate() || new Date(),
             } as NewsArticle;
         });
-        // Once the index is created, re-add `orderBy("timestamp", "desc")` to the query
-        // and remove this manual sort.
-        return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        return articles;
     } catch (e) {
         console.error("Error fetching user news:", e);
-        return [];
+        // Fallback for when the index is not ready
+        const qWithoutSort = query(collection(db, "news"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(qWithoutSort);
+        const articles = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                timestamp: data.timestamp?.toDate() || new Date(),
+            } as NewsArticle;
+        });
+        return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }
 }
 

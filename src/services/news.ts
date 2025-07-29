@@ -136,18 +136,14 @@ async function fetchFromGNews({ district, category, query: queryParam }: { distr
 
 async function fetchUserSubmittedNews({ district }: { district: string }): Promise<NewsArticle[]> {
     try {
-        let q;
         const newsCollection = collection(db, "news");
-
-        // Base query for user submitted news
-        const baseConditions = [where('category', '==', 'User Submitted')];
         
-        // Add district filtering if not 'All Karnataka'
+        let conditions = [where('category', '==', 'User Submitted')];
         if (district !== 'Karnataka') {
-           baseConditions.push(where("district", "==", district));
+           conditions.push(where("district", "==", district));
         }
 
-        q = query(newsCollection, ...baseConditions, orderBy("timestamp", "desc"));
+        const q = query(newsCollection, ...conditions, orderBy("timestamp", "desc"));
        
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => {
@@ -167,17 +163,18 @@ async function fetchUserSubmittedNews({ district }: { district: string }): Promi
 
 
 /**
- * Fetches news, de-duplicates, and then uses AI to filter for relevance.
- * User-submitted news is prioritized and always shown at the top.
+ * Fetches news from all sources. User-submitted news is always fetched and prioritized.
+ * API news is fetched based on the selected category and then filtered by the AI for relevance.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
   // 1. Always fetch user-submitted news for the selected district.
   const userNews = await fetchUserSubmittedNews({ district });
 
-  // 2. Fetch from external APIs only if the category is not "User Submitted".
+  // 2. Fetch from external APIs, unless the category is specifically "User Submitted".
   let apiArticles: NewsArticle[] = [];
   if (category !== 'User Submitted') {
     const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
+    
     const [newsDataArticles, gNewsArticles] = await Promise.all([
       fetchFromNewsDataIO({ district, category, query }),
       fetchFromGNews({ district, category, query }),
