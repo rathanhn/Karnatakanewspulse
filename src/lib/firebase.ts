@@ -9,7 +9,8 @@ const firebaseConfig = {
   storageBucket: "karnataka-news-pulse.firebasestorage.app",
   apiKey: "AIzaSyC1j8TG72O6K-ibOEdruCeLYQ8CBgacfB0",
   authDomain: "karnataka-news-pulse.firebaseapp.com",
-  messagingSenderId: "943034602473"
+  messagingSenderId: "943034602473",
+  measurementId: "G-XXXXXXXXXX" // Placeholder, replace with your actual Measurement ID from Firebase Console
 };
 
 
