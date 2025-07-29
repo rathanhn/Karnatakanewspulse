@@ -73,6 +73,7 @@ interface AddUserNewsData {
     district: string;
     userId: string;
     imageUrl?: string | null;
+    category: Category;
 }
 
 export const addUserNews = async (articleData: AddUserNewsData) => {
@@ -81,7 +82,6 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
             ...articleData,
             timestamp: serverTimestamp(),
             source: 'User Submitted',
-            category: 'User Submitted',
             url: '#', // User-submitted articles don't have an external source URL
         });
         return { ...articleData, id: docRef.id, timestamp: new Date() };

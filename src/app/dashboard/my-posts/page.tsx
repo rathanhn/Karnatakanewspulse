@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Badge } from '@/components/ui/badge';
 
 function PostCard({ post, onDelete }: { post: NewsArticle, onDelete: (id: string) => void }) {
     const { toast } = useToast();
@@ -50,7 +51,10 @@ function PostCard({ post, onDelete }: { post: NewsArticle, onDelete: (id: string
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{post.headline}</CardTitle>
+                <div className="flex justify-between items-start">
+                    <CardTitle>{post.headline}</CardTitle>
+                    <Badge variant="outline">{post.category}</Badge>
+                </div>
                 <CardDescription>
                     {post.district} - Published on {formattedDate}
                 </CardDescription>

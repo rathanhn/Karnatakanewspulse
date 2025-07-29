@@ -11,11 +11,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { karnatakaDistricts, getNewsArticleById, updateUserNews, NewsArticle } from '@/lib/data';
+import { karnatakaDistricts, getNewsArticleById, updateUserNews, NewsArticle, newsCategories, Category } from '@/lib/data';
 import { ArrowLeft, Send } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+
+const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
 export default function EditNewsPage() {
     const { toast } = useToast();
@@ -28,6 +30,7 @@ export default function EditNewsPage() {
     const [headline, setHeadline] = useState('');
     const [content, setContent] = useState('');
     const [district, setDistrict] = useState('');
+    const [category, setCategory] = useState<Category | ''>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -61,6 +64,7 @@ export default function EditNewsPage() {
                     setHeadline(fetchedPost.headline);
                     setContent(fetchedPost.content || '');
                     setDistrict(fetchedPost.district);
+                    setCategory(fetchedPost.category);
                 } else {
                     setError("Post not found.");
                      toast({ title: "Error", description: "The requested post could not be found.", variant: "destructive"});
@@ -82,14 +86,14 @@ export default function EditNewsPage() {
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!headline || !content || !district) {
+        if (!headline || !content || !district || !category) {
             toast({ title: 'Missing fields', description: 'Please fill out all fields.', variant: 'destructive'});
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await updateUserNews(id, { headline, content, district });
+            await updateUserNews(id, { headline, content, district, category });
             toast({ title: 'Post Updated!', description: 'Your changes have been saved successfully.'});
             router.push('/dashboard/my-posts');
         } catch (error) {
@@ -153,18 +157,33 @@ export default function EditNewsPage() {
                                     disabled={isSubmitting}
                                 />
                             </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="district">District</Label>
-                                <Select onValueChange={setDistrict} value={district} required disabled={isSubmitting}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select the relevant district" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {karnatakaDistricts.filter(d => d !== 'Karnataka').map(d => (
-                                            <SelectItem key={d} value={d}>{d}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="district">District</Label>
+                                    <Select onValueChange={setDistrict} value={district} required disabled={isSubmitting}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select the relevant district" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {karnatakaDistricts.filter(d => d !== 'Karnataka').map(d => (
+                                                <SelectItem key={d} value={d}>{d}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                     <Label htmlFor="category">Category</Label>
+                                    <Select onValueChange={(value) => setCategory(value as Category)} value={category} required disabled={isSubmitting}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a news category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {userSelectableCategories.map(c => (
+                                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="content">Content</Label>

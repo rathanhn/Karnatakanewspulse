@@ -11,11 +11,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { karnatakaDistricts, addUserNews } from '@/lib/data';
+import { karnatakaDistricts, addUserNews, newsCategories, Category } from '@/lib/data';
 import { ArrowLeft, Send, Upload, Loader2, CheckCircle } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+
+const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
 export default function CreateNewsPage() {
     const { toast } = useToast();
@@ -24,6 +26,7 @@ export default function CreateNewsPage() {
     const [headline, setHeadline] = useState('');
     const [content, setContent] = useState('');
     const [district, setDistrict] = useState('');
+    const [category, setCategory] = useState<Category | ''>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Cloudinary state
@@ -60,49 +63,27 @@ export default function CreateNewsPage() {
         }
         setUploading(true);
 
-        // =================================================================
-        // IMPORTANT: SECURE UPLOAD LOGIC
-        // =================================================================
-        // In a production app, you should NOT upload directly from the client
-        // using your API secret. Instead, this should be a call to YOUR OWN
-        // backend API endpoint.
-        //
-        // Your backend would:
-        // 1. Receive the file or a request to upload.
-        // 2. Use the Cloudinary Node.js SDK (or other server-side SDK).
-        // 3. Securely sign the request with your API_SECRET.
-        // 4. Upload the file to Cloudinary.
-        // 5. Return the secure URL to the client.
-        //
-        // The code below is a CLIENT-SIDE ONLY example for prototyping and
-        // WILL EXPOSE YOUR CREDENTIALS if not configured properly.
-        // =================================================================
-
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', 'YOUR_UNSIGNED_UPLOAD_PRESET'); // IMPORTANT: Create an UNSIGNED upload preset in Cloudinary settings
+        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
 
         try {
-            // Replace this with a fetch to YOUR backend endpoint
-            // For example: const response = await fetch('/api/upload', { method: 'POST', body: formData });
-            
-            // This is a placeholder and will not work without a backend or an UNSIGNED preset.
-            // Using an unsigned preset is less secure but can work for prototyping.
-            toast({
-                title: "Image Upload (Placeholder)",
-                description: "This is where you would call your secure backend to upload the image.",
-                variant: 'default',
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: 'POST',
+                body: formData,
             });
-            // SIMULATING A SUCCESSFUL UPLOAD FOR UI PURPOSES
-            // In a real app, you would get this URL from your backend's response.
-            const simulatedUrl = URL.createObjectURL(file);
-            setUploadedUrl(simulatedUrl);
-             toast({ title: "Upload Successful!", description: "Image is ready to be submitted with your post." });
+            const data = await response.json();
+            
+            if(data.secure_url) {
+                setUploadedUrl(data.secure_url);
+                toast({ title: "Upload Successful!", description: "Image is ready to be submitted with your post." });
+            } else {
+                 throw new Error(data.error.message || 'Unknown error during upload.');
+            }
 
-
-        } catch (error) {
+        } catch (error: any) {
             console.error('Upload error:', error);
-            toast({ title: 'Upload Failed', description: 'Could not upload the image.', variant: 'destructive'});
+            toast({ title: 'Upload Failed', description: error.message || 'Could not upload the image.', variant: 'destructive'});
         } finally {
             setUploading(false);
         }
@@ -110,10 +91,10 @@ export default function CreateNewsPage() {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (!headline || !content || !district || !user) {
+        if (!headline || !content || !district || !category || !user) {
             toast({
                 title: 'Missing fields',
-                description: 'Please fill out all fields and ensure you are logged in.',
+                description: 'Please fill out all fields, including category.',
                 variant: 'destructive',
             });
             return;
@@ -126,8 +107,9 @@ export default function CreateNewsPage() {
                 headline,
                 content,
                 district,
+                category,
                 userId: user.uid,
-                imageUrl: uploadedUrl // Pass the uploaded image URL
+                imageUrl: uploadedUrl
             });
 
             toast({
@@ -182,18 +164,33 @@ export default function CreateNewsPage() {
                                     disabled={isSubmitting}
                                 />
                             </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="district">District</Label>
-                                <Select onValueChange={setDistrict} value={district} required disabled={isSubmitting}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select the relevant district" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {karnatakaDistricts.filter(d => d !== 'Karnataka').map(d => (
-                                            <SelectItem key={d} value={d}>{d}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="district">District</Label>
+                                    <Select onValueChange={setDistrict} value={district} required disabled={isSubmitting}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select the relevant district" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {karnatakaDistricts.filter(d => d !== 'Karnataka').map(d => (
+                                                <SelectItem key={d} value={d}>{d}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="category">Category</Label>
+                                    <Select onValueChange={(value) => setCategory(value as Category)} value={category} required disabled={isSubmitting}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a news category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {userSelectableCategories.map(c => (
+                                                <SelectItem key={c} value={c}>{c}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="content">Content</Label>
@@ -220,11 +217,13 @@ export default function CreateNewsPage() {
                                     </Label>
                                     <Button type="button" onClick={handleUpload} disabled={!file || uploading || !!uploadedUrl}>
                                         {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                                        <span>{uploadedUrl ? "Uploaded" : "Upload"}</span>
+                                        <span>{uploading ? "Uploading" : (uploadedUrl ? "Uploaded" : "Upload")}</span>
                                     </Button>
                                 </div>
                                 {uploadedUrl && <div className='text-sm text-green-500 flex items-center gap-2'><CheckCircle className='w-4 h-4'/> Image is ready.</div>}
-                                <p className="text-xs text-muted-foreground">For security, image uploads must be handled by a backend service.</p>
+                                 <p className="text-xs text-muted-foreground">
+                                    For security, an unsigned upload preset must be configured in your Cloudinary account.
+                                </p>
                             </div>
                            
                             <Button type="submit" className="w-full" size="lg" disabled={isSubmitting || uploading}>
