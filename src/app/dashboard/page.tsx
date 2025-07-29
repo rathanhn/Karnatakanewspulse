@@ -31,18 +31,32 @@ import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
 import { NewsArticle, karnatakaDistricts, Category } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function Dashboard() {
   const { toast } = useToast();
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
   const [recommendedNews, setRecommendedNews] = useState<NewsArticle[]>([]);
   const [trendingNews, setTrendingNews] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        router.push('/login');
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
 
   useEffect(() => {
     const getNews = async () => {
@@ -69,11 +83,20 @@ export default function Dashboard() {
   }, [toast]);
   
   const handleLogout = async () => {
-    await toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out.',
-    });
-    router.push('/');
+    try {
+        await signOut(auth);
+        toast({
+          title: 'Logged out',
+          description: 'You have been successfully logged out.',
+        });
+        router.push('/login');
+    } catch(error) {
+         toast({
+          title: 'Logout Error',
+          description: 'Could not log you out. Please try again.',
+          variant: 'destructive'
+        });
+    }
   };
   
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -116,6 +139,11 @@ export default function Dashboard() {
                   <PlusCircle className="mr-2 h-4 w-4" />
                   <span>Create Post</span>
                 </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => router.push('/dashboard/my-posts')}>
+                  <Newspaper className="mr-2 h-4 w-4" />
+                  <span>My Posts</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Logout</span>

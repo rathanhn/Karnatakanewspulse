@@ -1,8 +1,10 @@
 // src/services/news.ts
 'use server';
 
-import { NewsArticle, Category, userSubmittedNews } from '@/lib/data';
+import { NewsArticle, Category } from '@/lib/data';
 import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, orderBy, Timestamp } from "firebase/firestore";
 
 interface FetchNewsOptions {
   district: string;
@@ -38,7 +40,7 @@ const isPaidPlanMessage = (text: string | null): boolean => {
     return text.toLowerCase().includes('only available in paid plans');
 }
 
-async function fetchFromNewsDataIO({ district, category, query }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
+async function fetchFromNewsDataIO({ district, category, query: queryParam }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
     console.warn('NewsData.io API key is not configured. Skipping fetch.');
@@ -47,7 +49,7 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
 
   const apiCategory = newsDataCategoryMapping[category];
   // Use qInTitle to comply with potential free plan limitations
-  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&qInTitle=${encodeURIComponent(query)}&language=kn,en`;
+  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&qInTitle=${encodeURIComponent(queryParam)}&language=kn,en`;
   if (apiCategory) {
       url += `&category=${apiCategory}`;
   }
@@ -86,7 +88,7 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
   }
 }
 
-async function fetchFromGNews({ district, category, query }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
+async function fetchFromGNews({ district, category, query: queryParam }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
   const apiKey = process.env.GNEWS_API_KEY;
   if (!apiKey) {
     console.warn('GNews API key is not configured. Skipping fetch.');
@@ -94,7 +96,7 @@ async function fetchFromGNews({ district, category, query }: { district: string,
   }
 
   const apiCategory = gNewsCategoryMapping[category];
-  let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&apikey=${apiKey}&lang=en&country=in&max=10`;
+  let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(queryParam)}&apikey=${apiKey}&lang=en&country=in&max=10`;
   
   if (apiCategory) {
       url += `&topic=${apiCategory}`;
@@ -132,16 +134,53 @@ async function fetchFromGNews({ district, category, query }: { district: string,
   }
 }
 
+async function fetchUserSubmittedNews({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
+    try {
+        let q;
+        const newsCollection = collection(db, "news");
+
+        if (district === 'Karnataka') {
+            // Fetch all user-submitted news if 'All Karnataka' is selected
+             q = query(newsCollection, 
+                where('category', '==', 'User Submitted'),
+                orderBy("timestamp", "desc")
+            );
+        } else {
+            // Fetch news for the specific district
+            q = query(newsCollection, 
+                where("district", "==", district),
+                where('category', '==', 'User Submitted'),
+                orderBy("timestamp", "desc")
+            );
+        }
+       
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const timestamp = data.timestamp as Timestamp;
+            return {
+                ...data,
+                id: doc.id,
+                timestamp: timestamp ? timestamp.toDate() : new Date(),
+            } as NewsArticle;
+        });
+    } catch (error) {
+        console.error("Error fetching user submitted news from Firestore:", error);
+        return [];
+    }
+}
+
+
 /**
  * Fetches news, de-duplicates, and then uses AI to filter for relevance.
  * User-submitted news is prioritized and always shown at the top.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  // 1. Handle User Submitted News separately to prioritize it.
-  const relevantUserNews = userSubmittedNews.filter(article => 
-      (district === 'Karnataka' || article.district === district) &&
-      (category === 'User Submitted' || category === 'Trending' || category === 'General') // Show user news in general feeds
-  );
+  // 1. Fetch User Submitted News from Firestore
+  let relevantUserNews: NewsArticle[] = [];
+  if (category === 'User Submitted' || category === 'Trending' || category === 'General') {
+    relevantUserNews = await fetchUserSubmittedNews({ district, category });
+  }
 
   // 2. Fetch from external APIs only if the category is not exclusively "User Submitted".
   let apiArticles: NewsArticle[] = [];
@@ -177,7 +216,7 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
 
   // 3. Combine and sort
   // User news comes first, then API news sorted by date.
-  const sortedApiArticles = apiArticles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  const sortedApiArticles = apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
   // By placing relevantUserNews first, we ensure it's at the top.
   const finalArticles = [...relevantUserNews, ...sortedApiArticles];

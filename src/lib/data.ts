@@ -1,5 +1,8 @@
 // src/lib/data.ts
 import { z } from 'zod';
+import { db } from './firebase';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc } from "firebase/firestore";
+
 
 export type Source = string;
 export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment', 'User Submitted'] as const;
@@ -12,11 +15,13 @@ export const NewsArticleSchema = z.object({
   url: z.string(),
   imageUrl: z.string().nullable(),
   embedUrl: z.string().optional(),
-  timestamp: z.coerce.date(),
+  timestamp: z.any(), // Firestore timestamp is not a JS Date initially
   source: z.string(),
   district: z.string(),
   category: z.enum(newsCategories),
   'data-ai-hint': z.string().optional(),
+  // For user-submitted posts
+  userId: z.string().optional(), 
 });
 
 export type NewsArticle = z.infer<typeof NewsArticleSchema>;
@@ -59,19 +64,56 @@ export const karnatakaDistrictsTuple = [
 
 export const karnatakaDistricts: string[] = [...karnatakaDistrictsTuple];
 
-// This is a temporary, in-memory store for user-submitted articles.
-// In a real application, this would be a database like Firestore.
-export const userSubmittedNews: NewsArticle[] = [];
 
-export const addUserNews = (article: Omit<NewsArticle, 'id' | 'timestamp' | 'source' | 'category' | 'url'>) => {
-    const newArticle: NewsArticle = {
-        ...article,
-        id: `user-${new Date().toISOString()}`,
-        timestamp: new Date(),
-        source: 'User Submitted',
-        category: 'User Submitted',
-        url: '#', // User-submitted articles don't have an external source URL
-    };
-    userSubmittedNews.unshift(newArticle); // Add to the beginning of the array
-    return newArticle;
+// --- Firestore Functions for User Submitted News ---
+
+interface AddUserNewsData {
+    headline: string;
+    content: string;
+    district: string;
+    userId: string;
+    imageUrl?: string | null;
+}
+
+export const addUserNews = async (articleData: AddUserNewsData) => {
+    try {
+        const docRef = await addDoc(collection(db, "news"), {
+            ...articleData,
+            timestamp: serverTimestamp(),
+            source: 'User Submitted',
+            category: 'User Submitted',
+            url: '#', // User-submitted articles don't have an external source URL
+        });
+        return { ...articleData, id: docRef.id, timestamp: new Date() };
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        throw new Error("Could not submit news article.");
+    }
+};
+
+export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArticle[]> => {
+    try {
+        const q = query(collection(db, "news"), where("userId", "==", userId), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                ...data,
+                id: doc.id,
+                timestamp: data.timestamp?.toDate() || new Date(),
+            } as NewsArticle;
+        });
+    } catch (e) {
+        console.error("Error fetching user news:", e);
+        return [];
+    }
+}
+
+export const deleteUserNews = async (postId: string): Promise<void> => {
+    try {
+        await deleteDoc(doc(db, "news", postId));
+    } catch (e) {
+        console.error("Error deleting document: ", e);
+        throw new Error("Could not delete post.");
+    }
 }
