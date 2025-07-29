@@ -1,7 +1,7 @@
 // src/app/login/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 
 export default function LoginPage() {
   const { toast } = useToast();
@@ -25,6 +25,33 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    const checkRedirect = async () => {
+      setIsLoading(true); // Use main loading state for redirect check
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          toast({
+            title: 'Login successful!',
+            description: 'Welcome back.',
+          });
+          router.push('/dashboard');
+        }
+      } catch (error: any) {
+        toast({
+          title: 'Google Login Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    checkRedirect();
+  }, [router, toast]);
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,24 +75,9 @@ export default function LoginPage() {
   };
   
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    setIsGoogleLoading(true);
     const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup(auth, provider);
-        toast({
-            title: 'Login successful!',
-            description: 'Welcome back.',
-        });
-        router.push('/dashboard');
-    } catch (error: any) {
-        toast({
-            title: 'Google Login Failed',
-            description: error.message,
-            variant: 'destructive',
-        });
-    } finally {
-        setIsLoading(false);
-    }
+    await signInWithRedirect(auth, provider);
   }
 
   return (
@@ -92,7 +104,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  disabled={isLoading || isGoogleLoading}
                 />
               </div>
               <div className="grid gap-2">
@@ -111,14 +123,14 @@ export default function LoginPage() {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
+                    disabled={isLoading || isGoogleLoading}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
                 {isLoading ? 'Logging in...' : 'Login'}
               </Button>
-              <Button variant="outline" className="w-full" type="button" onClick={handleGoogleLogin} disabled={isLoading}>
-                Login with Google
+              <Button variant="outline" className="w-full" type="button" onClick={handleGoogleLogin} disabled={isLoading || isGoogleLoading}>
+                {isGoogleLoading ? 'Redirecting to Google...' : 'Login with Google'}
               </Button>
             </div>
           </form>
