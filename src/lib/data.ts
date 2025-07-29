@@ -1,12 +1,25 @@
 // src/lib/data.ts
 import { z } from 'zod';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch } from "firebase/firestore";
 
 
 export type Source = string;
 export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment', 'User Submitted'] as const;
 export type Category = (typeof newsCategories)[number];
+
+export const UserProfileSchema = z.object({
+    uid: z.string(),
+    displayName: z.string().nullable(),
+    email: z.string(),
+    photoURL: z.string().url().nullable(),
+    preferredDistrict: z.string().optional(),
+    preferredCategory: z.enum(newsCategories).optional(),
+    notifications: z.boolean().optional().default(true),
+});
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
 
 export const NewsArticleSchema = z.object({
   id: z.string(),
@@ -63,6 +76,51 @@ export const karnatakaDistrictsTuple = [
 
 
 export const karnatakaDistricts: string[] = [...karnatakaDistrictsTuple];
+
+
+// --- Firestore Functions for User Profiles ---
+
+export const createUserProfile = async (uid: string, data: Omit<UserProfile, 'uid'>) => {
+    try {
+        const userDocRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userDocRef);
+        if (!docSnap.exists()) {
+            await setDoc(userDocRef, {
+                uid,
+                ...data,
+                displayName: data.displayName || 'Anonymous',
+                photoURL: data.photoURL || null,
+            });
+        }
+    } catch(error) {
+        console.error("Error creating user profile: ", error);
+        // We don't throw here to not block the login flow
+    }
+}
+
+export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+    try {
+        const userDocRef = doc(db, 'users', uid);
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as UserProfile;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        throw new Error("Could not fetch user profile.");
+    }
+};
+
+export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
+    try {
+        const userDocRef = doc(db, 'users', uid);
+        await updateDoc(userDocRef, data);
+    } catch (error) {
+        console.error("Error updating user profile:", error);
+        throw new Error("Could not update user profile.");
+    }
+};
 
 
 // --- Firestore Functions for User Submitted News ---
@@ -171,3 +229,23 @@ export const deleteUserNews = async (postId: string): Promise<void> => {
         throw new Error("Could not delete post.");
     }
 }
+
+export const deleteAllUserPosts = async (userId: string): Promise<void> => {
+    try {
+        // Find all posts by the user
+        const q = query(collection(db, "news"), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+        
+        // Create a batch to delete all documents
+        const batch = writeBatch(db);
+        querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        
+        // Commit the batch
+        await batch.commit();
+    } catch (e) {
+        console.error("Error deleting all user posts: ", e);
+        throw new Error("Could not delete all posts.");
+    }
+};

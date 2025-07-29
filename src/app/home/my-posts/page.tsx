@@ -81,7 +81,7 @@ function PostCard({ post, onDelete }: { post: NewsArticle, onDelete: (id: string
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This action cannot be undone. This will permanently delete your post.
-                        </-AlertDialogDescription>
+                        </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>

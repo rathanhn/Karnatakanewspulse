@@ -29,18 +29,21 @@ import { Input } from '@/components/ui/input';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
-import { NewsArticle, karnatakaDistricts, Category } from '@/lib/data';
+import { NewsArticle, karnatakaDistricts, Category, UserProfile, getUserProfile } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper, Settings } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 export default function HomePage() {
   const { toast } = useToast();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recommendedNews, setRecommendedNews] = useState<NewsArticle[]>([]);
   const [trendingNews, setTrendingNews] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,9 +51,17 @@ export default function HomePage() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        // Fetch user profile
+        try {
+            const profile = await getUserProfile(currentUser.uid);
+            setUserProfile(profile);
+            setSelectedDistrict(profile?.preferredDistrict || 'Karnataka');
+        } catch (error) {
+            console.error("Failed to fetch user profile", error);
+        }
       } else {
         router.push('/login');
       }
@@ -64,7 +75,7 @@ export default function HomePage() {
       try {
         const [trending, recommended] = await Promise.all([
           fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending' }),
-          fetchNewsFromAPI({ district: 'Bengaluru Urban', category: 'General' }), // Placeholder for recommendation
+          fetchNewsFromAPI({ district: userProfile?.preferredDistrict || 'Bengaluru Urban', category: userProfile?.preferredCategory || 'General' }),
         ]);
         setTrendingNews(trending.slice(0, 4));
         setRecommendedNews(recommended.slice(0, 4));
@@ -79,8 +90,10 @@ export default function HomePage() {
         setIsLoading(false);
       }
     };
-    getNews();
-  }, [toast]);
+    if(user) {
+        getNews();
+    }
+  }, [toast, user, userProfile]);
   
   const handleLogout = async () => {
     try {
@@ -106,6 +119,11 @@ export default function HomePage() {
       const district = selectedDistrict;
       router.push(`/news?q=${searchTerm}&district=${district}`);
   }
+  
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('');
+  }
 
   return (
     <div className="min-h-screen w-full bg-background font-sans text-foreground">
@@ -124,24 +142,30 @@ export default function HomePage() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Open user menu</span>
+                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                        <AvatarImage src={userProfile?.photoURL || ''} alt={userProfile?.displayName || 'User'} />
+                        <AvatarFallback>{getInitials(userProfile?.displayName)}</AvatarFallback>
+                    </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                    <p className="font-semibold">{userProfile?.displayName || 'Welcome'}</p>
+                    <p className="text-xs text-muted-foreground font-normal">{user?.email}</p>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => router.push('/news')}>
-                  View News Feed
-                </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => router.push('/news/create')}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  <span>Create Post</span>
+                <DropdownMenuItem onSelect={() => router.push('/home/profile')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Profile Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => router.push('/home/my-posts')}>
                   <Newspaper className="mr-2 h-4 w-4" />
                   <span>My Posts</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => router.push('/news/create')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <span>Create Post</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={handleLogout}>
@@ -235,7 +259,7 @@ export default function HomePage() {
 
         {/* Recommended News */}
         <section className="mb-12">
-            <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Star/> News For You</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Star/> News For You in {userProfile?.preferredDistrict || 'Bengaluru Urban'}</h2>
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)

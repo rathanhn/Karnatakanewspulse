@@ -1,7 +1,7 @@
 // src/components/news/news-card.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   Card,
@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { NewsArticle } from '@/lib/data';
+import { NewsArticle, UserProfile, getUserProfile } from '@/lib/data';
 import {
   DailyHuntIcon,
   FacebookIcon,
@@ -27,22 +27,54 @@ import {
   YouTubeIcon,
   NewsIcon,
 } from '@/components/icons';
-import { ExternalLink, BookOpen } from 'lucide-react';
+import { ExternalLink, BookOpen, UserCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type NewsCardProps = {
   article: NewsArticle;
 };
 
-const SourceIcon = ({ source, className }: { source: string, className?: string }) => {
+const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('');
+}
+
+
+const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
+  const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    const fetchAuthor = async () => {
+      if (article.userId) {
+        const profile = await getUserProfile(article.userId);
+        setAuthorProfile(profile);
+      }
+    };
+    fetchAuthor();
+  }, [article.userId]);
+
+  if (article.source === 'User Submitted') {
+    return (
+      <div className="flex items-center gap-2">
+        <Avatar className="w-6 h-6">
+            <AvatarImage src={authorProfile?.photoURL || ''} />
+            <AvatarFallback>{getInitials(authorProfile?.displayName)}</AvatarFallback>
+        </Avatar>
+        <span className="text-sm font-medium">{authorProfile?.displayName || 'Community Contributor'}</span>
+      </div>
+    );
+  }
+
   const props = { className: className || 'w-6 h-6' };
-  const lowerSource = source.toLowerCase();
+  const lowerSource = article.source.toLowerCase();
   if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
   if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
   if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
   if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
   return <NewsIcon {...props} />;
 };
+
 
 export function NewsCard({ article }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,7 +116,7 @@ export function NewsCard({ article }: NewsCardProps) {
             <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
               {article.headline}
             </CardTitle>
-            <SourceIcon source={article.source} />
+             {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
           </div>
         </CardHeader>
         <CardContent className="flex-grow">
@@ -93,6 +125,11 @@ export function NewsCard({ article }: NewsCardProps) {
           </p>
         </CardContent>
         <CardFooter className="flex-col items-start gap-4">
+            {article.source === 'User Submitted' && (
+                <div className="w-full">
+                    <SourceDisplay article={article} />
+                </div>
+            )}
            <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
             <Badge variant="outline">{article.district}</Badge>
             <span>{formattedDate}</span>
@@ -107,7 +144,7 @@ export function NewsCard({ article }: NewsCardProps) {
               <BookOpen />
               Read More
             </Button>
-            <Button asChild variant="outline" className="w-full">
+            <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
               <a href={article.url} target="_blank" rel="noopener noreferrer">
                 <ExternalLink />
                 View Source
@@ -124,7 +161,7 @@ export function NewsCard({ article }: NewsCardProps) {
                  <DialogTitle className="text-2xl font-bold font-headline text-primary">
                     {article.headline}
                  </DialogTitle>
-                 <SourceIcon source={article.source} className="w-8 h-8"/>
+                 <SourceDisplay article={article} />
             </div>
             <DialogDescription asChild>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -169,7 +206,7 @@ export function NewsCard({ article }: NewsCardProps) {
           </div>
            <div className="flex justify-end gap-2 mt-4">
              <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>Close</Button>
-             <Button asChild>
+             <Button asChild disabled={article.url === '#'}>
                <a href={article.url} target="_blank" rel="noopener noreferrer">
                  <ExternalLink />
                  View Source

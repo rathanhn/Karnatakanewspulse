@@ -17,7 +17,8 @@ import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithRedirect, getRedirectResult, User } from 'firebase/auth';
+import { createUserProfile } from '@/lib/data';
 
 export default function RegisterPage() {
   const { toast } = useToast();
@@ -29,17 +30,29 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  const handleSuccessfulLogin = async (user: User) => {
+    // Check if a user profile already exists. This can happen with social logins.
+    // For this app, we'll create one if it doesn't exist.
+    await createUserProfile(user.uid, {
+        displayName: user.displayName || `${firstName} ${lastName}`.trim(),
+        email: user.email!,
+        photoURL: user.photoURL,
+    });
+    
+    toast({
+        title: 'Success!',
+        description: `Welcome ${user.displayName || firstName}!`,
+    });
+    router.push('/home');
+  };
+
   useEffect(() => {
     const checkRedirect = async () => {
-      setIsLoading(true);
+      setIsGoogleLoading(true);
       try {
         const result = await getRedirectResult(auth);
         if (result) {
-          toast({
-            title: 'Sign up successful!',
-            description: 'Welcome!',
-          });
-          router.push('/home');
+            await handleSuccessfulLogin(result.user);
         }
       } catch (error: any) {
         toast({
@@ -48,27 +61,27 @@ export default function RegisterPage() {
           variant: 'destructive',
         });
       } finally {
-        setIsLoading(false);
+        setIsGoogleLoading(false);
       }
     };
     checkRedirect();
-  }, [router, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const newName = `${firstName} ${lastName}`.trim();
       await updateProfile(userCredential.user, {
-        displayName: `${firstName} ${lastName}`
+        displayName: newName
       });
+      
+      // We need to reload to get the updated profile, or pass it directly
+      const updatedUser = { ...userCredential.user, displayName: newName };
+      await handleSuccessfulLogin(updatedUser);
 
-      toast({
-        title: 'Success!',
-        description: 'You have signed up successfully.',
-      });
-
-      router.push('/home');
     } catch (error: any) {
         toast({
             title: 'Registration Failed',
