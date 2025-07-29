@@ -134,16 +134,22 @@ async function fetchFromGNews({ district, category, query: queryParam }: { distr
   }
 }
 
-async function fetchUserSubmittedNews({ district }: { district: string }): Promise<NewsArticle[]> {
+export async function fetchUserSubmittedNews({ district }: { district: string }): Promise<NewsArticle[]> {
     try {
         const newsCollection = collection(db, "news");
         
-        let conditions = [where('category', '==', 'User Submitted')];
-        if (district !== 'Karnataka') {
-           conditions.push(where("district", "==", district));
+        let q;
+        if (district === 'Karnataka') {
+           // Fetch all user-submitted articles when 'All Karnataka' is selected
+           q = query(newsCollection, where('category', '==', 'User Submitted'), orderBy("timestamp", "desc"));
+        } else {
+           // Fetch articles for a specific district
+           q = query(newsCollection, 
+               where('category', '==', 'User Submitted'),
+               where("district", "==", district), 
+               orderBy("timestamp", "desc")
+           );
         }
-
-        const q = query(newsCollection, ...conditions, orderBy("timestamp", "desc"));
        
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => {
@@ -163,14 +169,10 @@ async function fetchUserSubmittedNews({ district }: { district: string }): Promi
 
 
 /**
- * Fetches news from all sources. User-submitted news is always fetched and prioritized.
- * API news is fetched based on the selected category and then filtered by the AI for relevance.
+ * Fetches news from external APIs. User-submitted news is fetched separately.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  // 1. Always fetch user-submitted news for the selected district.
-  const userNews = await fetchUserSubmittedNews({ district });
-
-  // 2. Fetch from external APIs, unless the category is specifically "User Submitted".
+  // 1. Fetch from external APIs, unless the category is specifically "User Submitted".
   let apiArticles: NewsArticle[] = [];
   if (category !== 'User Submitted') {
     const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
@@ -205,12 +207,6 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
     }
   }
 
-  // 3. Combine and sort
-  // User news comes first, then API news sorted by date.
-  const sortedApiArticles = apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  
-  // By placing userNews first, we ensure it's at the top.
-  const finalArticles = [...userNews, ...sortedApiArticles];
-  
-  return finalArticles;
+  // 2. Sort and return
+  return apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }

@@ -14,12 +14,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category } from '@/lib/data';
-import { fetchNewsFromAPI } from '@/services/news';
+import { fetchNewsFromAPI, fetchUserSubmittedNews } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { AiSummary } from '@/components/ai-summary';
-import { Search, MapPin, LayoutGrid, AlertCircle, Home } from 'lucide-react';
+import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 
 
@@ -30,8 +30,11 @@ function NewsContent() {
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
   const [selectedCategory, setSelectedCategory] = useState<Category>('Trending');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
-  const [news, setNews] = useState<NewsArticleType[]>([]);
-  const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
+  
+  const [apiNews, setApiNews] = useState<NewsArticleType[]>([]);
+  const [userNews, setUserNews] = useState<NewsArticleType[]>([]);
+  const [filteredApiNews, setFilteredApiNews] = useState<NewsArticleType[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,9 +46,15 @@ function NewsContent() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchNewsFromAPI({ district, category });
-      setNews(result);
-      setFilteredNews(result); // Initially show all fetched news
+      // Fetch both user news and API news in parallel
+      const [userResult, apiResult] = await Promise.all([
+        fetchUserSubmittedNews({ district }),
+        fetchNewsFromAPI({ district, category })
+      ]);
+      
+      setUserNews(userResult);
+      setApiNews(apiResult);
+      setFilteredApiNews(apiResult); // Initially show all fetched API news
     } catch (err: any) {
       console.error('Error fetching news:', err);
       setError('Failed to fetch news. Please check your connection or API key and try again.');
@@ -61,18 +70,27 @@ function NewsContent() {
   const handleSearch = useCallback(async (currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
     
-    // Filter based on the original full list of news
-    const results = news.filter(
+    // Filter based on the original full list of API news
+    const results = apiNews.filter(
       (article) =>
         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
     );
-    setFilteredNews(results);
+    setFilteredApiNews(results);
 
-    if (currentSearchTerm.trim() && results.length > 0) {
+    // Also filter user news
+    const userResults = userNews.filter(
+        (article) =>
+            article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+            (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+    );
+    setUserNews(userResults);
+
+
+    if (currentSearchTerm.trim() && (results.length > 0 || userResults.length > 0)) {
       setIsAiSummaryLoading(true);
       try {
-        const searchResultsText = results.map(n => n.headline).join('\n');
+        const searchResultsText = [...userResults, ...results].map(n => n.headline).join('\n');
         const aiResponse = await refineSearchSuggestions({
           initialQuery: currentSearchTerm,
           searchResults: searchResultsText,
@@ -89,25 +107,30 @@ function NewsContent() {
     } else {
       setAiSummary('');
       setAiSuggestions([]);
+       // Reset user news to full list on empty search
+      fetchUserSubmittedNews({district: selectedDistrict}).then(setUserNews);
     }
-  }, [news]);
+  }, [apiNews, userNews, selectedDistrict]);
   
   useEffect(() => {
     // Initial search if q param exists
     if(searchTerm) {
         handleSearch(searchTerm);
+    } else {
+        // If search is cleared, ensure API news is reset
+        setFilteredApiNews(apiNews);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [news]); // Run only when news is loaded
+  }, [searchTerm, apiNews]); // Rerun search when apiNews is loaded or searchTerm changes
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
-    // Debounce search
-    const handler = setTimeout(() => {
-      handleSearch(newSearchTerm);
-    }, 500);
-    return () => clearTimeout(handler);
+  };
+  
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      handleSearch(searchTerm);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -126,7 +149,7 @@ function NewsContent() {
                     <h1 className='hidden sm:block'>Karnataka News Pulse</h1>
                 </Link>
             </div>
-            <div className="hidden md:flex items-center gap-4 w-full max-w-2xl">
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-4 w-full max-w-2xl">
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -164,7 +187,7 @@ function NewsContent() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </form>
              <Button asChild variant="ghost">
               <Link href="/dashboard">Dashboard</Link>
             </Button>
@@ -191,17 +214,34 @@ function NewsContent() {
                 <p className="text-muted-foreground max-w-md">{error}</p>
                 <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} className="mt-6">Try Again</Button>
             </div>
-        ) : filteredNews.length === 0 ? (
-          <div className="text-center py-20">
-            <h2 className="text-2xl font-bold">No news articles found</h2>
-            <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
-          </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredNews.map((article) => (
-              <NewsCard key={article.id} article={article} />
-            ))}
-          </div>
+            <>
+                {userNews.length > 0 && (
+                    <section className="mb-12">
+                        <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {userNews.map((article) => (
+                                <NewsCard key={article.id} article={article} />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {filteredApiNews.length === 0 ? (
+                    userNews.length === 0 && (
+                         <div className="text-center py-20">
+                            <h2 className="text-2xl font-bold">No news articles found</h2>
+                            <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
+                        </div>
+                    )
+                ) : (
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {filteredApiNews.map((article) => (
+                        <NewsCard key={article.id} article={article} />
+                        ))}
+                    </div>
+                )}
+           </>
         )}
       </main>
     </div>
