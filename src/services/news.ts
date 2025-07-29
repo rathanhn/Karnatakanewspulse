@@ -134,51 +134,53 @@ async function fetchFromGNews({ district, category, query }: { district: string,
 
 /**
  * Fetches news, de-duplicates, and then uses AI to filter for relevance.
+ * User-submitted news is prioritized and always shown at the top.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
+  // 1. Handle User Submitted News separately to prioritize it.
+  const relevantUserNews = userSubmittedNews.filter(article => 
+      (district === 'Karnataka' || article.district === district) &&
+      (category === 'User Submitted' || category === 'Trending' || category === 'General') // Show user news in general feeds
+  );
 
-  // Fetch from both APIs in parallel if category is not "User Submitted"
-  let combinedArticles: NewsArticle[] = [];
-
-  if(category === 'User Submitted') {
-      combinedArticles = [...userSubmittedNews];
-  } else {
+  // 2. Fetch from external APIs only if the category is not exclusively "User Submitted".
+  let apiArticles: NewsArticle[] = [];
+  if (category !== 'User Submitted') {
+    const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
     const [newsDataArticles, gNewsArticles] = await Promise.all([
       fetchFromNewsDataIO({ district, category, query }),
       fetchFromGNews({ district, category, query }),
     ]);
-    combinedArticles = [...newsDataArticles, ...gNewsArticles, ...userSubmittedNews];
-  }
+    const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
 
+    // De-duplicate API articles based on URL
+    const uniqueArticlesMap = new Map<string, NewsArticle>();
+    for (const article of combinedApiArticles) {
+      if (article.url && !uniqueArticlesMap.has(article.url)) {
+        uniqueArticlesMap.set(article.url, article);
+      }
+    }
+    const uniqueApiArticles = Array.from(uniqueArticlesMap.values());
 
-  // De-duplicate articles based on URL
-  const uniqueArticlesMap = new Map<string, NewsArticle>();
-  for (const article of combinedArticles) {
-    if (article.url && !uniqueArticlesMap.has(article.url)) {
-      uniqueArticlesMap.set(article.url, article);
+    // Use AI to filter and ensure relevance to the district if there are articles.
+    if (uniqueApiArticles.length > 0) {
+        try {
+            const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
+            apiArticles = filteredResult.articles;
+        } catch (error) {
+            console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
+            // Fallback to unfiltered (but de-duplicated) articles if AI fails
+            apiArticles = uniqueApiArticles;
+        }
     }
   }
-  
-  const uniqueArticles = Array.from(uniqueArticlesMap.values());
-  
-  if (uniqueArticles.length === 0) {
-      return [];
-  }
 
-  // Use AI to filter and ensure relevance to the district
-  try {
-    const filteredResult = await filterNewsByDistrict({ articles: uniqueArticles, district });
-    
-    // Sort by timestamp descending
-    const sortedArticles = filteredResult.articles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    
-    return sortedArticles;
-
-  } catch (error) {
-    console.error("AI filtering failed. Returning unfiltered results.", error);
-    // Fallback to returning unfiltered (but de-duplicated) articles if AI fails
-    const sortedArticles = uniqueArticles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    return sortedArticles;
-  }
+  // 3. Combine and sort
+  // User news comes first, then API news sorted by date.
+  const sortedApiArticles = apiArticles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  
+  // By placing relevantUserNews first, we ensure it's at the top.
+  const finalArticles = [...relevantUserNews, ...sortedApiArticles];
+  
+  return finalArticles;
 }
