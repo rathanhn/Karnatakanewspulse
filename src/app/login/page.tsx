@@ -1,4 +1,4 @@
-// src/app/register/page.tsx
+// src/app/login/page.tsx
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -13,25 +13,24 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, you would handle form submission here,
-    // e.g., send data to an API endpoint.
+    // In a real app, you would handle authentication here.
     
     // Show success notification
     toast({
-      title: 'Success!',
-      description: 'You have signed up successfully.',
+      title: 'Login successful!',
+      description: 'Welcome back.',
     });
 
-    // Redirect to login page after a short delay
+    // Redirect to dashboard after a short delay
     setTimeout(() => {
       router.push('/dashboard');
     }, 1000); 
@@ -41,27 +40,17 @@ export default function RegisterPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader>
-          <CardTitle className="text-xl flex items-center gap-2">
-            <UserPlus className="w-6 h-6" />
-            <span>Sign Up</span>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <LogIn className="w-6 h-6" />
+            <span>Login</span>
           </CardTitle>
           <CardDescription>
-            Enter your information to create an account
+            Enter your email below to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" placeholder="Max" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" placeholder="Robinson" required />
-                </div>
-              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -72,21 +61,29 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="#"
+                    className="ml-auto inline-block text-sm underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
                 <Input id="password" type="password" required />
               </div>
               <Button type="submit" className="w-full">
-                Create an account
+                Login
               </Button>
               <Button variant="outline" className="w-full" type="button">
-                Sign up with Google
+                Login with Google
               </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link href="/login" className="underline">
-              Sign in
+            Don&apos;t have an account?{' '}
+            <Link href="/register" className="underline">
+              Sign up
             </Link>
           </div>
            <div className="mt-4 text-center text-sm">

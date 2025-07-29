@@ -1,7 +1,9 @@
 // src/app/news/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Select,
   SelectContent,
@@ -18,13 +20,16 @@ import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { AiSummary } from '@/components/ai-summary';
 import { Search, MapPin, LayoutGrid, AlertCircle, Home } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { KarnatakaMapIcon } from '@/components/icons';
 
-export default function NewsPage() {
+
+function NewsContent() {
   const router = useRouter();
-  const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
+  const searchParams = useSearchParams();
+
+  const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
   const [selectedCategory, setSelectedCategory] = useState<Category>('Trending');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [news, setNews] = useState<NewsArticleType[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,36 +39,29 @@ export default function NewsPage() {
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
-  const fetchNews = useCallback(async () => {
+  const fetchNews = useCallback(async (district: string, category: Category) => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await fetchNewsFromAPI({
-        district: selectedDistrict,
-        category: selectedCategory,
-      });
+      const result = await fetchNewsFromAPI({ district, category });
       setNews(result);
+      setFilteredNews(result); // Initially show all fetched news
     } catch (err: any) {
       console.error('Error fetching news:', err);
       setError('Failed to fetch news. Please check your connection or API key and try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDistrict, selectedCategory]);
+  }, []);
 
   useEffect(() => {
-    fetchNews();
-  }, [fetchNews]);
+    fetchNews(selectedDistrict, selectedCategory);
+  }, [selectedDistrict, selectedCategory, fetchNews]);
 
   const handleSearch = useCallback(async (currentSearchTerm: string) => {
-    if (!currentSearchTerm.trim()) {
-      setFilteredNews(news);
-      setAiSummary('');
-      setAiSuggestions([]);
-      return;
-    }
-
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
+    
+    // Filter based on the original full list of news
     const results = news.filter(
       (article) =>
         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
@@ -71,7 +69,7 @@ export default function NewsPage() {
     );
     setFilteredNews(results);
 
-    if (results.length > 0) {
+    if (currentSearchTerm.trim() && results.length > 0) {
       setIsAiSummaryLoading(true);
       try {
         const searchResultsText = results.map(n => n.headline).join('\n');
@@ -95,31 +93,38 @@ export default function NewsPage() {
   }, [news]);
   
   useEffect(() => {
+    // Initial search if q param exists
+    if(searchTerm) {
+        handleSearch(searchTerm);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [news]); // Run only when news is loaded
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
     // Debounce search
     const handler = setTimeout(() => {
-      handleSearch(searchTerm);
+      handleSearch(newSearchTerm);
     }, 500);
     return () => clearTimeout(handler);
-  }, [searchTerm, handleSearch]);
-
+  };
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
   
-  const displayNews = useMemo(() => searchTerm.trim() ? filteredNews : news, [searchTerm, filteredNews, news]);
-
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
       <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
              <div className="flex items-center gap-2">
-                <button onClick={() => router.push('/dashboard')} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
-                    <Home className="w-8 h-8"/>
-                    <h1>Karnataka News Pulse</h1>
-                </button>
+                <Link href="/dashboard" className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <KarnatakaMapIcon className="w-10 h-10"/>
+                    <h1 className='hidden sm:block'>Karnataka News Pulse</h1>
+                </Link>
             </div>
             <div className="hidden md:flex items-center gap-4 w-full max-w-2xl">
               <div className="relative w-full">
@@ -129,7 +134,7 @@ export default function NewsPage() {
                   placeholder="Search for news..."
                   className="pl-10 w-full"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchInputChange}
                 />
               </div>
               <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
@@ -160,8 +165,8 @@ export default function NewsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="ghost" className="md:hidden">
-              <Search className="w-6 h-6" />
+             <Button asChild variant="ghost">
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           </div>
         </div>
@@ -177,23 +182,23 @@ export default function NewsPage() {
 
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(8)].map((_, i) => <NewsSkeleton key={i} />)}
+            {[...Array(12)].map((_, i) => <NewsSkeleton key={i} />)}
           </div>
         ) : error ? (
             <div className="flex flex-col items-center justify-center text-center py-20">
                 <AlertCircle className="w-16 h-16 text-destructive mb-4" />
                 <h2 className="text-2xl font-bold mb-2">An Error Occurred</h2>
                 <p className="text-muted-foreground max-w-md">{error}</p>
-                <Button onClick={fetchNews} className="mt-6">Try Again</Button>
+                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} className="mt-6">Try Again</Button>
             </div>
-        ) : displayNews.length === 0 ? (
+        ) : filteredNews.length === 0 ? (
           <div className="text-center py-20">
             <h2 className="text-2xl font-bold">No news articles found</h2>
             <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {displayNews.map((article) => (
+            {filteredNews.map((article) => (
               <NewsCard key={article.id} article={article} />
             ))}
           </div>
@@ -201,4 +206,13 @@ export default function NewsPage() {
       </main>
     </div>
   );
+}
+
+
+export default function NewsPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <NewsContent />
+        </Suspense>
+    )
 }
