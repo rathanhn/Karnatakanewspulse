@@ -134,25 +134,20 @@ async function fetchFromGNews({ district, category, query: queryParam }: { distr
   }
 }
 
-async function fetchUserSubmittedNews({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
+async function fetchUserSubmittedNews({ district }: { district: string }): Promise<NewsArticle[]> {
     try {
         let q;
         const newsCollection = collection(db, "news");
 
-        if (district === 'Karnataka') {
-            // Fetch all user-submitted news if 'All Karnataka' is selected
-             q = query(newsCollection, 
-                where('category', '==', 'User Submitted'),
-                orderBy("timestamp", "desc")
-            );
-        } else {
-            // Fetch news for the specific district
-            q = query(newsCollection, 
-                where("district", "==", district),
-                where('category', '==', 'User Submitted'),
-                orderBy("timestamp", "desc")
-            );
+        // Base query for user submitted news
+        const baseConditions = [where('category', '==', 'User Submitted')];
+        
+        // Add district filtering if not 'All Karnataka'
+        if (district !== 'Karnataka') {
+           baseConditions.push(where("district", "==", district));
         }
+
+        q = query(newsCollection, ...baseConditions, orderBy("timestamp", "desc"));
        
         const querySnapshot = await getDocs(q);
         return querySnapshot.docs.map(doc => {
@@ -176,13 +171,10 @@ async function fetchUserSubmittedNews({ district, category }: FetchNewsOptions):
  * User-submitted news is prioritized and always shown at the top.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  // 1. Fetch User Submitted News from Firestore
-  let relevantUserNews: NewsArticle[] = [];
-  if (category === 'User Submitted' || category === 'Trending' || category === 'General') {
-    relevantUserNews = await fetchUserSubmittedNews({ district, category });
-  }
+  // 1. Always fetch user-submitted news for the selected district.
+  const userNews = await fetchUserSubmittedNews({ district });
 
-  // 2. Fetch from external APIs only if the category is not exclusively "User Submitted".
+  // 2. Fetch from external APIs only if the category is not "User Submitted".
   let apiArticles: NewsArticle[] = [];
   if (category !== 'User Submitted') {
     const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
@@ -202,7 +194,7 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
     const uniqueApiArticles = Array.from(uniqueArticlesMap.values());
 
     // Use AI to filter and ensure relevance to the district if there are articles.
-    if (uniqueApiArticles.length > 0) {
+    if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
         try {
             const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
             apiArticles = filteredResult.articles;
@@ -211,6 +203,8 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
             // Fallback to unfiltered (but de-duplicated) articles if AI fails
             apiArticles = uniqueApiArticles;
         }
+    } else {
+        apiArticles = uniqueApiArticles;
     }
   }
 
@@ -218,8 +212,8 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
   // User news comes first, then API news sorted by date.
   const sortedApiArticles = apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
-  // By placing relevantUserNews first, we ensure it's at the top.
-  const finalArticles = [...relevantUserNews, ...sortedApiArticles];
+  // By placing userNews first, we ensure it's at the top.
+  const finalArticles = [...userNews, ...sortedApiArticles];
   
   return finalArticles;
 }
