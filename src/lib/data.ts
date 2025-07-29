@@ -1,7 +1,7 @@
 // src/lib/data.ts
 import { z } from 'zod';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp } from "firebase/firestore";
 
 
 export type Source = string;
@@ -93,33 +93,38 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
 
 export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArticle[]> => {
     try {
-        // A composite index is required in Firestore to filter by one field (userId) and order by another (timestamp).
-        // The user must create this index in the Firebase console using the link from the error message.
         const q = query(collection(db, "news"), where("userId", "==", userId), orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         const articles = querySnapshot.docs.map(doc => {
             const data = doc.data();
+            const timestamp = data.timestamp as Timestamp;
             return {
                 ...data,
                 id: doc.id,
-                timestamp: data.timestamp?.toDate() || new Date(),
+                timestamp: timestamp ? timestamp.toDate() : new Date(),
             } as NewsArticle;
         });
         return articles;
     } catch (e) {
         console.error("Error fetching user news:", e);
         // Fallback for when the index is not ready
-        const qWithoutSort = query(collection(db, "news"), where("userId", "==", userId));
-        const querySnapshot = await getDocs(qWithoutSort);
-        const articles = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                ...data,
-                id: doc.id,
-                timestamp: data.timestamp?.toDate() || new Date(),
-            } as NewsArticle;
-        });
-        return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+         if (e instanceof Error && e.message.includes("The query requires an index")) {
+            console.warn("Firestore index not found. Fetching without sorting. Please create the required index in the Firebase console.");
+            const qWithoutSort = query(collection(db, "news"), where("userId", "==", userId));
+            const querySnapshot = await getDocs(qWithoutSort);
+            const articles = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                const timestamp = data.timestamp as Timestamp;
+                return {
+                    ...data,
+                    id: doc.id,
+                    timestamp: timestamp ? timestamp.toDate() : new Date(),
+                } as NewsArticle;
+            });
+            // Manual sort in JS as a fallback
+            return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        }
+        throw e;
     }
 }
 

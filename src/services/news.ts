@@ -141,12 +141,10 @@ export async function fetchUserSubmittedNews({ district }: { district: string })
         let q;
         if (district === 'Karnataka') {
            q = query(newsCollection, 
-               where('category', '==', 'User Submitted'), 
                orderBy("timestamp", "desc")
            );
         } else {
            q = query(newsCollection, 
-               where('category', '==', 'User Submitted'),
                where("district", "==", district), 
                orderBy("timestamp", "desc")
            );

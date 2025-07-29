@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category } from '@/lib/data';
-import { fetchNewsFromAPI, fetchUserSubmittedNews } from '@/services/news';
+import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
@@ -152,7 +152,7 @@ function NewsContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Karnataka">All Karnataka</SelectItem>
-                  {karnatakaDistricts.map((district) => (
+                  {karnatakaDistricts.filter(d=> d !== 'Karnataka').map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
                     </SelectItem>
@@ -201,8 +201,37 @@ function NewsContent() {
             </div>
         ) : (
             <>
-                {userNews.length > 0 && (
-                    <section className="mb-12">
+              {filteredNews.length === 0 && (
+                     <div className="text-center py-20">
+                        <h2 className="text-2xl font-bold">No news articles found</h2>
+                        <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
+                    </div>
+              )}
+                
+              {filteredNews.length > 0 && selectedCategory !== 'User Submitted' && userNews.length > 0 && (
+                  <section className="mb-12">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                          {userNews.map((article) => (
+                              <NewsCard key={article.id} article={article} />
+                          ))}
+                      </div>
+                  </section>
+              )}
+
+              {apiNews.length > 0 && selectedCategory !== 'User Submitted' && (
+                <section>
+                    <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {apiNews.map((article) => (
+                        <NewsCard key={article.id} article={article} />
+                        ))}
+                    </div>
+                </section>
+              )}
+
+              {selectedCategory === 'User Submitted' && (
+                   <section>
                         <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {userNews.map((article) => (
@@ -210,25 +239,7 @@ function NewsContent() {
                             ))}
                         </div>
                     </section>
-                )}
-
-                {apiNews.length > 0 && (
-                  <section>
-                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                          {apiNews.map((article) => (
-                          <NewsCard key={article.id} article={article} />
-                          ))}
-                      </div>
-                  </section>
-                )}
-
-                {filteredNews.length === 0 && (
-                     <div className="text-center py-20">
-                        <h2 className="text-2xl font-bold">No news articles found</h2>
-                        <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
-                    </div>
-                )}
+              )}
            </>
         )}
       </main>
