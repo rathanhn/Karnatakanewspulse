@@ -2,6 +2,7 @@
 'use server';
 
 import { NewsArticle, Category } from '@/lib/data';
+import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
 
 interface FetchNewsOptions {
   district: string;
@@ -38,17 +39,19 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
   }
 
   const apiCategory = newsDataCategoryMapping[category];
-  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&q=${encodeURIComponent(query)}&language=kn,en`;
+  // Use qInTitle to comply with potential free plan limitations
+  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&qInTitle=${encodeURIComponent(query)}&language=kn,en`;
   if (apiCategory) {
       url += `&category=${apiCategory}`;
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' }); // Disable cache to get latest news
     if (!response.ok) {
       const errorBody = await response.json();
       console.error('NewsData.io API Error:', errorBody);
-      throw new Error(`NewsData.io API request failed: ${errorBody.results?.message || response.statusText}`);
+      // Don't throw, just return empty array so other APIs can still work
+      return [];
     }
     const data = await response.json();
     if (data.status === 'success' && data.results) {
@@ -61,7 +64,7 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
         embedUrl: item.video_url,
         timestamp: new Date(item.pubDate),
         source: item.source_id || 'Unknown Source',
-        district: district,
+        district: district, // Tentative district
         category: category,
         'data-ai-hint': item.keywords ? item.keywords.join(' ') : item.title.split(' ').slice(0, 2).join(' '),
       }));
@@ -69,7 +72,7 @@ async function fetchFromNewsDataIO({ district, category, query }: { district: st
     return [];
   } catch (error) {
     console.error('Failed to fetch from NewsData.io:', error);
-    return []; // Return empty array on error
+    return [];
   }
 }
 
@@ -81,30 +84,30 @@ async function fetchFromGNews({ district, category, query }: { district: string,
   }
 
   const apiCategory = gNewsCategoryMapping[category];
-  let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&apikey=${apiKey}&lang=en&country=in`;
+  let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&apikey=${apiKey}&lang=en&country=in&max=10`;
   
   if (apiCategory) {
       url += `&topic=${apiCategory}`;
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       const errorBody = await response.json();
       console.error('GNews API Error:', errorBody);
-      throw new Error(`GNews API request failed: ${errorBody.errors?.join(', ') || response.statusText}`);
+      return [];
     }
     const data = await response.json();
     if (data.articles) {
       return data.articles.map((item: any): NewsArticle => ({
-        id: item.url, // GNews doesn't have a stable ID, use URL
+        id: item.url,
         headline: item.title,
         content: item.content || item.description || null,
         url: item.url,
         imageUrl: item.image,
         timestamp: new Date(item.publishedAt),
         source: item.source.name || 'Unknown Source',
-        district: district,
+        district: district, // Tentative district
         category: category,
          'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
       }));
@@ -112,16 +115,15 @@ async function fetchFromGNews({ district, category, query }: { district: string,
     return [];
   } catch (error) {
     console.error('Failed to fetch from GNews:', error);
-    return []; // Return empty array on error
+    return [];
   }
 }
 
-
 /**
- * Fetches news from multiple APIs, combines, and de-duplicates them.
+ * Fetches news, de-duplicates, and then uses AI to filter for relevance.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' Karnataka'}`;
+  const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
 
   // Fetch from both APIs in parallel
   const [newsDataArticles, gNewsArticles] = await Promise.all([
@@ -132,17 +134,32 @@ export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions)
   const combinedArticles = [...newsDataArticles, ...gNewsArticles];
 
   // De-duplicate articles based on URL
-  const uniqueArticles = new Map<string, NewsArticle>();
+  const uniqueArticlesMap = new Map<string, NewsArticle>();
   for (const article of combinedArticles) {
-    if (!uniqueArticles.has(article.url)) {
-      uniqueArticles.set(article.url, article);
+    if (article.url && !uniqueArticlesMap.has(article.url)) {
+      uniqueArticlesMap.set(article.url, article);
     }
   }
   
-  const articles = Array.from(uniqueArticles.values());
+  const uniqueArticles = Array.from(uniqueArticlesMap.values());
+  
+  if (uniqueArticles.length === 0) {
+      return [];
+  }
 
-  // Sort by timestamp descending
-  articles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  // Use AI to filter and ensure relevance to the district
+  try {
+    const filteredResult = await filterNewsByDistrict({ articles: uniqueArticles, district });
+    
+    // Sort by timestamp descending
+    const sortedArticles = filteredResult.articles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    
+    return sortedArticles;
 
-  return articles;
+  } catch (error) {
+    console.error("AI filtering failed. Returning unfiltered results.", error);
+    // Fallback to returning unfiltered (but de-duplicated) articles if AI fails
+    const sortedArticles = uniqueArticles.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return sortedArticles;
+  }
 }
