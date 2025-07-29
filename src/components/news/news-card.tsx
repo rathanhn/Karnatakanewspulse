@@ -52,22 +52,28 @@ export function NewsCard({ article }: NewsCardProps) {
     timeStyle: 'short',
   }).format(new Date(article.timestamp));
 
-  const imageUrl = article.imageUrl || `https://placehold.co/600x400.png`;
+  const imageUrl = article.imageUrl;
 
   return (
     <>
       <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 bg-card border-accent/20">
         <CardHeader>
            <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden">
-             <Image
-                src={imageUrl}
-                alt={article.headline}
-                data-ai-hint={article['data-ai-hint'] || 'news event'}
-                layout="fill"
-                objectFit="cover"
-                className="transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; }}
-            />
+             {imageUrl ? (
+                <Image
+                    src={imageUrl}
+                    alt={article.headline}
+                    data-ai-hint={article['data-ai-hint'] || 'news event'}
+                    layout="fill"
+                    objectFit="cover"
+                    className="transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
+                />
+             ) : (
+                <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
+                    <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+                </div>
+             )}
             {article.embedUrl && (
                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                     <YouTubeIcon className="w-16 h-16 text-white opacity-80" />
@@ -141,7 +147,7 @@ export function NewsCard({ article }: NewsCardProps) {
                         className="rounded-lg"
                     ></iframe>
                 </div>
-            ) : (
+            ) : imageUrl ? (
                 <div className="relative w-full h-64 mb-4 rounded-lg overflow-hidden">
                     <Image
                         src={imageUrl}
@@ -151,6 +157,10 @@ export function NewsCard({ article }: NewsCardProps) {
                         objectFit="cover"
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400.png'; }}
                     />
+                </div>
+            ) : (
+                 <div className="flex items-center justify-center h-64 bg-secondary text-center p-4 mb-4 rounded-lg">
+                    <h3 className="font-bold text-2xl text-secondary-foreground">{article.headline}</h3>
                 </div>
             )}
             <ScrollArea className="h-60 mt-4 pr-4">
