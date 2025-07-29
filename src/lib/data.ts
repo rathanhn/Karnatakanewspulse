@@ -1,6 +1,6 @@
 // src/lib/data.ts
 
-export type Source = string; // Can be any string from NewsData.io
+export type Source = string;
 export type Category = 'General' | 'Politics' | 'Sports' | 'Crime' | 'Technology' | 'Business' | 'Entertainment' | 'Trending';
 
 export const newsCategories: (Category)[] = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'];
