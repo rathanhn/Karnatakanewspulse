@@ -31,9 +31,8 @@ function NewsContent() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('Trending');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   
-  const [apiNews, setApiNews] = useState<NewsArticleType[]>([]);
-  const [userNews, setUserNews] = useState<NewsArticleType[]>([]);
-  const [filteredApiNews, setFilteredApiNews] = useState<NewsArticleType[]>([]);
+  const [news, setNews] = useState<NewsArticleType[]>([]);
+  const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,15 +45,9 @@ function NewsContent() {
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch both user news and API news in parallel
-      const [userResult, apiResult] = await Promise.all([
-        fetchUserSubmittedNews({ district }),
-        fetchNewsFromAPI({ district, category })
-      ]);
-      
-      setUserNews(userResult);
-      setApiNews(apiResult);
-      setFilteredApiNews(apiResult); // Initially show all fetched API news
+      const allNews = await fetchNewsFromAPI({ district, category });
+      setNews(allNews);
+      setFilteredNews(allNews);
     } catch (err: any) {
       console.error('Error fetching news:', err);
       setError('Failed to fetch news. Please check your connection or API key and try again.');
@@ -70,27 +63,17 @@ function NewsContent() {
   const handleSearch = useCallback(async (currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
     
-    // Filter based on the original full list of API news
-    const results = apiNews.filter(
+    const results = news.filter(
       (article) =>
         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
     );
-    setFilteredApiNews(results);
+    setFilteredNews(results);
 
-    // Also filter user news
-    const userResults = userNews.filter(
-        (article) =>
-            article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
-            (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
-    );
-    setUserNews(userResults);
-
-
-    if (currentSearchTerm.trim() && (results.length > 0 || userResults.length > 0)) {
+    if (currentSearchTerm.trim() && results.length > 0) {
       setIsAiSummaryLoading(true);
       try {
-        const searchResultsText = [...userResults, ...results].map(n => n.headline).join('\n');
+        const searchResultsText = results.map(n => n.headline).join('\n');
         const aiResponse = await refineSearchSuggestions({
           initialQuery: currentSearchTerm,
           searchResults: searchResultsText,
@@ -107,21 +90,17 @@ function NewsContent() {
     } else {
       setAiSummary('');
       setAiSuggestions([]);
-       // Reset user news to full list on empty search
-      fetchUserSubmittedNews({district: selectedDistrict}).then(setUserNews);
     }
-  }, [apiNews, userNews, selectedDistrict]);
+  }, [news]);
   
   useEffect(() => {
-    // Initial search if q param exists
     if(searchTerm) {
         handleSearch(searchTerm);
     } else {
-        // If search is cleared, ensure API news is reset
-        setFilteredApiNews(apiNews);
+        setFilteredNews(news);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, apiNews]); // Rerun search when apiNews is loaded or searchTerm changes
+  }, [searchTerm, news]);
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
@@ -137,6 +116,12 @@ function NewsContent() {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
+
+  const { userNews, apiNews } = useMemo(() => {
+    const userNews = filteredNews.filter(a => a.source === 'User Submitted');
+    const apiNews = filteredNews.filter(a => a.source !== 'User Submitted');
+    return { userNews, apiNews };
+  }, [filteredNews]);
   
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
@@ -227,18 +212,21 @@ function NewsContent() {
                     </section>
                 )}
 
-                {filteredApiNews.length === 0 ? (
-                    userNews.length === 0 && (
-                         <div className="text-center py-20">
-                            <h2 className="text-2xl font-bold">No news articles found</h2>
-                            <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
-                        </div>
-                    )
-                ) : (
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {filteredApiNews.map((article) => (
-                        <NewsCard key={article.id} article={article} />
-                        ))}
+                {apiNews.length > 0 && (
+                  <section>
+                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>
+                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                          {apiNews.map((article) => (
+                          <NewsCard key={article.id} article={article} />
+                          ))}
+                      </div>
+                  </section>
+                )}
+
+                {filteredNews.length === 0 && (
+                     <div className="text-center py-20">
+                        <h2 className="text-2xl font-bold">No news articles found</h2>
+                        <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
                     </div>
                 )}
            </>

@@ -140,10 +140,11 @@ export async function fetchUserSubmittedNews({ district }: { district: string })
         
         let q;
         if (district === 'Karnataka') {
-           // Fetch all user-submitted articles when 'All Karnataka' is selected
-           q = query(newsCollection, where('category', '==', 'User Submitted'), orderBy("timestamp", "desc"));
+           q = query(newsCollection, 
+               where('category', '==', 'User Submitted'), 
+               orderBy("timestamp", "desc")
+           );
         } else {
-           // Fetch articles for a specific district
            q = query(newsCollection, 
                where('category', '==', 'User Submitted'),
                where("district", "==", district), 
@@ -169,44 +170,55 @@ export async function fetchUserSubmittedNews({ district }: { district: string })
 
 
 /**
- * Fetches news from external APIs. User-submitted news is fetched separately.
+ * Fetches news from external APIs and combines it with user-submitted news.
  */
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
-  // 1. Fetch from external APIs, unless the category is specifically "User Submitted".
-  let apiArticles: NewsArticle[] = [];
-  if (category !== 'User Submitted') {
-    const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
-    
-    const [newsDataArticles, gNewsArticles] = await Promise.all([
-      fetchFromNewsDataIO({ district, category, query }),
-      fetchFromGNews({ district, category, query }),
-    ]);
-    const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
+  // 1. Fetch user-submitted news from Firestore. This happens for all categories.
+  const userArticles = await fetchUserSubmittedNews({ district });
 
-    // De-duplicate API articles based on URL
-    const uniqueArticlesMap = new Map<string, NewsArticle>();
-    for (const article of combinedApiArticles) {
-      if (article.url && !uniqueArticlesMap.has(article.url)) {
-        uniqueArticlesMap.set(article.url, article);
-      }
-    }
-    const uniqueApiArticles = Array.from(uniqueArticlesMap.values());
-
-    // Use AI to filter and ensure relevance to the district if there are articles.
-    if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
-        try {
-            const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
-            apiArticles = filteredResult.articles;
-        } catch (error) {
-            console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
-            // Fallback to unfiltered (but de-duplicated) articles if AI fails
-            apiArticles = uniqueApiArticles;
-        }
-    } else {
-        apiArticles = uniqueApiArticles;
-    }
+  // 2. If the category is "User Submitted", we only return those articles.
+  if (category === 'User Submitted') {
+      return userArticles;
   }
 
-  // 2. Sort and return
-  return apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // 3. Fetch from external APIs for other categories.
+  const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
+  
+  const [newsDataArticles, gNewsArticles] = await Promise.all([
+    fetchFromNewsDataIO({ district, category, query }),
+    fetchFromGNews({ district, category, query }),
+  ]);
+  const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
+
+  // De-duplicate API articles based on URL
+  const uniqueArticlesMap = new Map<string, NewsArticle>();
+  for (const article of combinedApiArticles) {
+    if (article.url && !uniqueArticlesMap.has(article.url)) {
+      uniqueArticlesMap.set(article.url, article);
+    }
+  }
+  let uniqueApiArticles = Array.from(uniqueArticlesMap.values());
+
+  // Use AI to filter and ensure relevance to the district if there are articles.
+  if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
+      try {
+          const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
+          uniqueApiArticles = filteredResult.articles;
+      } catch (error) {
+          console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
+      }
+  }
+  
+  // 4. Combine user news and API news, then sort.
+  // User articles are always first, followed by API articles sorted by date.
+  const allArticles = [...userArticles, ...uniqueApiArticles];
+  
+  return allArticles.sort((a, b) => {
+    // Prioritize User Submitted
+    if (a.source === 'User Submitted' && b.source !== 'User Submitted') return -1;
+    if (a.source !== 'User Submitted' && b.source === 'User Submitted') return 1;
+
+    // If both are user submitted or both are not, sort by timestamp
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
 }
