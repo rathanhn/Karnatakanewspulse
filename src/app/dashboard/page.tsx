@@ -14,20 +14,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
 import { NewsArticle, karnatakaDistricts, Category } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -36,6 +42,7 @@ export default function Dashboard() {
   const [trendingNews, setTrendingNews] = useState<NewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const getNews = async () => {
@@ -126,20 +133,66 @@ export default function Dashboard() {
                 />
               </div>
               <div className="flex gap-4 w-full md:w-auto">
-                 <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-                    <SelectTrigger className="w-full md:w-[280px] h-12 text-base">
-                      <MapPin className="w-5 h-5 mr-2" />
-                      <SelectValue placeholder="Select District" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Karnataka">All Karnataka</SelectItem>
-                      {karnatakaDistricts.map((district) => (
-                        <SelectItem key={district} value={district}>
-                          {district}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                 <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        className="w-full md:w-[280px] h-12 text-base justify-between"
+                      >
+                         <MapPin className="w-5 h-5 mr-2 shrink-0" />
+                        <span className="truncate">
+                        {selectedDistrict
+                          ? karnatakaDistricts.find((district) => district === selectedDistrict) || 'All Karnataka'
+                          : "Select District"}
+                          </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[280px] p-0">
+                      <Command>
+                        <CommandInput placeholder="Search district..." />
+                        <CommandEmpty>No district found.</CommandEmpty>
+                        <CommandGroup>
+                           <CommandItem
+                                key="Karnataka"
+                                value="Karnataka"
+                                onSelect={(currentValue) => {
+                                  setSelectedDistrict(currentValue === selectedDistrict ? "" : currentValue)
+                                  setOpen(false)
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    selectedDistrict === "Karnataka" ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                All Karnataka
+                              </CommandItem>
+                          {karnatakaDistricts.map((district) => (
+                            <CommandItem
+                              key={district}
+                              value={district}
+                              onSelect={(currentValue) => {
+                                setSelectedDistrict(currentValue === selectedDistrict ? "" : currentValue)
+                                setOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedDistrict === district ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {district}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                  <Button type="submit" size="lg" className="h-12">Search</Button>
               </div>
             </form>
