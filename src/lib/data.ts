@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 export type Source = string;
-export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment'] as const;
+export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment', 'User Submitted'] as const;
 export type Category = (typeof newsCategories)[number];
 
 export const NewsArticleSchema = z.object({
@@ -58,3 +58,20 @@ export const karnatakaDistrictsTuple = [
 
 
 export const karnatakaDistricts: string[] = [...karnatakaDistrictsTuple];
+
+// This is a temporary, in-memory store for user-submitted articles.
+// In a real application, this would be a database like Firestore.
+export const userSubmittedNews: NewsArticle[] = [];
+
+export const addUserNews = (article: Omit<NewsArticle, 'id' | 'timestamp' | 'source' | 'category' | 'url'>) => {
+    const newArticle: NewsArticle = {
+        ...article,
+        id: `user-${new Date().toISOString()}`,
+        timestamp: new Date(),
+        source: 'User Submitted',
+        category: 'User Submitted',
+        url: '#', // User-submitted articles don't have an external source URL
+    };
+    userSubmittedNews.unshift(newArticle); // Add to the beginning of the array
+    return newArticle;
+}

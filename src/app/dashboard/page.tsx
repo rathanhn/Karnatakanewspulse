@@ -31,7 +31,7 @@ import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
 import { NewsArticle, karnatakaDistricts, Category } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 
@@ -93,6 +93,9 @@ export default function Dashboard() {
             <h1>Karnataka News Pulse</h1>
           </Link>
           <div className="flex items-center gap-4">
+            <Button asChild>
+              <Link href="/news/create"><PlusCircle /> Create Post</Link>
+            </Button>
             <Button asChild variant="ghost">
               <Link href="/news">News Feed</Link>
             </Button>
@@ -108,6 +111,10 @@ export default function Dashboard() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => router.push('/news')}>
                   View News Feed
+                </DropdownMenuItem>
+                 <DropdownMenuItem onSelect={() => router.push('/news/create')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  <span>Create Post</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -159,7 +166,7 @@ export default function Dashboard() {
                                 key="Karnataka"
                                 value="Karnataka"
                                 onSelect={(currentValue) => {
-                                  setSelectedDistrict(currentValue === selectedDistrict ? "" : currentValue)
+                                  setSelectedDistrict(currentValue === "Karnataka" ? "Karnataka" : currentValue)
                                   setOpen(false)
                                 }}
                               >
@@ -171,7 +178,7 @@ export default function Dashboard() {
                                 />
                                 All Karnataka
                               </CommandItem>
-                          {karnatakaDistricts.map((district) => (
+                          {karnatakaDistricts.filter(d => d !== 'Karnataka').map((district) => (
                             <CommandItem
                               key={district}
                               value={district}

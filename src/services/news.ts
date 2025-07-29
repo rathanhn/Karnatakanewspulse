@@ -1,7 +1,7 @@
 // src/services/news.ts
 'use server';
 
-import { NewsArticle, Category } from '@/lib/data';
+import { NewsArticle, Category, userSubmittedNews } from '@/lib/data';
 import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
 
 interface FetchNewsOptions {
@@ -18,6 +18,7 @@ const newsDataCategoryMapping: Record<Category, string | null> = {
     Technology: 'technology',
     Business: 'business',
     Entertainment: 'entertainment',
+    'User Submitted': null, // No mapping for user submitted
 };
 
 const gNewsCategoryMapping: Record<Category, string | null> = {
@@ -29,6 +30,7 @@ const gNewsCategoryMapping: Record<Category, string | null> = {
     Technology: 'technology',
     Business: 'business',
     Entertainment: 'entertainment',
+    'User Submitted': null, // No mapping for user submitted
 };
 
 const isPaidPlanMessage = (text: string | null): boolean => {
@@ -136,13 +138,19 @@ async function fetchFromGNews({ district, category, query }: { district: string,
 export async function fetchNewsFromAPI({ district, category }: FetchNewsOptions): Promise<NewsArticle[]> {
   const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
 
-  // Fetch from both APIs in parallel
-  const [newsDataArticles, gNewsArticles] = await Promise.all([
-    fetchFromNewsDataIO({ district, category, query }),
-    fetchFromGNews({ district, category, query }),
-  ]);
+  // Fetch from both APIs in parallel if category is not "User Submitted"
+  let combinedArticles: NewsArticle[] = [];
 
-  const combinedArticles = [...newsDataArticles, ...gNewsArticles];
+  if(category === 'User Submitted') {
+      combinedArticles = [...userSubmittedNews];
+  } else {
+    const [newsDataArticles, gNewsArticles] = await Promise.all([
+      fetchFromNewsDataIO({ district, category, query }),
+      fetchFromGNews({ district, category, query }),
+    ]);
+    combinedArticles = [...newsDataArticles, ...gNewsArticles, ...userSubmittedNews];
+  }
+
 
   // De-duplicate articles based on URL
   const uniqueArticlesMap = new Map<string, NewsArticle>();
