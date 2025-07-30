@@ -78,11 +78,19 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
 
 export function NewsCard({ article }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formattedDate, setFormattedDate] = useState('');
 
-  const formattedDate = new Intl.DateTimeFormat('en-IN', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(article.timestamp));
+  useEffect(() => {
+    if (article.timestamp) {
+        setFormattedDate(
+            new Intl.DateTimeFormat('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            }).format(new Date(article.timestamp))
+        );
+    }
+  }, [article.timestamp]);
+
 
   const imageUrl = article.imageUrl;
 
@@ -132,7 +140,7 @@ export function NewsCard({ article }: NewsCardProps) {
             )}
            <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
             <Badge variant="outline">{article.district}</Badge>
-            <span>{formattedDate}</span>
+            <span>{formattedDate || '...'}</span>
           </div>
           <div className="flex w-full gap-2">
             <Button
@@ -166,7 +174,7 @@ export function NewsCard({ article }: NewsCardProps) {
             <DialogDescription asChild>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <Badge variant="default">{article.district}</Badge>
-                    <span>{formattedDate}</span>
+                    <span>{formattedDate || '...'}</span>
                 </div>
             </DialogDescription>
           </DialogHeader>
