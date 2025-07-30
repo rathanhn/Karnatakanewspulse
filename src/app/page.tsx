@@ -144,9 +144,9 @@ export default function SplashPage() {
                 >
                   {isUserNewsLoading
                     ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
-                    : userNews.map((article) => (
+                    : userNews.map((article, index) => (
                         <div key={article.id} className="cursor-pointer">
-                          <NewsCard article={article} />
+                          <NewsCard article={article} priority={index < 2} />
                         </div>
                       ))}
                 </div>
@@ -164,9 +164,9 @@ export default function SplashPage() {
             >
               {isLatestLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
-                : latestNews.map((article) => (
+                : latestNews.map((article, index) => (
                     <div key={article.id} className="cursor-pointer">
-                      <NewsCard article={article} />
+                      <NewsCard article={article} priority={index < 2} />
                     </div>
                   ))}
             </div>

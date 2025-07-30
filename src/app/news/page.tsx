@@ -234,8 +234,8 @@ function NewsContent() {
                   <section className="mb-12">
                       <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                          {userNews.map((article) => (
-                              <NewsCard key={article.id} article={article} />
+                          {userNews.map((article, index) => (
+                              <NewsCard key={article.id} article={article} priority={index < 4} />
                           ))}
                       </div>
                   </section>
@@ -245,8 +245,8 @@ function NewsContent() {
                 <section>
                     {userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {apiNews.map((article) => (
-                        <NewsCard key={article.id} article={article} />
+                        {apiNews.map((article, index) => (
+                          <NewsCard key={article.id} article={article} priority={index < 4 && userNews.length === 0} />
                         ))}
                     </div>
                 </section>

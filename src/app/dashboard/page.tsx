@@ -239,8 +239,8 @@ export default function Dashboard() {
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
-                : recommendedNews.map((article) => (
-                    <NewsCard key={article.id} article={article} />
+                : recommendedNews.map((article, index) => (
+                    <NewsCard key={article.id} article={article} priority={index < 2} />
                   ))}
             </div>
         </section>
@@ -251,8 +251,8 @@ export default function Dashboard() {
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
-                : trendingNews.map((article) => (
-                    <NewsCard key={article.id} article={article} />
+                : trendingNews.map((article, index) => (
+                    <NewsCard key={article.id} article={article} priority={index < 2} />
                   ))}
             </div>
         </section>

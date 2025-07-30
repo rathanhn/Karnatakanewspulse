@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type NewsCardProps = {
   article: NewsArticle;
+  priority?: boolean;
 };
 
 const getInitials = (name: string | null | undefined) => {
@@ -76,7 +77,7 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
 };
 
 
-export function NewsCard({ article }: NewsCardProps) {
+export function NewsCard({ article, priority = false }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
 
@@ -106,6 +107,7 @@ export function NewsCard({ article }: NewsCardProps) {
                     data-ai-hint={article['data-ai-hint'] || 'news event'}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={priority}
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
                 />
