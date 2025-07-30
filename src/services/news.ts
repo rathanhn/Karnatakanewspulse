@@ -1,14 +1,12 @@
 // src/services/news.ts
 'use server';
 
-import { NewsArticle, Category, karnatakaDistricts, fetchUserSubmittedNews } from '@/lib/data';
+import { NewsArticle, Category, fetchUserSubmittedNews } from '@/lib/data';
 
 interface FetchNewsOptions {
   district: string;
   category?: Category;
   limit?: number;
-  sources?: 'api' | 'user' | 'all';
-  searchTerm?: string;
 }
 
 // --- GNews API Fetcher (for broad categories) ---
@@ -89,45 +87,41 @@ async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
 }
 
 // --- Main Exported Function ---
-export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit, sources = 'all', searchTerm = '' }: FetchNewsOptions): Promise<NewsArticle[]> {
+export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
   
-  let userArticles: NewsArticle[] = [];
-  let apiArticles: NewsArticle[] = [];
-  
-  if (sources === 'all' || sources === 'user') {
-     userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
-  }
+  // Always fetch user-submitted news for the given district
+  const userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
 
+  // If the category is 'User Submitted', we only return those articles.
   if (category === 'User Submitted') {
       return userArticles;
   }
   
-  if ((sources === 'all' || sources === 'api')) {
-      let query = searchTerm;
-      // If there's a search term, prioritize it. Otherwise build a query.
-      if (!query) {
-        query = (district === 'Karnataka' ? '' : district) + ' ' + (category === 'Trending' ? '' : category);
-        query = query.trim();
-        if (!query) query = 'Karnataka'; // Fallback query
-      }
-      
-      // Use different APIs based on what is being requested
-      if (category === 'Trending' || category === 'General') {
-          apiArticles = await fetchFromGNews(query, category);
-      } else {
-          // For more specific queries, NewsData.io is better
-          apiArticles = await fetchFromNewsDataIO(query);
-      }
-      
-      // Assign the selected district to the fetched articles
-      apiArticles = apiArticles.map(article => ({ ...article, district }));
-
-      if (queryLimit) {
-        apiArticles = apiArticles.slice(0, queryLimit);
-      }
+  let apiArticles: NewsArticle[] = [];
+  
+  // Construct the query for the APIs
+  let query = (district === 'Karnataka' ? '' : district) + ' ' + (category === 'Trending' ? '' : category);
+  query = query.trim();
+  if (!query) query = 'Karnataka'; // Fallback query for broad searches
+  
+  // Use different APIs based on what is being requested
+  if (category === 'Trending' || category === 'General') {
+      apiArticles = await fetchFromGNews(query, category);
+  } else {
+      // For more specific queries, NewsData.io is better
+      apiArticles = await fetchFromNewsDataIO(query);
   }
   
+  // Assign the selected district to the fetched articles for consistency
+  apiArticles = apiArticles.map(article => ({ ...article, district }));
+
+  if (queryLimit) {
+    apiArticles = apiArticles.slice(0, queryLimit);
+  }
+  
+  // Combine user-submitted articles with API articles
   const allArticles = [...userArticles, ...apiArticles];
   
+  // Sort all articles by date, newest first
   return allArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 }
