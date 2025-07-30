@@ -65,10 +65,12 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
         
         let q;
         if (district === 'Karnataka' || !karnatakaDistricts.includes(district)) {
+           // For "All Karnataka", fetch all user-submitted news without district filter
            q = query(newsCollection, 
                orderBy("timestamp", "desc")
            );
         } else {
+           // For a specific district, filter by that district
            q = query(newsCollection, 
                where("district", "==", district), 
                orderBy("timestamp", "desc")
@@ -95,6 +97,7 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
     }
 }
 
+
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit, sources = 'all' }: FetchNewsOptions): Promise<NewsArticle[]> {
   
   let userArticles: NewsArticle[] = [];
@@ -104,23 +107,29 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
      userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
   }
 
+  // If the user specifically wants only user-submitted news, return that.
   if (category === 'User Submitted') {
       return userArticles;
   }
   
   if (sources === 'all' || sources === 'api') {
+      // Construct a broad query for the API. AI will do the fine-grained filtering.
       const query = `${district === 'Karnataka' ? 'Karnataka' : district} India ${category !== 'Trending' ? category : ''}`.trim();
       
-      apiArticles = await fetchFromNewsAPI({ query });
+      const rawApiArticles = await fetchFromNewsAPI({ query });
 
-      if (apiArticles.length > 0 && district !== 'Karnataka') {
+      if (rawApiArticles.length > 0) {
           try {
-              const filteredResult = await filterNewsByDistrict({ articles: apiArticles, district });
-              apiArticles = filteredResult.articles.map(article => ({ ...article, district })); // Set correct district after filtering
+              // The AI flow will filter articles and assign the correct district.
+              const filteredResult = await filterNewsByDistrict({ articles: rawApiArticles, district });
+              apiArticles = filteredResult.articles;
           } catch (error) {
-              console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
+              console.error("AI filtering failed. Returning unfiltered API results as a fallback.", error);
+              // Fallback to returning all API articles if AI fails
+              apiArticles = rawApiArticles.map(a => ({...a, district}));
           }
       }
+      
       if (queryLimit) {
         apiArticles = apiArticles.slice(0, queryLimit);
       }
@@ -128,6 +137,7 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   
   const allArticles = [...userArticles, ...apiArticles];
   
+  // Sort all combined articles by timestamp, descending.
   return allArticles.sort((a, b) => {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
