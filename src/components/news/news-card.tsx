@@ -104,9 +104,9 @@ export function NewsCard({ article }: NewsCardProps) {
                     src={imageUrl}
                     alt={article.headline}
                     data-ai-hint={article['data-ai-hint'] || 'news event'}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                     onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
                 />
              ) : (
@@ -198,8 +198,9 @@ export function NewsCard({ article }: NewsCardProps) {
                         src={imageUrl}
                         alt={article.headline}
                         data-ai-hint={article['data-ai-hint'] || 'news event'}
-                        layout="fill"
-                        objectFit="cover"
+                        fill
+                        sizes="80vw"
+                        className="object-cover"
                         onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400.png'; }}
                     />
                 </div>
