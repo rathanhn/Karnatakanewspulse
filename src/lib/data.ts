@@ -222,6 +222,7 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
 }
 
 export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
+    console.log(`[LOG] fetchUserSubmittedNews called with: district="${district}", limit=${queryLimit}`);
     try {
         const constraints: QueryConstraint[] = [
             where("source", "==", "User Submitted"),
@@ -237,7 +238,7 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { 
 
         const q = query(collection(db, "news"), ...constraints);
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => {
+        const articles = querySnapshot.docs.map(doc => {
             const data = doc.data();
             const timestamp = data.timestamp as Timestamp;
             return {
@@ -246,11 +247,13 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { 
                 timestamp: timestamp ? timestamp.toDate() : new Date(),
             } as NewsArticle;
         });
+        console.log(`[LOG] Found ${articles.length} user-submitted articles from Firestore.`);
+        return articles;
     } catch (e) {
-        console.error("Error fetching user submitted news:", e);
+        console.error("[LOG] Error fetching user submitted news:", e);
         // Fallback for missing indexes
         if (e instanceof Error && e.message.includes("The query requires an index")) {
-             console.warn("Firestore index not found for user news query. Please create the required index in the Firebase console.");
+             console.warn("[LOG] Firestore index not found for user news query. Please create the required index in the Firebase console.");
         }
         return [];
     }

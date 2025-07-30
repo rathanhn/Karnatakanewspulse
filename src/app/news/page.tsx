@@ -55,12 +55,14 @@ function NewsContent() {
     setSearchTerm(initialSearchTerm);
 
     const executeFetch = async () => {
+        console.log(`[LOG] NewsContent: Starting fetch with district=${initialDistrict}, category=${initialCategory}, search=${initialSearchTerm}`);
         setIsLoading(true);
         setError(null);
         setAllNews([]);
         setFilteredNews([]);
         try {
             const newsData = await fetchNewsFromAPI({ district: initialDistrict, category: initialCategory });
+            console.log(`[LOG] NewsContent: fetchNewsFromAPI returned ${newsData.length} articles.`);
             setAllNews(newsData);
 
             if (initialSearchTerm) {
@@ -72,15 +74,18 @@ function NewsContent() {
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
                 );
                 setFilteredNews(results);
+                console.log(`[LOG] NewsContent: Initial search found ${results.length} articles.`);
             } else {
                 // Otherwise, show all fetched news
                 setFilteredNews(newsData);
+                console.log(`[LOG] NewsContent: No initial search, showing all ${newsData.length} articles.`);
             }
         } catch (err: any) {
-            console.error('Error fetching news:', err);
+            console.error('[LOG] NewsContent: Error fetching news:', err);
             setError('Failed to fetch news. Please check your connection or API key and try again.');
         } finally {
             setIsLoading(false);
+            console.log("[LOG] NewsContent: Fetch finished, loading set to false.");
         }
     };
     
@@ -90,8 +95,10 @@ function NewsContent() {
   // Client-side filtering logic
   const handleSearch = useCallback((currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
+    console.log(`[LOG] NewsContent: Performing client-side search for: "${lowerCaseSearchTerm}"`);
     if (lowerCaseSearchTerm.trim() === '') {
         setFilteredNews(allNews); // Reset to all news if search is cleared
+        console.log(`[LOG] NewsContent: Search cleared, showing all ${allNews.length} articles.`);
     } else {
         const results = allNews.filter(
             (article) =>
@@ -99,6 +106,7 @@ function NewsContent() {
                 (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
         );
         setFilteredNews(results);
+        console.log(`[LOG] NewsContent: Client-side search found ${results.length} articles.`);
     }
   }, [allNews]);
 
@@ -115,6 +123,7 @@ function NewsContent() {
 
       if (searchTerm.trim() && currentResults.length > 0) {
         setIsAiSummaryLoading(true);
+        console.log("[LOG] NewsContent: Generating AI summary...");
         try {
           const searchResultsText = currentResults.map(n => n.headline).join('\n');
           const aiResponse = await refineSearchSuggestions({
@@ -124,11 +133,12 @@ function NewsContent() {
           setAiSummary(aiResponse.summary);
           setAiSuggestions(aiResponse.suggestions);
         } catch (err) {
-          console.error("AI suggestion error:", err);
+          console.error("[LOG] NewsContent: AI suggestion error:", err);
           setAiSummary('Could not generate summary.');
           setAiSuggestions([]);
         } finally {
           setIsAiSummaryLoading(false);
+          console.log("[LOG] NewsContent: AI summary finished.");
         }
       } else {
         setAiSummary('');
