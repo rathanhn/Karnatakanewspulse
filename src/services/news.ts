@@ -1,7 +1,7 @@
 // src/services/news.ts
 'use server';
 
-import { NewsArticle, Category } from '@/lib/data';
+import { NewsArticle, Category, karnatakaDistricts } from '@/lib/data';
 import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, orderBy, Timestamp, limit } from "firebase/firestore";
@@ -13,125 +13,64 @@ interface FetchNewsOptions {
   sources?: 'api' | 'user' | 'all';
 }
 
-const newsDataCategoryMapping: Record<Category, string | null> = {
-    Trending: null,
-    General: 'other',
-    Politics: 'politics',
-    Sports: 'sports',
-    Crime: 'crime',
-    Technology: 'technology',
-    Business: 'business',
-    Entertainment: 'entertainment',
-    'User Submitted': null, // No mapping for user submitted
-};
 
-const gNewsCategoryMapping: Record<Category, string | null> = {
+const newsApiCategoryMapping: Record<Category, string | null> = {
     Trending: 'general',
     General: 'general',
-    Politics: 'politics',
+    Politics: 'general', // newsapi.org doesn't have a specific politics category, use general
     Sports: 'sports',
-    Crime: 'nation', 
+    Crime: 'general', // Use general for crime
     Technology: 'technology',
     Business: 'business',
     Entertainment: 'entertainment',
-    'User Submitted': null, // No mapping for user submitted
+    'User Submitted': null,
 };
 
-const isPaidPlanMessage = (text: string | null): boolean => {
-    if (!text) return false;
-    return text.toLowerCase().includes('only available in paid plans');
-}
 
-async function fetchFromNewsDataIO({ district, category, query: queryParam }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
+async function fetchFromNewsAPI({ district, category, query: queryParam }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWS_API_KEY;
   if (!apiKey) {
-    console.warn('NewsData.io API key is not configured. Skipping fetch.');
+    console.warn('NewsAPI.org API key is not configured. Skipping fetch.');
     return [];
   }
-
-  const apiCategory = newsDataCategoryMapping[category];
-  // Use qInTitle to comply with potential free plan limitations
-  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&qInTitle=${encodeURIComponent(queryParam)}&language=kn,en`;
-  if (apiCategory) {
-      url += `&category=${apiCategory}`;
-  }
-
-  try {
-    const response = await fetch(url, { cache: 'no-store' }); // Disable cache to get latest news
-    if (!response.ok) {
-      const errorBody = await response.json();
-      console.error('NewsData.io API Error:', errorBody);
-      // Don't throw, just return empty array so other APIs can still work
-      return [];
-    }
-    const data = await response.json();
-    if (data.status === 'success' && data.results) {
-      return data.results.map((item: any): NewsArticle => {
-        const content = item.content || item.description;
-        return {
-            id: item.article_id,
-            headline: item.title,
-            content: isPaidPlanMessage(content) ? null : content,
-            url: item.link,
-            imageUrl: item.image_url,
-            embedUrl: item.video_url,
-            timestamp: new Date(item.pubDate),
-            source: item.source_id || 'Unknown Source',
-            district: district, // Tentative district
-            category: category,
-            'data-ai-hint': item.keywords ? item.keywords.join(' ') : item.title.split(' ').slice(0, 2).join(' '),
-        }
-      });
-    }
-    return [];
-  } catch (error) {
-    console.error('Failed to fetch from NewsData.io:', error);
-    return [];
-  }
-}
-
-async function fetchFromGNews({ district, category, query: queryParam }: { district: string, category: Category, query: string }): Promise<NewsArticle[]> {
-  const apiKey = process.env.GNEWS_API_KEY;
-  if (!apiKey) {
-    console.warn('GNews API key is not configured. Skipping fetch.');
-    return [];
-  }
-
-  const apiCategory = gNewsCategoryMapping[category];
-  let url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(queryParam)}&apikey=${apiKey}&lang=en&country=in&max=10`;
   
-  if (apiCategory) {
-      url += `&topic=${apiCategory}`;
+  const apiCategory = newsApiCategoryMapping[category];
+  
+  // Use top-headlines for categories and everything for general search
+  const endpoint = apiCategory ? 'top-headlines' : 'everything';
+  
+  let url = `https://newsapi.org/v2/${endpoint}?q=${encodeURIComponent(queryParam)}&apiKey=${apiKey}&language=en`;
+  
+  if (endpoint === 'top-headlines' && apiCategory) {
+    url += `&category=${apiCategory}&country=in`;
   }
 
   try {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       const errorBody = await response.json();
-      console.error('GNews API Error:', errorBody);
+      console.error('NewsAPI.org API Error:', errorBody);
       return [];
     }
     const data = await response.json();
-    if (data.articles) {
-      return data.articles.map((item: any): NewsArticle => {
-        const content = item.content || item.description;
-        return {
-            id: item.url,
-            headline: item.title,
-            content: isPaidPlanMessage(content) ? null : content,
-            url: item.url,
-            imageUrl: item.image,
-            timestamp: new Date(item.publishedAt),
-            source: item.source.name || 'Unknown Source',
-            district: district, // Tentative district
-            category: category,
-            'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
-        }
-      });
+    if (data.status === 'ok' && data.articles) {
+      return data.articles.map((item: any): NewsArticle => ({
+        id: item.url, // Use URL as a unique ID
+        headline: item.title,
+        content: item.description,
+        url: item.url,
+        imageUrl: item.urlToImage,
+        embedUrl: undefined, // NewsAPI doesn't provide embed URLs
+        timestamp: new Date(item.publishedAt),
+        source: item.source.name || 'Unknown Source',
+        district: district, // Tentative district
+        category: category,
+        'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
+      }));
     }
     return [];
   } catch (error) {
-    console.error('Failed to fetch from GNews:', error);
+    console.error('Failed to fetch from NewsAPI.org:', error);
     return [];
   }
 }
@@ -141,7 +80,7 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
         const newsCollection = collection(db, "news");
         
         let q;
-        if (district === 'Karnataka') {
+        if (district === 'Karnataka' || !karnatakaDistricts.includes(district)) {
            q = query(newsCollection, 
                orderBy("timestamp", "desc")
            );
@@ -179,61 +118,40 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
 export async function fetchNewsFromAPI({ district, category, limit, sources = 'all' }: FetchNewsOptions): Promise<NewsArticle[]> {
   
   let userArticles: NewsArticle[] = [];
-  let uniqueApiArticles: NewsArticle[] = [];
+  let apiArticles: NewsArticle[] = [];
   
-  // 1. Fetch user-submitted news if requested
   if (sources === 'all' || sources === 'user') {
-     userArticles = await fetchUserSubmittedNews({ district, limit });
+     userArticles = await fetchUserSubmittedNews({ district });
   }
 
-  // 2. If the category is "User Submitted", we only return those articles.
   if (category === 'User Submitted') {
       return userArticles;
   }
   
-  // 3. Fetch from external APIs if requested
   if (sources === 'all' || sources === 'api') {
-      const query = `${district === 'Karnataka' ? 'Karnataka' : district + ' news'}`;
+      const query = `${district === 'Karnataka' ? 'Karnataka India' : district + ' news'}`;
       
-      const [newsDataArticles, gNewsArticles] = await Promise.all([
-        fetchFromNewsDataIO({ district, category, query }),
-        fetchFromGNews({ district, category, query }),
-      ]);
-      const combinedApiArticles = [...newsDataArticles, ...gNewsArticles];
+      apiArticles = await fetchFromNewsAPI({ district, category, query });
 
-      // De-duplicate API articles based on URL
-      const uniqueArticlesMap = new Map<string, NewsArticle>();
-      for (const article of combinedApiArticles) {
-        if (article.url && !uniqueArticlesMap.has(article.url)) {
-          uniqueArticlesMap.set(article.url, article);
-        }
-      }
-      uniqueApiArticles = Array.from(uniqueArticlesMap.values());
-
-      // Use AI to filter and ensure relevance to the district if there are articles.
-      if (uniqueApiArticles.length > 0 && district !== 'Karnataka') {
+      if (apiArticles.length > 0 && district !== 'Karnataka') {
           try {
-              const filteredResult = await filterNewsByDistrict({ articles: uniqueApiArticles, district });
-              uniqueApiArticles = filteredResult.articles;
+              const filteredResult = await filterNewsByDistrict({ articles: apiArticles, district });
+              apiArticles = filteredResult.articles;
           } catch (error) {
               console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
           }
       }
       if (limit) {
-        uniqueApiArticles = uniqueApiArticles.slice(0, limit);
+        apiArticles = apiArticles.slice(0, limit);
       }
   }
   
-  // 4. Combine user news and API news, then sort.
-  // User articles are always first, followed by API articles sorted by date.
-  const allArticles = [...userArticles, ...uniqueApiArticles];
+  const allArticles = [...userArticles, ...apiArticles];
   
   return allArticles.sort((a, b) => {
-    // Prioritize User Submitted
     if (a.source === 'User Submitted' && b.source !== 'User Submitted') return -1;
     if (a.source !== 'User Submitted' && b.source === 'User Submitted') return 1;
 
-    // If both are user submitted or both are not, sort by timestamp
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 }
