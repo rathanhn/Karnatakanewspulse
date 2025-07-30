@@ -163,7 +163,6 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | null
                 timestamp: timestamp ? timestamp.toDate() : new Date(),
             } as NewsArticle;
         } else {
-            console.log("No such document!");
             return null;
         }
     } catch (error) {
@@ -222,7 +221,6 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
 }
 
 export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
-    console.log(`[LOG] fetchUserSubmittedNews called with: district="${district}", limit=${queryLimit}`);
     try {
         const constraints: QueryConstraint[] = [
             where("source", "==", "User Submitted"),
@@ -247,13 +245,12 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { 
                 timestamp: timestamp ? timestamp.toDate() : new Date(),
             } as NewsArticle;
         });
-        console.log(`[LOG] Found ${articles.length} user-submitted articles from Firestore.`);
         return articles;
     } catch (e) {
-        console.error("[LOG] Error fetching user submitted news:", e);
-        // Fallback for missing indexes
         if (e instanceof Error && e.message.includes("The query requires an index")) {
-             console.warn("[LOG] Firestore index not found for user news query. Please create the required index in the Firebase console.");
+             console.warn("Firestore index not found for user news query. Please create the required index in the Firebase console.");
+        } else {
+            console.error("Error fetching user submitted news:", e);
         }
         return [];
     }
