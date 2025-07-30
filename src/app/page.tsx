@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
-import { fetchNewsFromAPI, fetchUserSubmittedNews } from '@/services/news';
-import { NewsArticle } from '@/lib/data';
+import { fetchNewsFromAPI } from '@/services/news';
+import { NewsArticle, fetchUserSubmittedNews } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { Newspaper, Lightbulb, Map, BarChart, Users } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
@@ -51,7 +51,7 @@ export default function SplashPage() {
       setIsUserNewsLoading(true);
       try {
         const [apiNews, communityNews] = await Promise.all([
-             fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending', sources: 'api', limit: 4 }),
+             fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending', limit: 4 }),
              fetchUserSubmittedNews({ district: 'Karnataka', limit: 4})
         ]);
         setLatestNews(apiNews);

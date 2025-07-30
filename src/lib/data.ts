@@ -1,7 +1,7 @@
 // src/lib/data.ts
 import { z } from 'zod';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch, limit, QueryConstraint } from "firebase/firestore";
 
 
 export type Source = string;
@@ -220,6 +220,41 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
         throw e;
     }
 }
+
+export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
+    try {
+        const constraints: QueryConstraint[] = [
+            where("source", "==", "User Submitted"),
+            orderBy("timestamp", "desc")
+        ];
+
+        if (district !== 'Karnataka') {
+            constraints.push(where("district", "==", district));
+        }
+        if (queryLimit) {
+            constraints.push(limit(queryLimit));
+        }
+
+        const q = query(collection(db, "news"), ...constraints);
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const timestamp = data.timestamp as Timestamp;
+            return {
+                ...data,
+                id: doc.id,
+                timestamp: timestamp ? timestamp.toDate() : new Date(),
+            } as NewsArticle;
+        });
+    } catch (e) {
+        console.error("Error fetching user submitted news:", e);
+        // Fallback for missing indexes
+        if (e instanceof Error && e.message.includes("The query requires an index")) {
+             console.warn("Firestore index not found for user news query. Please create the required index in the Firebase console.");
+        }
+        return [];
+    }
+};
 
 export const deleteUserNews = async (postId: string): Promise<void> => {
     try {

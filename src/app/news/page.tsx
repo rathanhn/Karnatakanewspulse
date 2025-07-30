@@ -41,13 +41,12 @@ function NewsContent() {
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
-  const fetchNews = useCallback(async (district: string, category: Category) => {
+  const fetchNews = useCallback(async (district: string, category: Category, term: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const allNews = await fetchNewsFromAPI({ district, category });
+      const allNews = await fetchNewsFromAPI({ district, category, searchTerm: term });
       setNews(allNews);
-      setFilteredNews(allNews);
     } catch (err: any) {
       console.error('Error fetching news:', err);
       setError('Failed to fetch news. Please check your connection or API key and try again.');
@@ -57,23 +56,28 @@ function NewsContent() {
   }, []);
 
   useEffect(() => {
-    fetchNews(selectedDistrict, selectedCategory);
+    fetchNews(selectedDistrict, selectedCategory, searchTerm);
   }, [selectedDistrict, selectedCategory, fetchNews]);
 
   const handleSearch = useCallback(async (currentSearchTerm: string) => {
-    const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
-    
-    const results = news.filter(
-      (article) =>
-        article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
-        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
-    );
-    setFilteredNews(results);
+    // If there is a search term, we need to re-fetch from the API
+    if(currentSearchTerm.trim()) {
+        fetchNews(selectedDistrict, selectedCategory, currentSearchTerm);
+    } else {
+        // Otherwise, filter the existing news list
+        const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
+        const results = news.filter(
+          (article) =>
+            article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+            (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+        setFilteredNews(results);
+    }
 
-    if (currentSearchTerm.trim() && results.length > 0) {
+    if (currentSearchTerm.trim() && news.length > 0) {
       setIsAiSummaryLoading(true);
       try {
-        const searchResultsText = results.map(n => n.headline).join('\n');
+        const searchResultsText = news.map(n => n.headline).join('\n');
         const aiResponse = await refineSearchSuggestions({
           initialQuery: currentSearchTerm,
           searchResults: searchResultsText,
@@ -91,16 +95,18 @@ function NewsContent() {
       setAiSummary('');
       setAiSuggestions([]);
     }
-  }, [news]);
+  }, [news, fetchNews, selectedDistrict, selectedCategory]);
   
   useEffect(() => {
-    if(searchTerm) {
-        handleSearch(searchTerm);
-    } else {
-        setFilteredNews(news);
+    // This effect now simply copies the full news list to the filtered list when news changes.
+    // The actual text filtering is handled by the search submission.
+    setFilteredNews(news);
+    // When news is reloaded (e.g. after a search), regenerate AI summary
+    if (searchTerm.trim() && news.length > 0) {
+        handleSearch(searchTerm)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTerm, news]);
+  }, [news]);
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
@@ -197,7 +203,7 @@ function NewsContent() {
                 <AlertCircle className="w-16 h-16 text-destructive mb-4" />
                 <h2 className="text-2xl font-bold mb-2">An Error Occurred</h2>
                 <p className="text-muted-foreground max-w-md">{error}</p>
-                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory)} className="mt-6">Try Again</Button>
+                <Button onClick={() => fetchNews(selectedDistrict, selectedCategory, searchTerm)} className="mt-6">Try Again</Button>
             </div>
         ) : (
             <>
@@ -208,7 +214,7 @@ function NewsContent() {
                     </div>
               )}
                 
-              {filteredNews.length > 0 && selectedCategory !== 'User Submitted' && userNews.length > 0 && (
+              {userNews.length > 0 && (
                   <section className="mb-12">
                       <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
                       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -219,26 +225,15 @@ function NewsContent() {
                   </section>
               )}
 
-              {apiNews.length > 0 && selectedCategory !== 'User Submitted' && (
+              {apiNews.length > 0 && (
                 <section>
-                    <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>
+                    {userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {apiNews.map((article) => (
                         <NewsCard key={article.id} article={article} />
                         ))}
                     </div>
                 </section>
-              )}
-
-              {selectedCategory === 'User Submitted' && (
-                   <section>
-                        <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                            {userNews.map((article) => (
-                                <NewsCard key={article.id} article={article} />
-                            ))}
-                        </div>
-                    </section>
               )}
            </>
         )}
@@ -253,5 +248,5 @@ export default function NewsPage() {
         <Suspense fallback={<div>Loading...</div>}>
             <NewsContent />
         </Suspense>
-    )
+    );
 }
