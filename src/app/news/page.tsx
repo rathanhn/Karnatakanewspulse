@@ -27,86 +27,128 @@ function NewsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // State for UI controls
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
-  const [selectedCategory, setSelectedCategory] = useState<Category>('Trending');
+  const [selectedCategory, setSelectedCategory] = useState<Category>((searchParams.get('category') as Category) || 'Trending');
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   
-  const [news, setNews] = useState<NewsArticleType[]>([]);
+  // State for data and loading
+  const [allNews, setAllNews] = useState<NewsArticleType[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // State for AI summary
   const [aiSummary, setAiSummary] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
-  const executeFetch = useCallback(async (district: string, category: Category) => {
-    setIsLoading(true);
-    setError(null);
-    setNews([]);
-    setFilteredNews([]);
-    try {
-      const allNews = await fetchNewsFromAPI({ district, category });
-      setNews(allNews);
-      setFilteredNews(allNews); // Initially, filtered news is all news
-    } catch (err: any) {
-      console.error('Error fetching news:', err);
-      setError('Failed to fetch news. Please check your connection or API key and try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
+  // Fetch initial data based on URL params or defaults
   useEffect(() => {
-    executeFetch(selectedDistrict, selectedCategory);
-  }, [selectedDistrict, selectedCategory, executeFetch]);
+    const initialDistrict = searchParams.get('district') || 'Karnataka';
+    const initialCategory = (searchParams.get('category') as Category) || 'Trending';
+    const initialSearchTerm = searchParams.get('q') || '';
 
-  const handleSearch = useCallback(async (currentSearchTerm: string) => {
+    setSelectedDistrict(initialDistrict);
+    setSelectedCategory(initialCategory);
+    setSearchTerm(initialSearchTerm);
+
+    const executeFetch = async () => {
+        setIsLoading(true);
+        setError(null);
+        setAllNews([]);
+        setFilteredNews([]);
+        try {
+            const newsData = await fetchNewsFromAPI({ district: initialDistrict, category: initialCategory });
+            setAllNews(newsData);
+
+            if (initialSearchTerm) {
+                // If there's an initial search term, filter the results immediately
+                const lowerCaseSearchTerm = initialSearchTerm.toLowerCase();
+                const results = newsData.filter(
+                    (article) =>
+                        article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+                        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+                );
+                setFilteredNews(results);
+            } else {
+                // Otherwise, show all fetched news
+                setFilteredNews(newsData);
+            }
+        } catch (err: any) {
+            console.error('Error fetching news:', err);
+            setError('Failed to fetch news. Please check your connection or API key and try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    executeFetch();
+  }, [searchParams]);
+
+  // Client-side filtering logic
+  const handleSearch = useCallback((currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
-    const results = news.filter(
-      (article) =>
-        article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
-        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
-    );
-    setFilteredNews(results);
-
-    if (currentSearchTerm.trim() && results.length > 0) {
-      setIsAiSummaryLoading(true);
-      try {
-        const searchResultsText = results.map(n => n.headline).join('\n');
-        const aiResponse = await refineSearchSuggestions({
-          initialQuery: currentSearchTerm,
-          searchResults: searchResultsText,
-        });
-        setAiSummary(aiResponse.summary);
-        setAiSuggestions(aiResponse.suggestions);
-      } catch (err) {
-        console.error("AI suggestion error:", err);
-        setAiSummary('Could not generate summary.');
-        setAiSuggestions([]);
-      } finally {
-        setIsAiSummaryLoading(false);
-      }
+    if (lowerCaseSearchTerm.trim() === '') {
+        setFilteredNews(allNews); // Reset to all news if search is cleared
     } else {
-      setAiSummary('');
-      setAiSuggestions([]);
+        const results = allNews.filter(
+            (article) =>
+                article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+                (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+        setFilteredNews(results);
     }
-  }, [news]);
+  }, [allNews]);
 
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-  
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // Handle form submission and AI summary generation
+  const handleSearchSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      handleSearch(searchTerm);
-  };
+      handleSearch(searchTerm); // Perform client-side filtering
+
+      const currentResults = allNews.filter(
+        (article) =>
+          article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+
+      if (searchTerm.trim() && currentResults.length > 0) {
+        setIsAiSummaryLoading(true);
+        try {
+          const searchResultsText = currentResults.map(n => n.headline).join('\n');
+          const aiResponse = await refineSearchSuggestions({
+            initialQuery: searchTerm,
+            searchResults: searchResultsText,
+          });
+          setAiSummary(aiResponse.summary);
+          setAiSuggestions(aiResponse.suggestions);
+        } catch (err) {
+          console.error("AI suggestion error:", err);
+          setAiSummary('Could not generate summary.');
+          setAiSuggestions([]);
+        } finally {
+          setIsAiSummaryLoading(false);
+        }
+      } else {
+        setAiSummary('');
+        setAiSuggestions([]);
+      }
+  }, [searchTerm, allNews, handleSearch]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
+
+  const handleFilterChange = () => {
+    // Update URL to trigger re-fetch when filters change
+    const params = new URLSearchParams();
+    params.set('district', selectedDistrict);
+    params.set('category', selectedCategory);
+    if(searchTerm) params.set('q', searchTerm);
+    router.push(`/news?${params.toString()}`);
+  }
 
   const { userNews, apiNews } = useMemo(() => {
     const userNews = filteredNews.filter(a => a.source === 'User Submitted');
@@ -125,18 +167,18 @@ function NewsContent() {
                     <h1 className='hidden sm:block'>Karnataka News Pulse</h1>
                 </Link>
             </div>
-            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-4 w-full max-w-2xl">
-              <div className="relative w-full">
+            <div className="hidden md:flex items-center gap-4 w-full max-w-2xl">
+              <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search for news..."
+                  placeholder="Search within results..."
                   className="pl-10 w-full"
                   value={searchTerm}
-                  onChange={handleSearchInputChange}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-              </div>
-              <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+              </form>
+              <Select value={selectedDistrict} onValueChange={val => {setSelectedDistrict(val); router.push(`/news?district=${val}&category=${selectedCategory}`)}}>
                 <SelectTrigger className="w-[280px]">
                   <MapPin className="w-5 h-5 mr-2" />
                   <SelectValue placeholder="Select District" />
@@ -150,7 +192,7 @@ function NewsContent() {
                   ))}
                 </SelectContent>
               </Select>
-               <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as Category)}>
+               <Select value={selectedCategory} onValueChange={(value) => {setSelectedCategory(value as Category); router.push(`/news?district=${selectedDistrict}&category=${value}`)}}>
                 <SelectTrigger className="w-[220px]">
                   <LayoutGrid className="w-5 h-5 mr-2" />
                   <SelectValue placeholder="Select Category" />
@@ -163,7 +205,7 @@ function NewsContent() {
                   ))}
                 </SelectContent>
               </Select>
-            </form>
+            </div>
              <Button asChild variant="ghost">
               <Link href="/home">Home</Link>
             </Button>
@@ -188,7 +230,7 @@ function NewsContent() {
                 <AlertCircle className="w-16 h-16 text-destructive mb-4" />
                 <h2 className="text-2xl font-bold mb-2">An Error Occurred</h2>
                 <p className="text-muted-foreground max-w-md">{error}</p>
-                <Button onClick={() => executeFetch(selectedDistrict, selectedCategory)} className="mt-6">Try Again</Button>
+                <Button onClick={() => router.refresh()} className="mt-6">Try Again</Button>
             </div>
         ) : (
             <>

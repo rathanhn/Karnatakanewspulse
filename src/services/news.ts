@@ -13,19 +13,20 @@ interface FetchNewsOptions {
 async function fetchFromGNews(query: string, category: string): Promise<NewsArticle[]> {
   const apiKey = process.env.GNEWS_API_KEY;
   if (!apiKey) {
-    console.warn('GNews API key is not configured. Skipping fetch.');
+    console.warn('GNews API key is not configured. Skipping fetch from GNews.');
     return [];
   }
   
   const categoryParam = category.toLowerCase() === 'trending' ? 'general' : category.toLowerCase();
-  let url = `https://gnews.io/api/v4/top-headlines?country=in&lang=en&q=${encodeURIComponent(query)}&category=${categoryParam}&apikey=${apiKey}`;
+  const url = `https://gnews.io/api/v4/top-headlines?country=in&lang=en&q=${encodeURIComponent(query)}&category=${categoryParam}&apikey=${apiKey}`;
+  console.log(`Fetching from GNews: ${url.replace(apiKey, 'REDACTED')}`);
 
   try {
     const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
     if (!response.ok) {
         const errorData = await response.json();
         console.error("GNews API Error:", errorData);
-        throw new Error(errorData.errors.join(', '));
+        throw new Error(`GNews API Error: ${errorData.errors?.join(', ') || response.statusText}`);
     }
     const data = await response.json();
     
@@ -37,7 +38,7 @@ async function fetchFromGNews(query: string, category: string): Promise<NewsArti
       imageUrl: item.image,
       timestamp: new Date(item.publishedAt),
       source: item.source.name,
-      district: "API Sourced", // Placeholder
+      district: "API Sourced", // Placeholder, will be replaced
       category: category as Category,
       'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
     }));
@@ -52,18 +53,19 @@ async function fetchFromGNews(query: string, category: string): Promise<NewsArti
 async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
   const apiKey = process.env.NEWSDATA_API_KEY;
   if (!apiKey) {
-    console.warn('NewsData.io API key is not configured. Skipping fetch.');
+    console.warn('NewsData.io API key is not configured. Skipping fetch from NewsData.io.');
     return [];
   }
   
-  let url = `https://newsdata.io/api/1/news?apikey=${apiKey}&country=in&language=en&q=${encodeURIComponent(query)}`;
+  const url = `https://newsdata.io/api/1/news?apikey=${apiKey}&country=in&language=en&q=${encodeURIComponent(query)}`;
+  console.log(`Fetching from NewsData.io: ${url.replace(apiKey, 'REDACTED')}`);
 
   try {
     const response = await fetch(url, { next: { revalidate: 3600 } });
     if (!response.ok) {
         const errorData = await response.json();
         console.error("NewsData.io API Error:", errorData);
-        throw new Error(errorData.results?.message || "NewsData.io request failed");
+        throw new Error(`NewsData.io Error: ${errorData.results?.message || response.statusText}`);
     }
     const data = await response.json();
 
@@ -75,7 +77,7 @@ async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
       imageUrl: item.image_url,
       timestamp: new Date(item.pubDate),
       source: item.source_id || 'Unknown Source',
-      district: item.country?.includes('India') ? 'API Sourced' : item.country, // Placeholder
+      district: "API Sourced", // Placeholder, will be replaced
       category: 'General', // Default category
       'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
     }));
@@ -89,8 +91,11 @@ async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
   
+  console.log(`Fetching all news for district: "${district}", category: "${category}"`);
+  
   // Always fetch user-submitted news for the given district
   const userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
+  console.log(`Found ${userArticles.length} user-submitted articles.`);
 
   // If the category is 'User Submitted', we only return those articles.
   if (category === 'User Submitted') {
@@ -100,18 +105,32 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   let apiArticles: NewsArticle[] = [];
   
   // Construct the query for the APIs
-  let query = (district === 'Karnataka' ? '' : district) + ' ' + (category === 'Trending' ? '' : category);
-  query = query.trim();
-  if (!query) query = 'Karnataka'; // Fallback query for broad searches
+  // Using a more specific query improves relevance
+  const queryParts = [];
+  if (district !== 'Karnataka') {
+      queryParts.push(district);
+  }
+  if (category !== 'Trending' && category !== 'General') {
+       queryParts.push(category);
+  }
+  let query = queryParts.join(' ');
+
+  // If query is still empty (e.g., "All Karnataka" and "Trending"), use a broad term.
+  if (!query) {
+      query = 'Karnataka';
+  }
   
   // Use different APIs based on what is being requested
   if (category === 'Trending' || category === 'General') {
+      console.log(`Using GNews for broad category: ${category}`);
       apiArticles = await fetchFromGNews(query, category);
   } else {
-      // For more specific queries, NewsData.io is better
+      console.log(`Using NewsData.io for specific query: "${query}"`);
       apiArticles = await fetchFromNewsDataIO(query);
   }
   
+  console.log(`Found ${apiArticles.length} articles from API.`);
+
   // Assign the selected district to the fetched articles for consistency
   apiArticles = apiArticles.map(article => ({ ...article, district }));
 
@@ -123,5 +142,7 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   const allArticles = [...userArticles, ...apiArticles];
   
   // Sort all articles by date, newest first
-  return allArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const sortedArticles = allArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  console.log(`Returning a total of ${sortedArticles.length} sorted articles.`);
+  return sortedArticles;
 }
