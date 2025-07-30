@@ -39,3 +39,17 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .h-screen-minus-header {
+    height: calc(100vh - 5rem); /* 5rem is h-20 */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}

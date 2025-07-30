@@ -21,11 +21,13 @@ import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { AiSummary } from '@/components/ai-summary';
 import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 
 function NewsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isMobile = useIsMobile();
 
   // State for UI controls
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
@@ -89,7 +91,7 @@ function NewsContent() {
   // Client-side filtering logic
   const handleSearch = useCallback((currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
-    if (lowerCaseSearchTerm.trim() === '') {
+    if (currentSearchTerm.trim() === '') {
         setFilteredNews(allNews); // Reset to all news if search is cleared
     } else {
         const results = allNews.filter(
@@ -144,6 +146,21 @@ function NewsContent() {
     const apiNews = filteredNews.filter(a => a.source !== 'User Submitted');
     return { userNews, apiNews };
   }, [filteredNews]);
+
+  const NewsContainer = ({ children }: { children: React.ReactNode }) => {
+    if (isMobile) {
+      return (
+        <div className="h-screen-minus-header snap-y snap-mandatory overflow-y-scroll scrollbar-hide">
+            {children}
+        </div>
+      )
+    }
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {children}
+      </div>
+    )
+  }
   
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
@@ -202,16 +219,18 @@ function NewsContent() {
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-8">
-        <AiSummary 
-          summary={aiSummary} 
-          suggestions={aiSuggestions} 
-          onSuggestionClick={handleSuggestionClick}
-          isLoading={isAiSummaryLoading}
-        />
+      <main className="md:container md:mx-auto md:p-4 md:pt-8">
+        <div className="px-4 pt-4 md:px-0 md:pt-0">
+          <AiSummary 
+            summary={aiSummary} 
+            suggestions={aiSuggestions} 
+            onSuggestionClick={handleSuggestionClick}
+            isLoading={isAiSummaryLoading}
+          />
+        </div>
 
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4 md:p-0">
             {[...Array(12)].map((_, i) => <NewsSkeleton key={i} />)}
           </div>
         ) : error ? (
@@ -232,23 +251,23 @@ function NewsContent() {
                 
               {userNews.length > 0 && (
                   <section className="mb-12">
-                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Users /> Community News</h2>
-                      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0"><Users /> Community News</h2>
+                      <NewsContainer>
                           {userNews.map((article, index) => (
                               <NewsCard key={article.id} article={article} priority={index < 4} />
                           ))}
-                      </div>
+                      </NewsContainer>
                   </section>
               )}
 
               {apiNews.length > 0 && (
                 <section>
-                    {userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4">Latest Headlines</h2>}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0">Latest Headlines</h2>}
+                    <NewsContainer>
                         {apiNews.map((article, index) => (
                           <NewsCard key={article.id} article={article} priority={index < 4 && userNews.length === 0} />
                         ))}
-                    </div>
+                    </NewsContainer>
                 </section>
               )}
            </>

@@ -97,71 +97,144 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 bg-card border-accent/20">
-        <CardHeader>
-           <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden">
-             {imageUrl ? (
-                <Image
-                    src={imageUrl}
-                    alt={article.headline}
-                    data-ai-hint={article['data-ai-hint'] || 'news event'}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority={priority}
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
-                />
-             ) : (
-                <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
-                    <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+      <Card className="flex flex-col h-full md:h-auto snap-start md:snap-align-none md:rounded-lg overflow-hidden transition-all duration-300 ease-in-out md:hover:shadow-xl md:hover:-translate-y-1 bg-card md:border-accent/20">
+        {/* Mobile Reel View */}
+        <div className="md:hidden flex flex-col h-screen-minus-header p-4 bg-black/30 backdrop-blur-sm">
+            <div className="relative w-full h-1/2 rounded-lg overflow-hidden flex-shrink-0">
+                {imageUrl ? (
+                    <Image
+                        src={imageUrl}
+                        alt={article.headline}
+                        data-ai-hint={article['data-ai-hint'] || 'news event'}
+                        fill
+                        sizes="100vw"
+                        priority={priority}
+                        className="object-cover"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
+                        <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+                    </div>
+                )}
+                {article.embedUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <YouTubeIcon className="w-16 h-16 text-white opacity-80" />
+                    </div>
+                )}
+            </div>
+            <div className="flex flex-col flex-grow justify-between pt-4 overflow-y-auto">
+                 <CardHeader className="p-0">
+                    <div className="flex items-start justify-between gap-4">
+                        <CardTitle className="text-2xl font-bold leading-tight font-headline text-primary">
+                        {article.headline}
+                        </CardTitle>
+                        {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
+                    </div>
+                 </CardHeader>
+                <CardContent className="p-0 mt-2 flex-grow">
+                    <p className="text-base text-muted-foreground line-clamp-5">
+                        {article.content}
+                    </p>
+                </CardContent>
+                <CardFooter className="flex-col items-start gap-4 p-0 mt-4">
+                    {article.source === 'User Submitted' && (
+                        <div className="w-full">
+                            <SourceDisplay article={article} />
+                        </div>
+                    )}
+                <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+                    <Badge variant="outline">{article.district}</Badge>
+                    <span>{formattedDate || '...'}</span>
                 </div>
-             )}
-            {article.embedUrl && (
-                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                    <YouTubeIcon className="w-16 h-16 text-white opacity-80" />
-                 </div>
-            )}
-           </div>
-          <div className="flex items-start justify-between gap-4">
-            <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
-              {article.headline}
-            </CardTitle>
-             {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
-          </div>
-        </CardHeader>
-        <CardContent className="flex-grow">
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {article.content}
-          </p>
-        </CardContent>
-        <CardFooter className="flex-col items-start gap-4">
-            {article.source === 'User Submitted' && (
-                <div className="w-full">
-                    <SourceDisplay article={article} />
+                <div className="flex w-full gap-2">
+                    <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => setIsDialogOpen(true)}
+                    disabled={!article.content}
+                    >
+                    <BookOpen />
+                    Read More
+                    </Button>
+                    <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
+                    <a href={article.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink />
+                        View Source
+                    </a>
+                    </Button>
                 </div>
-            )}
-           <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
-            <Badge variant="outline">{article.district}</Badge>
-            <span>{formattedDate || '...'}</span>
-          </div>
-          <div className="flex w-full gap-2">
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => setIsDialogOpen(true)}
-              disabled={!article.content}
-            >
-              <BookOpen />
-              Read More
-            </Button>
-            <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
-              <a href={article.url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink />
-                View Source
-              </a>
-            </Button>
-          </div>
-        </CardFooter>
+                </CardFooter>
+            </div>
+        </div>
+
+        {/* Desktop Card View */}
+        <div className="hidden md:flex flex-col h-full">
+            <CardHeader>
+            <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden">
+                {imageUrl ? (
+                    <Image
+                        src={imageUrl}
+                        alt={article.headline}
+                        data-ai-hint={article['data-ai-hint'] || 'news event'}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={priority}
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
+                        <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+                    </div>
+                )}
+                {article.embedUrl && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                        <YouTubeIcon className="w-16 h-16 text-white opacity-80" />
+                    </div>
+                )}
+            </div>
+            <div className="flex items-start justify-between gap-4">
+                <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
+                {article.headline}
+                </CardTitle>
+                {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
+            </div>
+            </CardHeader>
+            <CardContent className="flex-grow">
+            <p className="text-sm text-muted-foreground line-clamp-3">
+                {article.content}
+            </p>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-4">
+                {article.source === 'User Submitted' && (
+                    <div className="w-full">
+                        <SourceDisplay article={article} />
+                    </div>
+                )}
+            <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+                <Badge variant="outline">{article.district}</Badge>
+                <span>{formattedDate || '...'}</span>
+            </div>
+            <div className="flex w-full gap-2">
+                <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => setIsDialogOpen(true)}
+                disabled={!article.content}
+                >
+                <BookOpen />
+                Read More
+                </Button>
+                <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
+                <a href={article.url} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink />
+                    View Source
+                </a>
+                </Button>
+            </div>
+            </CardFooter>
+        </div>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
