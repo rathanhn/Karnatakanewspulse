@@ -8,7 +8,7 @@ import { collection, query, where, getDocs, orderBy, Timestamp, limit } from "fi
 
 interface FetchNewsOptions {
   district: string;
-  category: Category;
+  category?: Category;
   limit?: number;
   sources?: 'api' | 'user' | 'all';
 }
@@ -46,11 +46,11 @@ async function fetchFromNewsAPI({ district, category, query: queryParam }: { dis
   }
 
   try {
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
     if (!response.ok) {
       const errorBody = await response.json();
       console.error('NewsAPI.org API Error:', errorBody);
-      return [];
+      throw new Error(`NewsAPI request failed with status ${response.status}: ${errorBody.message}`);
     }
     const data = await response.json();
     if (data.status === 'ok' && data.articles) {
@@ -71,6 +71,7 @@ async function fetchFromNewsAPI({ district, category, query: queryParam }: { dis
     return [];
   } catch (error) {
     console.error('Failed to fetch from NewsAPI.org:', error);
+    // Return empty array on failure to prevent app crash
     return [];
   }
 }
@@ -80,6 +81,7 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
         const newsCollection = collection(db, "news");
         
         let q;
+        // When 'All Karnataka' is selected, fetch all user posts. Otherwise, filter by district.
         if (district === 'Karnataka' || !karnatakaDistricts.includes(district)) {
            q = query(newsCollection, 
                orderBy("timestamp", "desc")
@@ -115,24 +117,26 @@ export async function fetchUserSubmittedNews({ district, limit: queryLimit }: { 
 /**
  * Fetches news from external APIs and combines it with user-submitted news.
  */
-export async function fetchNewsFromAPI({ district, category, limit, sources = 'all' }: FetchNewsOptions): Promise<NewsArticle[]> {
+export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit, sources = 'all' }: FetchNewsOptions): Promise<NewsArticle[]> {
   
   let userArticles: NewsArticle[] = [];
   let apiArticles: NewsArticle[] = [];
   
   if (sources === 'all' || sources === 'user') {
-     userArticles = await fetchUserSubmittedNews({ district });
+     userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
   }
 
+  // If the user specifically asks for user-submitted news, return only that.
   if (category === 'User Submitted') {
       return userArticles;
   }
   
   if (sources === 'all' || sources === 'api') {
-      const query = `${district === 'Karnataka' ? 'Karnataka India' : district + ' news'}`;
+      const query = `${district === 'Karnataka' ? 'Karnataka India' : district} news`;
       
       apiArticles = await fetchFromNewsAPI({ district, category, query });
 
+      // Only filter with AI if a specific district is selected.
       if (apiArticles.length > 0 && district !== 'Karnataka') {
           try {
               const filteredResult = await filterNewsByDistrict({ articles: apiArticles, district });
@@ -141,16 +145,21 @@ export async function fetchNewsFromAPI({ district, category, limit, sources = 'a
               console.error("AI filtering failed. Returning unfiltered results for APIs.", error);
           }
       }
-      if (limit) {
-        apiArticles = apiArticles.slice(0, limit);
+      if (queryLimit) {
+        apiArticles = apiArticles.slice(0, queryLimit);
       }
   }
   
+  // Combine and sort: User Submitted news first, then all news by date.
   const allArticles = [...userArticles, ...apiArticles];
   
   return allArticles.sort((a, b) => {
-    if (a.source === 'User Submitted' && b.source !== 'User Submitted') return -1;
-    if (a.source !== 'User Submitted' && b.source === 'User Submitted') return 1;
+    // This custom sort can be removed if you want pure chronological order after combining.
+    const aIsUser = a.source === 'User Submitted';
+    const bIsUser = b.source === 'User Submitted';
+
+    if (aIsUser && !bIsUser) return -1;
+    if (!aIsUser && bIsUser) return 1;
 
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
