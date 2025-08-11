@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category } from '@/lib/data';
+import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNews } from '@/lib/data';
 import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
@@ -62,13 +62,23 @@ function NewsContent() {
         setAllNews([]);
         setFilteredNews([]);
         try {
-            const newsData = await fetchNewsFromAPI({ district: initialDistrict, category: initialCategory });
-            setAllNews(newsData);
+            // Fetch API news and user-submitted news in parallel
+            const [apiNews, userNews] = await Promise.all([
+                fetchNewsFromAPI({ district: initialDistrict, category: initialCategory }),
+                fetchUserSubmittedNews({ district: initialDistrict })
+            ]);
+
+            const combinedNews = [...userNews, ...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            
+            // Remove duplicates by URL or headline+source
+            const uniqueNews = Array.from(new Map(combinedNews.map(item => [`${item.url || (item.headline+item.source)}`, item])).values());
+
+            setAllNews(uniqueNews);
 
             if (initialSearchTerm) {
                 // If there's an initial search term, filter the results immediately
                 const lowerCaseSearchTerm = initialSearchTerm.toLowerCase();
-                const results = newsData.filter(
+                const results = uniqueNews.filter(
                     (article) =>
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
@@ -76,7 +86,7 @@ function NewsContent() {
                 setFilteredNews(results);
             } else {
                 // Otherwise, show all fetched news
-                setFilteredNews(newsData);
+                setFilteredNews(uniqueNews);
             }
         } catch (err: any) {
             setError('Failed to fetch news. Please check your connection or API key and try again.');

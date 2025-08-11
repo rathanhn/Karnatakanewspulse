@@ -15,11 +15,6 @@ const NEWSDATA_API_KEY = "pub_48261e86cf413c604473e049183416979e2c4";
 
 // --- GNews API Fetcher (for broad categories) ---
 async function fetchFromGNews(query: string, category: string): Promise<NewsArticle[]> {
-  if (!GNEWS_API_KEY) {
-    console.warn('GNews API key is not configured. Skipping fetch from GNews.');
-    return [];
-  }
-  
   const categoryParam = category.toLowerCase() === 'trending' ? 'general' : category.toLowerCase();
   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&apiKey=${GNEWS_API_KEY}`;
   
@@ -53,11 +48,6 @@ async function fetchFromGNews(query: string, category: string): Promise<NewsArti
 
 // --- NewsData.io API Fetcher (for specific district/keyword searches) ---
 async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
-  if (!NEWSDATA_API_KEY) {
-    console.warn('NewsData.io API key is not configured. Skipping fetch from NewsData.io.');
-    return [];
-  }
-  
   const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_API_KEY}&country=in&language=en&q=${encodeURIComponent(query)}`;
 
   try {
@@ -91,10 +81,8 @@ async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
   
-  const userArticles = await fetchUserSubmittedNews({ district, limit: queryLimit });
-
   if (category === 'User Submitted') {
-      return userArticles;
+      return fetchUserSubmittedNews({ district, limit: queryLimit });
   }
   
   let apiArticles: NewsArticle[] = [];
@@ -124,8 +112,6 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
     apiArticles = apiArticles.slice(0, queryLimit);
   }
   
-  const allArticles = [...userArticles, ...apiArticles];
-  
-  const sortedArticles = allArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  const sortedArticles = apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return sortedArticles;
 }
