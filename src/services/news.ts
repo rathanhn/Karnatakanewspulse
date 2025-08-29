@@ -9,8 +9,8 @@ interface FetchNewsOptions {
   limit?: number;
 }
 
-const GNEWS_API_KEY = "5c6db2cfaf5649db92039f9ae8305a68";
-const NEWSDATA_API_KEY = "pub_48261e86cf413c604473e049183416979e2c4";
+const GNEWS_API_KEY = "b22ac38c0388be49295828dfa7b73ea0";
+const NEWSDATA_API_KEY = "pub_3e231d27d02b413a804e6216d1b83058";
 
 
 // --- GNews API Fetcher (for broad categories) ---
@@ -100,11 +100,7 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
       query = 'Karnataka';
   }
   
-  if (category === 'Trending' || category === 'General') {
-      apiArticles = await fetchFromGNews(query, category);
-  } else {
-      apiArticles = await fetchFromNewsDataIO(query);
-  }
+  apiArticles = await fetchFromGNews(query, category);
   
   apiArticles = apiArticles.map(article => ({ ...article, district }));
 
