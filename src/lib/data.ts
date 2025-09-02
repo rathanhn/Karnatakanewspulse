@@ -1,7 +1,7 @@
 // src/lib/data.ts
 import { z } from 'zod';
 import { db } from './firebase';
-import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch, limit, QueryConstraint } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch, limit, QueryConstraint,getCountFromServer } from "firebase/firestore";
 
 
 export type Source = string;
@@ -16,6 +16,7 @@ export const UserProfileSchema = z.object({
     preferredDistrict: z.string().optional(),
     preferredCategory: z.enum(newsCategories).optional(),
     notifications: z.boolean().optional().default(true),
+    isAdmin: z.boolean().optional().default(false), // Admin role
 });
 
 export type UserProfile = z.infer<typeof UserProfileSchema>;
@@ -80,7 +81,7 @@ export const karnatakaDistricts: string[] = [...karnatakaDistrictsTuple];
 
 // --- Firestore Functions for User Profiles ---
 
-export const createUserProfile = async (uid: string, data: Omit<UserProfile, 'uid'>) => {
+export const createUserProfile = async (uid: string, data: Omit<UserProfile, 'uid' | 'isAdmin'>) => {
     try {
         const userDocRef = doc(db, 'users', uid);
         const docSnap = await getDoc(userDocRef);
@@ -90,6 +91,7 @@ export const createUserProfile = async (uid: string, data: Omit<UserProfile, 'ui
                 ...data,
                 displayName: data.displayName || 'Anonymous',
                 photoURL: data.photoURL || null,
+                isAdmin: false, // Ensure new users are not admins
             });
         }
     } catch(error) {
@@ -115,7 +117,9 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
     try {
         const userDocRef = doc(db, 'users', uid);
-        await updateDoc(userDocRef, data);
+        // Prevent users from making themselves admin
+        const { isAdmin, ...updatableData } = data;
+        await updateDoc(userDocRef, updatableData);
     } catch (error) {
         console.error("Error updating user profile:", error);
         throw new Error("Could not update user profile.");
@@ -142,7 +146,11 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
             source: 'User Submitted',
             url: '#', // User-submitted articles don't have an external source URL
         });
-        return { ...articleData, id: docRef.id, timestamp: new Date() };
+        // Construct a URL for the new post
+        const newUrl = `${window.location.origin}/news/post/${docRef.id}`;
+        await updateDoc(docRef, { url: newUrl });
+
+        return { ...articleData, id: docRef.id, timestamp: new Date(), url: newUrl };
     } catch (e) {
         console.error("Error adding document: ", e);
         throw new Error("Could not submit news article.");
@@ -282,5 +290,25 @@ export const deleteAllUserPosts = async (userId: string): Promise<void> => {
     } catch (e) {
         console.error("Error deleting all user posts: ", e);
         throw new Error("Could not delete all posts.");
+    }
+};
+
+// --- Admin Functions ---
+
+export const getAdminDashboardStats = async (): Promise<{ totalArticles: number; totalUsers: number }> => {
+    try {
+        const newsCollection = collection(db, 'news');
+        const usersCollection = collection(db, 'users');
+        
+        const newsSnapshot = await getCountFromServer(newsCollection);
+        const usersSnapshot = await getCountFromServer(usersCollection);
+
+        return {
+            totalArticles: newsSnapshot.data().count,
+            totalUsers: usersSnapshot.data().count,
+        };
+    } catch (error) {
+        console.error("Error fetching admin stats:", error);
+        throw new Error("Could not fetch admin dashboard stats.");
     }
 };

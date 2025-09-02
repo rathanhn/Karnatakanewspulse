@@ -31,7 +31,7 @@ import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
 import { NewsArticle, karnatakaDistricts, Category, UserProfile, getUserProfile } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper, Settings } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper, Settings, Shield } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
@@ -155,6 +155,12 @@ export default function HomePage() {
                     <p className="text-xs text-muted-foreground font-normal">{user?.email}</p>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {userProfile?.isAdmin && (
+                  <DropdownMenuItem onSelect={() => router.push('/admin')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    <span>Admin Dashboard</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={() => router.push('/home/profile')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>

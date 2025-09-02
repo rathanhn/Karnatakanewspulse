@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { NewsArticle, UserProfile, getUserProfile } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 import {
   DailyHuntIcon,
   FacebookIcon,
@@ -27,9 +28,10 @@ import {
   YouTubeIcon,
   NewsIcon,
 } from '@/components/icons';
-import { ExternalLink, BookOpen, UserCircle } from 'lucide-react';
+import { ExternalLink, BookOpen, Share2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 type NewsCardProps = {
   article: NewsArticle;
@@ -80,6 +82,7 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
 export function NewsCard({ article, priority = false }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
     if (article.timestamp) {
@@ -91,6 +94,23 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
         );
     }
   }, [article.timestamp]);
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.headline,
+          text: article.content?.substring(0, 100) + '...',
+          url: article.url,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+        navigator.clipboard.writeText(article.url);
+        toast({ title: "Link Copied!", description: "News article URL copied to your clipboard." });
+    }
+  };
 
 
   const imageUrl = article.imageUrl;
@@ -157,13 +177,17 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
                     <BookOpen />
                     Read More
                     </Button>
-                    <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
+                     <Button variant="outline" className="w-full" onClick={handleShare}>
+                        <Share2 />
+                        Share
+                    </Button>
+                </div>
+                 <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
                     <a href={article.url} target="_blank" rel="noopener noreferrer">
                         <ExternalLink />
                         View Source
                     </a>
-                    </Button>
-                </div>
+                </Button>
                 </CardFooter>
             </div>
         </div>
@@ -224,12 +248,15 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
                 disabled={!article.content}
                 >
                 <BookOpen />
-                Read More
+                Read
                 </Button>
+                 <Button variant="outline" size="icon" onClick={handleShare}>
+                    <Share2 />
+                 </Button>
                 <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
                 <a href={article.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink />
-                    View Source
+                    Source
                 </a>
                 </Button>
             </div>
@@ -290,6 +317,7 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
           </div>
            <div className="flex justify-end gap-2 mt-4">
              <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>Close</Button>
+              <Button onClick={handleShare}><Share2 /> Share</Button>
              <Button asChild disabled={article.url === '#'}>
                <a href={article.url} target="_blank" rel="noopener noreferrer">
                  <ExternalLink />
