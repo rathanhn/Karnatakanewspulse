@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read and write to their own document.
+    match /users/{userId} {
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Disallow creating or deleting user profiles directly via the client. 
+      // Creation is handled server-side or via trusted functions.
+      allow create, delete: if false; 
+    }
+
+    // Rules for news articles
+    match /news/{newsId} {
+      // Anyone can read any news article.
+      allow read: if true;
+      
+      // Only authenticated users can create new articles.
+      allow create: if request.auth != null;
+      
+      // Only the user who created the article can update or delete it.
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+  }
+}
