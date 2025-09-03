@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { karnatakaDistricts, addUserNews, newsCategories, Category } from '@/lib/data';
-import { ArrowLeft, Send, Upload, Loader2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Send, Upload, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Image from 'next/image';
 
 const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
@@ -29,12 +30,10 @@ export default function CreateNewsPage() {
     const [category, setCategory] = useState<Category | ''>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // Cloudinary state
     const [file, setFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
-    const [fileName, setFileName] = useState('');
-
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -48,11 +47,17 @@ export default function CreateNewsPage() {
     }, [router]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
+        if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
             setFile(selectedFile);
-            setFileName(selectedFile.name);
-            setUploadedUrl(null); // Reset on new file selection
+            setUploadedUrl(null);
+            
+            // Create a preview URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreviewUrl(reader.result as string);
+            };
+            reader.readAsDataURL(selectedFile);
         }
     };
     
@@ -205,22 +210,19 @@ export default function CreateNewsPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="thumbnail">Thumbnail</Label>
+                                <Label>Thumbnail Image (Optional)</Label>
+                                {previewUrl && (
+                                     <div className="relative w-full h-48 rounded-md overflow-hidden border">
+                                        <Image src={previewUrl} alt="Image preview" layout="fill" objectFit="cover" />
+                                    </div>
+                                )}
                                 <div className="flex items-center gap-2">
-                                    <Label htmlFor="file-upload" className="flex-grow">
-                                        <Input id="file-upload" type="file" className="sr-only" onChange={handleFileChange} accept="image/*" disabled={uploading || isSubmitting} />
-                                        <Button type="button" variant="outline" className="w-full" asChild>
-                                             <span className='truncate w-full'>
-                                                {fileName ? fileName : "Select an image..."}
-                                             </span>
-                                        </Button>
-                                    </Label>
-                                    <Button type="button" onClick={handleUpload} disabled={!file || uploading || !!uploadedUrl}>
-                                        {uploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                                        <span>{uploading ? "Uploading" : (uploadedUrl ? "Uploaded" : "Upload")}</span>
+                                    <Input id="file-upload" type="file" className="flex-grow" onChange={handleFileChange} accept="image/*" disabled={uploading || isSubmitting} />
+                                    <Button type="button" size="icon" onClick={handleUpload} disabled={!file || uploading || !!uploadedUrl}>
+                                        {uploading ? <Loader2 className="animate-spin" /> : (uploadedUrl ? <CheckCircle/> : <Upload/>)}
                                     </Button>
                                 </div>
-                                {uploadedUrl && <div className='text-sm text-green-500 flex items-center gap-2'><CheckCircle className='w-4 h-4'/> Image is ready.</div>}
+                                {uploadedUrl && <div className='text-sm text-green-500 flex items-center gap-2'><CheckCircle className='w-4 h-4'/> Image uploaded and ready.</div>}
                                  <p className="text-xs text-muted-foreground">
                                     For security, an unsigned upload preset must be configured in your Cloudinary account.
                                 </p>

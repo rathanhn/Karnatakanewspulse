@@ -50,9 +50,9 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
   const props = { className: className || 'w-6 h-6' };
 
   if (article.source === 'User Submitted') {
-      // Logic for user-submitted posts
-      const authorName = article.author?.displayName || 'Community Contributor';
-      const authorImage = article.author?.photoURL || '';
+      const author = article.author;
+      const authorName = author?.displayName || 'Community Contributor';
+      const authorImage = author?.photoURL || '';
       const authorInitials = getInitials(authorName);
 
       return (
@@ -211,7 +211,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         alt={article.headline}
                         data-ai-hint={article['data-ai-hint'] || 'news event'}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                         priority={priority}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -308,7 +308,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         alt={article.headline}
                         data-ai-hint={article['data-ai-hint'] || 'news event'}
                         fill
-                        sizes="80vw"
+                        sizes="(max-width: 640px) 90vw, 80vw"
                         className="object-cover"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
