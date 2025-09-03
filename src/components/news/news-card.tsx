@@ -61,8 +61,10 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
   if (!article.author) {
      return (
         <div className="flex items-center gap-2">
-            <Skeleton className="w-6 h-6 rounded-full" />
-            <Skeleton className="h-4 w-32" />
+            <Avatar className="w-6 h-6">
+                <AvatarFallback>CC</AvatarFallback>
+            </Avatar>
+            <span className="text-sm font-medium">Community Contributor</span>
         </div>
     );
   }

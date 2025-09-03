@@ -100,10 +100,14 @@ const filterNewsFlow = ai.defineFlow(
     const originalArticleMap = new Map(input.articles.map(a => [a.id, a]));
     const trulyFilteredArticles = filteredArticles.filter(filteredArticle => 
         originalArticleMap.has(filteredArticle.id)
-    ).map(filteredArticle => ({
-        ...originalArticleMap.get(filteredArticle.id)!,
-        district: input.district // Assign the correct district to the filtered articles.
-    }));
+    ).map(filteredArticle => {
+        // Re-attach the original full article data, including the author, to the filtered result.
+        const originalArticle = originalArticleMap.get(filteredArticle.id)!;
+        return {
+            ...originalArticle,
+            district: input.district // Assign the correct district to the filtered articles.
+        };
+    });
 
     return { articles: trulyFilteredArticles };
   }
