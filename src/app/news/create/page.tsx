@@ -43,20 +43,27 @@ export default function CreateNewsPage() {
                 router.push('/login');
             }
         });
-        return () => unsubscribe();
+
+        // Cleanup blob URL on component unmount
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+            unsubscribe();
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
         if (e.target.files && e.target.files[0]) {
             const selectedFile = e.target.files[0];
             setFile(selectedFile);
             setUploadedUrl(null);
-            
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewUrl(reader.result as string);
-            };
-            reader.readAsDataURL(selectedFile);
+            setPreviewUrl(URL.createObjectURL(selectedFile));
         } else {
             setFile(null);
             setPreviewUrl(null);
@@ -68,14 +75,23 @@ export default function CreateNewsPage() {
              toast({ title: 'No file selected', description: 'Please select an image to upload.', variant: 'destructive'});
             return;
         }
-        setUploading(true);
 
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+        if (!cloudName || !uploadPreset) {
+            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up.', variant: 'destructive'});
+            console.error('Cloudinary environment variables NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME or NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET are not defined.');
+            return;
+        }
+
+        setUploading(true);
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+        formData.append('upload_preset', uploadPreset);
 
         try {
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -226,7 +242,7 @@ export default function CreateNewsPage() {
                                 </div>
                                 {uploadedUrl && <div className='text-sm text-green-500 flex items-center gap-2'><CheckCircle className='w-4 h-4'/> Image uploaded and ready.</div>}
                                  <p className="text-xs text-muted-foreground">
-                                    For security, an unsigned upload preset must be configured in your Cloudinary account.
+                                    Ensure Cloudinary variables are set in your deployment environment.
                                 </p>
                             </div>
                            

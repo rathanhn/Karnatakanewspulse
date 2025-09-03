@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserProfile, getUserProfile, updateUserProfile, karnatakaDistricts, newsCategories, deleteAllUserPosts, Category } from '@/lib/data';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User, signOut, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
-import { ArrowLeft, Moon, Sun, User as UserIcon, Bell, Trash2, LogOut, Loader2, Upload, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Bell, Trash2, LogOut, Loader2, Upload, CheckCircle } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import {
   AlertDialog,
@@ -49,6 +49,7 @@ export default function ProfilePage() {
     
     // Cloudinary state
     const [file, setFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
@@ -60,7 +61,14 @@ export default function ProfilePage() {
                 router.push('/login');
             }
         });
-        return () => unsubscribe();
+
+        return () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+            unsubscribe();
+        };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [router]);
 
     const fetchProfile = useCallback(async (uid: string) => {
@@ -131,21 +139,40 @@ export default function ProfilePage() {
     };
     
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setFile(e.target.files[0]);
-            setUploadedUrl(null); 
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+        }
+
+        if (e.target.files && e.target.files[0]) {
+            const selectedFile = e.target.files[0];
+            setFile(selectedFile);
+            setUploadedUrl(null);
+            setPreviewUrl(URL.createObjectURL(selectedFile));
+        } else {
+            setFile(null);
+            setPreviewUrl(null);
         }
     };
     
     const handleUpload = async () => {
         if (!file) return;
+
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+        if (!cloudName || !uploadPreset) {
+            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up.', variant: 'destructive'});
+            console.error('Cloudinary environment variables NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME or NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET are not defined.');
+            return;
+        }
+
         setUploading(true);
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+        formData.append('upload_preset', uploadPreset);
 
         try {
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -225,7 +252,7 @@ export default function ProfilePage() {
                                 <CardContent className="space-y-6">
                                      <div className="flex items-center gap-6">
                                         <Avatar className="w-24 h-24 text-3xl">
-                                            <AvatarImage src={uploadedUrl || profile?.photoURL || ''} />
+                                            <AvatarImage src={uploadedUrl || previewUrl || profile?.photoURL || ''} />
                                             <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                                         </Avatar>
                                         <div className='space-y-2 flex-grow'>
