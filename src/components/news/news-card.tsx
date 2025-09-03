@@ -43,16 +43,17 @@ type NewsCardProps = {
 
 const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
-    return name.split(' ').map(n => n[0]).join('');
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
 const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
   const props = { className: className || 'w-6 h-6' };
 
-  if (article.source === 'User Submitted') {
+  // This is the corrected logic. It now robustly checks for the author object.
+  if (article.source === 'User Submitted' && article.author) {
       const author = article.author;
-      const authorName = author?.displayName || 'Community Contributor';
-      const authorImage = author?.photoURL || '';
+      const authorName = author.displayName || 'Community Contributor';
+      const authorImage = author.photoURL || '';
       const authorInitials = getInitials(authorName);
 
       return (
@@ -62,6 +63,18 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
               <AvatarFallback>{authorInitials}</AvatarFallback>
           </Avatar>
           <span className="text-sm font-medium">{authorName}</span>
+        </div>
+      );
+  }
+
+  // Fallback for user-submitted posts without an author for some reason
+  if (article.source === 'User Submitted') {
+     return (
+        <div className="flex items-center gap-2">
+          <Avatar className="w-6 h-6">
+              <AvatarFallback>CC</AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium">Community Contributor</span>
         </div>
       );
   }
@@ -83,12 +96,19 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
 
   useEffect(() => {
     if (article.timestamp) {
-        setFormattedDate(
-            new Intl.DateTimeFormat('en-IN', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-            }).format(new Date(article.timestamp))
-        );
+        // Check if timestamp is a Firestore Timestamp object
+        if (typeof article.timestamp.toDate === 'function') {
+            setFormattedDate(
+                new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                .format(article.timestamp.toDate())
+            );
+        } else {
+            // Assume it's a JS Date object or a string
+            setFormattedDate(
+                new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+                .format(new Date(article.timestamp))
+            );
+        }
     }
   }, [article.timestamp]);
 
@@ -211,7 +231,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         alt={article.headline}
                         data-ai-hint={article['data-ai-hint'] || 'news event'}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         priority={priority}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}

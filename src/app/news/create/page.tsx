@@ -52,12 +52,14 @@ export default function CreateNewsPage() {
             setFile(selectedFile);
             setUploadedUrl(null);
             
-            // Create a preview URL
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewUrl(reader.result as string);
             };
             reader.readAsDataURL(selectedFile);
+        } else {
+            setFile(null);
+            setPreviewUrl(null);
         }
     };
     
