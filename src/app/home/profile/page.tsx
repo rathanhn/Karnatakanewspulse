@@ -105,9 +105,14 @@ export default function ProfilePage() {
                 notifications,
             };
 
-            if (preferredCategory) {
+            // Only include preferredCategory if it has a valid value
+            if (preferredCategory && newsCategories.includes(preferredCategory)) {
                 updatedProfileData.preferredCategory = preferredCategory;
+            } else {
+                // If it's an empty string or invalid, ensure it's not in the object
+                delete updatedProfileData.preferredCategory;
             }
+
 
             await updateUserProfile(user.uid, updatedProfileData);
 
@@ -119,6 +124,7 @@ export default function ProfilePage() {
             toast({ title: 'Profile Updated', description: 'Your changes have been saved.' });
             fetchProfile(user.uid); // re-fetch to update UI state
         } catch (error) {
+            console.error("Profile update error:", error);
             toast({ title: 'Error', description: 'Failed to update your profile.', variant: 'destructive' });
         } finally {
             setIsSaving(false);
