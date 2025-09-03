@@ -6,7 +6,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, de
 
 export type Source = string;
 export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment', 'User Submitted'] as const;
-export type Category = (typeof newsCategories)[number];
+export type Category = (typeof newsCategories)[number] | '';
 
 export const UserProfileSchema = z.object({
     uid: z.string(),
@@ -14,7 +14,7 @@ export const UserProfileSchema = z.object({
     email: z.string(),
     photoURL: z.string().url().nullable(),
     preferredDistrict: z.string().optional(),
-    preferredCategory: z.enum(newsCategories).optional(),
+    preferredCategory: z.enum(newsCategories).or(z.literal('')).optional(),
     notifications: z.boolean().optional().default(true),
     isAdmin: z.boolean().optional().default(false), // Admin role
 });

@@ -105,10 +105,13 @@ export default function ProfilePage() {
                 notifications,
             };
 
-            // Only include preferredCategory if it has a valid value
-            if (preferredCategory) {
+            // Only include preferredCategory if it has a valid value and is not the placeholder
+            if (preferredCategory && preferredCategory !== '__none__') {
                 updatedProfileData.preferredCategory = preferredCategory;
+            } else {
+                updatedProfileData.preferredCategory = '' as Category; // Or handle as needed
             }
+
 
             await updateUserProfile(user.uid, updatedProfileData);
 
@@ -269,7 +272,7 @@ export default function ProfilePage() {
                                         <Select onValueChange={(v) => setPreferredCategory(v as Category)} value={preferredCategory}>
                                             <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="">None</SelectItem>
+                                                <SelectItem value="__none__">None</SelectItem>
                                                 {newsCategories.filter(c => c !== 'User Submitted').map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
                                             </SelectContent>
                                         </Select>
