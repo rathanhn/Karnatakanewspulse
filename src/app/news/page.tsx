@@ -149,7 +149,19 @@ function NewsContent() {
       e.preventDefault();
       handleSearch(searchTerm); // Perform client-side filtering
 
-      const currentResults = [...filteredNews, ...filteredUserNews];
+      // Re-filter the original sources to get current results for AI summary
+      const currentApiResults = allNews.filter(
+            (article) =>
+                article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      const currentUserResults = userNews.filter(
+            (article) =>
+                article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
+      const currentResults = [...currentApiResults, ...currentUserResults];
 
       if (searchTerm.trim() && currentResults.length > 0) {
         setIsAiSummaryLoading(true);
@@ -171,7 +183,7 @@ function NewsContent() {
         setAiSummary('');
         setAiSuggestions([]);
       }
-  }, [searchTerm, filteredNews, filteredUserNews, handleSearch]);
+  }, [searchTerm, allNews, userNews, handleSearch]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchTerm(suggestion);
