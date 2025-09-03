@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { NewsArticle, UserProfile } from '@/lib/data';
+import { NewsArticle } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   DailyHuntIcon,

@@ -5,8 +5,14 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import { NewsArticle, newsCategories, karnatakaDistricts } from '@/lib/data';
+
+const AuthorSchema = z.object({
+    uid: z.string(),
+    displayName: z.string().nullable(),
+    photoURL: z.string().url().nullable(),
+});
 
 const NewsArticleSchema = z.object({
   id: z.string(),
@@ -20,6 +26,8 @@ const NewsArticleSchema = z.object({
   district: z.string(),
   category: z.enum(newsCategories),
   'data-ai-hint': z.string().optional(),
+  userId: z.string().optional(),
+  author: AuthorSchema.optional(),
 });
 
 const FilterNewsInputSchema = z.object({
