@@ -56,8 +56,10 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
         setAuthorProfile(profile);
       }
     };
-    fetchAuthor();
-  }, [article.userId]);
+    if (article.source === 'User Submitted') {
+      fetchAuthor();
+    }
+  }, [article.userId, article.source]);
 
   if (article.source === 'User Submitted') {
     return (
@@ -157,7 +159,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         <CardTitle className="text-2xl font-bold leading-tight font-headline text-primary">
                         {article.headline}
                         </CardTitle>
-                        {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
+                        <SourceDisplay article={article} />
                     </div>
                  </CardHeader>
                 <CardContent className="p-0 mt-2 flex-grow">
@@ -166,11 +168,6 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                     </p>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 p-0 mt-4">
-                    {article.source === 'User Submitted' && (
-                        <div className="w-full">
-                            <SourceDisplay article={article} />
-                        </div>
-                    )}
                 <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
                     <Badge variant="outline">{article.district}</Badge>
                     <span>{formattedDate || '...'}</span>
@@ -230,7 +227,6 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                 <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
                 {article.headline}
                 </CardTitle>
-                {article.source !== 'User Submitted' && <SourceDisplay article={article} />}
             </div>
             </CardHeader>
             <CardContent className="flex-grow">
@@ -239,11 +235,9 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
             </p>
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
-                {article.source === 'User Submitted' && (
-                    <div className="w-full">
-                        <SourceDisplay article={article} />
-                    </div>
-                )}
+                <div className="w-full">
+                    <SourceDisplay article={article} />
+                </div>
             <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
                 <Badge variant="outline">{article.district}</Badge>
                 <span>{formattedDate || '...'}</span>

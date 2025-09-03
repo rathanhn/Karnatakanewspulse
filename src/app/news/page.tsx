@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNews } from '@/lib/data';
 import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
@@ -107,7 +108,7 @@ function NewsContent() {
     };
     
     executeFetch();
-  }, [searchParams]); // Rerunning on user change is not needed as client side filtering handles 'My Post' logic
+  }, [searchParams]);
 
   // Client-side filtering logic
   const handleSearch = useCallback((currentSearchTerm: string) => {
@@ -165,8 +166,17 @@ function NewsContent() {
   const { userNews, apiNews } = useMemo(() => {
     const userNews = filteredNews.filter(a => a.source === 'User Submitted');
     const apiNews = filteredNews.filter(a => a.source !== 'User Submitted');
-    return { userNews, apiNews };
-  }, [filteredNews]);
+    // For community feed, sort "My Posts" to the top
+    const sortedUserNews = userNews.sort((a, b) => {
+        const aIsMyPost = a.userId === user?.uid;
+        const bIsMyPost = b.userId === user?.uid;
+        if (aIsMyPost && !bIsMyPost) return -1;
+        if (!aIsMyPost && bIsMyPost) return 1;
+        return 0;
+    });
+
+    return { userNews: sortedUserNews, apiNews };
+  }, [filteredNews, user?.uid]);
 
 
   const NewsContainer = ({ children }: { children: React.ReactNode }) => {
@@ -263,36 +273,40 @@ function NewsContent() {
                 <Button onClick={() => router.refresh()} className="mt-6">Try Again</Button>
             </div>
         ) : (
-            <>
-              {filteredNews.length === 0 && (
-                     <div className="text-center py-20">
-                        <h2 className="text-2xl font-bold">No news articles found</h2>
-                        <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
-                    </div>
-              )}
-                
-              {userNews.length > 0 && (
-                  <section className="mb-12">
-                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0"><Users /> Community News</h2>
-                      <NewsContainer>
-                          {userNews.map((article, index) => (
-                              <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} />
-                          ))}
-                      </NewsContainer>
-                  </section>
-              )}
-
-              {apiNews.length > 0 && (
-                <section>
-                    { userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0">Latest Headlines</h2>}
-                    <NewsContainer>
-                        {apiNews.map((article, index) => (
-                          <NewsCard key={article.id} article={article} priority={index < 4 && userNews.length === 0} />
-                        ))}
-                    </NewsContainer>
-                </section>
-              )}
-           </>
+             <Tabs defaultValue="latest" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 md:w-1/2 mx-auto">
+                    <TabsTrigger value="latest">Latest Headlines</TabsTrigger>
+                    <TabsTrigger value="community">Community News</TabsTrigger>
+                </TabsList>
+                <TabsContent value="latest" className="mt-6">
+                    {apiNews.length > 0 ? (
+                         <NewsContainer>
+                            {apiNews.map((article, index) => (
+                              <NewsCard key={article.id} article={article} priority={index < 4} />
+                            ))}
+                        </NewsContainer>
+                    ) : (
+                        <div className="text-center py-20">
+                            <h2 className="text-2xl font-bold">No API articles found</h2>
+                            <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
+                        </div>
+                    )}
+                </TabsContent>
+                <TabsContent value="community" className="mt-6">
+                    {userNews.length > 0 ? (
+                        <NewsContainer>
+                            {userNews.map((article, index) => (
+                                <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} />
+                            ))}
+                        </NewsContainer>
+                    ) : (
+                        <div className="text-center py-20">
+                            <h2 className="text-2xl font-bold">No community articles found</h2>
+                            <p className="text-muted-foreground">Be the first to post in this district!</p>
+                        </div>
+                    )}
+                </TabsContent>
+            </Tabs>
         )}
       </main>
     </div>
