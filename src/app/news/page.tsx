@@ -13,21 +13,25 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNews } from '@/lib/data';
+import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNews, getUserNewsFromFirestore } from '@/lib/data';
 import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { AiSummary } from '@/components/ai-summary';
-import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users } from 'lucide-react';
+import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users, Star } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 
 function NewsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
+  
+  const [user, setUser] = useState<User | null>(null);
 
   // State for UI controls
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
@@ -36,6 +40,7 @@ function NewsContent() {
   
   // State for data and loading
   const [allNews, setAllNews] = useState<NewsArticleType[]>([]);
+  const [myPosts, setMyPosts] = useState<NewsArticleType[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +50,13 @@ function NewsContent() {
   const [aiSummary, setAiSummary] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Fetch initial data based on URL params or defaults
   useEffect(() => {
@@ -61,14 +73,27 @@ function NewsContent() {
         setError(null);
         setAllNews([]);
         setFilteredNews([]);
+        setMyPosts([]);
         try {
             // Fetch API news and user-submitted news in parallel
-            const [apiNews, userNews] = await Promise.all([
+            const fetchPromises: Promise<NewsArticleType[]>[] = [
                 fetchNewsFromAPI({ district: initialDistrict, category: initialCategory }),
-                fetchUserSubmittedNews({ district: initialDistrict })
-            ]);
+                fetchUserSubmittedNews({ district: initialDistrict, excludeUserId: user?.uid })
+            ];
+            
+            // If user is logged in, also fetch their specific posts
+            if (user) {
+                fetchPromises.push(getUserNewsFromFirestore(user.uid));
+            }
 
-            const combinedNews = [...userNews, ...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            const [apiNews, otherUserNews, userSpecificPosts] = await Promise.all(fetchPromises);
+
+            if (userSpecificPosts) {
+                const userPostsInDistrict = userSpecificPosts.filter(p => initialDistrict === 'Karnataka' || p.district === initialDistrict);
+                setMyPosts(userPostsInDistrict);
+            }
+
+            const combinedNews = [...otherUserNews, ...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             
             // Remove duplicates by URL or headline+source
             const uniqueNews = Array.from(new Map(combinedNews.map(item => [`${item.url || (item.headline+item.source)}`, item])).values());
@@ -96,7 +121,7 @@ function NewsContent() {
     };
     
     executeFetch();
-  }, [searchParams]);
+  }, [searchParams, user]);
 
   // Client-side filtering logic
   const handleSearch = useCallback((currentSearchTerm: string) => {
@@ -156,6 +181,16 @@ function NewsContent() {
     const apiNews = filteredNews.filter(a => a.source !== 'User Submitted');
     return { userNews, apiNews };
   }, [filteredNews]);
+
+  const filteredMyPosts = useMemo(() => {
+    if (!searchTerm) return myPosts;
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return myPosts.filter(
+      (article) =>
+        article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+    );
+  }, [myPosts, searchTerm]);
 
   const NewsContainer = ({ children }: { children: React.ReactNode }) => {
     if (isMobile) {
@@ -252,13 +287,24 @@ function NewsContent() {
             </div>
         ) : (
             <>
-              {filteredNews.length === 0 && (
+              {filteredNews.length === 0 && filteredMyPosts.length === 0 && (
                      <div className="text-center py-20">
                         <h2 className="text-2xl font-bold">No news articles found</h2>
                         <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
                     </div>
               )}
                 
+              {filteredMyPosts.length > 0 && (
+                  <section className="mb-12">
+                      <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0"><Star /> Your Posts in {selectedDistrict}</h2>
+                      <NewsContainer>
+                          {filteredMyPosts.map((article, index) => (
+                              <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={true} />
+                          ))}
+                      </NewsContainer>
+                  </section>
+              )}
+              
               {userNews.length > 0 && (
                   <section className="mb-12">
                       <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0"><Users /> Community News</h2>
@@ -272,7 +318,7 @@ function NewsContent() {
 
               {apiNews.length > 0 && (
                 <section>
-                    {userNews.length > 0 && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0">Latest Headlines</h2>}
+                    { (userNews.length > 0 || myPosts.length > 0) && <h2 className="text-2xl font-bold flex items-center gap-2 mb-4 px-4 md:px-0">Latest Headlines</h2>}
                     <NewsContainer>
                         {apiNews.map((article, index) => (
                           <NewsCard key={article.id} article={article} priority={index < 4 && userNews.length === 0} />

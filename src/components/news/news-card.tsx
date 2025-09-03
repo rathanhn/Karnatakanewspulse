@@ -28,14 +28,16 @@ import {
   YouTubeIcon,
   NewsIcon,
 } from '@/components/icons';
-import { ExternalLink, BookOpen, Share2 } from 'lucide-react';
+import { ExternalLink, BookOpen, Share2, Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 
 type NewsCardProps = {
   article: NewsArticle;
   priority?: boolean;
+  isMyPost?: boolean;
 };
 
 const getInitials = (name: string | null | undefined) => {
@@ -79,7 +81,7 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
 };
 
 
-export function NewsCard({ article, priority = false }: NewsCardProps) {
+export function NewsCard({ article, priority = false, isMyPost = false }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
   const { toast } = useToast();
@@ -117,7 +119,13 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col h-full md:h-auto snap-start md:snap-align-none md:rounded-lg overflow-hidden transition-all duration-300 ease-in-out md:hover:shadow-xl md:hover:-translate-y-1 bg-card md:border-accent/20">
+      <Card className={cn("flex flex-col h-full md:h-auto snap-start md:snap-align-none md:rounded-lg overflow-hidden transition-all duration-300 ease-in-out md:hover:shadow-xl md:hover:-translate-y-1 bg-card md:border-accent/20", isMyPost && 'border-primary border-2')}>
+        {isMyPost && (
+            <Badge variant="default" className="absolute top-2 right-2 z-10">
+              <Star className="mr-1 h-3 w-3" />
+              My Post
+            </Badge>
+        )}
         {/* Mobile Reel View */}
         <div className="md:hidden flex flex-col h-screen-minus-header p-4 bg-black/30 backdrop-blur-sm">
             <div className="relative w-full h-1/2 rounded-lg overflow-hidden flex-shrink-0">
@@ -158,7 +166,7 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
                     </p>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 p-0 mt-4">
-                    {article.source === 'User Submitted' && (
+                    {article.source === 'User Submitted' && !isMyPost && (
                         <div className="w-full">
                             <SourceDisplay article={article} />
                         </div>
@@ -231,7 +239,7 @@ export function NewsCard({ article, priority = false }: NewsCardProps) {
             </p>
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
-                {article.source === 'User Submitted' && (
+                {article.source === 'User Submitted' && !isMyPost && (
                     <div className="w-full">
                         <SourceDisplay article={article} />
                     </div>

@@ -228,7 +228,7 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
     }
 }
 
-export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
+export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excludeUserId }: { district: string; limit?: number, excludeUserId?: string | null }): Promise<NewsArticle[]> => {
     try {
         const constraints: QueryConstraint[] = [
             where("source", "==", "User Submitted"),
@@ -238,6 +238,11 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { 
         if (district !== 'Karnataka') {
             constraints.push(where("district", "==", district));
         }
+
+        if (excludeUserId) {
+            constraints.push(where("userId", "!=", excludeUserId));
+        }
+
         if (queryLimit) {
             constraints.push(limit(queryLimit));
         }
