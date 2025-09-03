@@ -125,7 +125,8 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
         const userDocRef = doc(db, 'users', uid);
         // Prevent users from making themselves admin
         const { isAdmin, ...updatableData } = data;
-        await updateDoc(userDocRef, updatableData);
+        // Use set with merge:true to create or update the document.
+        await setDoc(userDocRef, updatableData, { merge: true });
     } catch (error) {
         console.error("Error updating user profile:", error);
         throw new Error("Could not update user profile.");
@@ -384,5 +385,3 @@ export const getAdminDashboardStats = async (): Promise<{ totalArticles: number;
         throw new Error("Could not fetch admin dashboard stats.");
     }
 };
-
-
