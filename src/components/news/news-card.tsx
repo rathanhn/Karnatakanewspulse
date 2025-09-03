@@ -129,7 +129,19 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
             </Badge>
         )}
         {/* Mobile Reel View */}
-        <div className="md:hidden flex flex-col h-screen-minus-header p-4 bg-black/30 backdrop-blur-sm">
+        <div className="md:hidden flex flex-col h-screen-minus-header p-4 bg-black/30 backdrop-blur-sm relative">
+             {imageUrl && (
+                    <Image
+                        src={imageUrl}
+                        alt={article.headline}
+                        data-ai-hint={article['data-ai-hint'] || 'news event'}
+                        fill
+                        sizes="100vw"
+                        priority={priority}
+                        className="object-cover -z-10"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                )}
             <div className="relative w-full h-1/2 rounded-lg overflow-hidden flex-shrink-0">
                 {imageUrl ? (
                     <Image
@@ -139,7 +151,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         fill
                         sizes="100vw"
                         priority={priority}
-                        className="object-cover"
+                        className="object-contain"
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                 ) : (
@@ -199,8 +211,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
 
         {/* Desktop Card View */}
         <div className="hidden md:flex flex-col h-full">
-            <CardHeader>
-            <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden">
+             <div className="relative w-full h-48 mb-4 rounded-t-lg overflow-hidden group">
                 {imageUrl ? (
                     <Image
                         src={imageUrl}
@@ -210,7 +221,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         priority={priority}
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400.png'; e.currentTarget.style.display = 'none'; }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
@@ -223,11 +234,12 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                     </div>
                 )}
             </div>
-            <div className="flex items-start justify-between gap-4">
-                <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
-                {article.headline}
-                </CardTitle>
-            </div>
+            <CardHeader className='pt-0'>
+                <div className="flex items-start justify-between gap-4">
+                    <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
+                    {article.headline}
+                    </CardTitle>
+                </div>
             </CardHeader>
             <CardContent className="flex-grow">
             <p className="text-sm text-muted-foreground line-clamp-3">
@@ -305,7 +317,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         fill
                         sizes="80vw"
                         className="object-cover"
-                        onError={(e) => { e.currentTarget.src = 'https://placehold.co/800x400.png'; }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                 </div>
             ) : (

@@ -229,6 +229,19 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
 }
 
 export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excludeUserId }: { district: string; limit?: number, excludeUserId?: string | null }): Promise<NewsArticle[]> => {
+    const processSnapshot = (querySnapshot: any) => {
+        const articles = querySnapshot.docs.map((doc: any) => {
+            const data = doc.data();
+            const timestamp = data.timestamp as Timestamp;
+            return {
+                ...data,
+                id: doc.id,
+                timestamp: timestamp ? timestamp.toDate() : new Date(),
+            } as NewsArticle;
+        });
+        return articles;
+    }
+    
     try {
         const constraints: QueryConstraint[] = [
             where("source", "==", "User Submitted"),
@@ -249,19 +262,27 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excl
 
         const q = query(collection(db, "news"), ...constraints);
         const querySnapshot = await getDocs(q);
-        const articles = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            const timestamp = data.timestamp as Timestamp;
-            return {
-                ...data,
-                id: doc.id,
-                timestamp: timestamp ? timestamp.toDate() : new Date(),
-            } as NewsArticle;
-        });
-        return articles;
+        return processSnapshot(querySnapshot);
+
     } catch (e) {
         if (e instanceof Error && e.message.includes("The query requires an index")) {
-             console.warn("Firestore index not found for user news query. Please create the required index in the Firebase console.");
+             console.warn("Firestore index not found for user news query. Please create the required index in the Firebase console. Fetching without sort order as a fallback.");
+            // Fallback query without the orderBy clause
+            const constraints: QueryConstraint[] = [where("source", "==", "User Submitted")];
+             if (district !== 'Karnataka') {
+                constraints.push(where("district", "==", district));
+            }
+             if (excludeUserId) {
+                constraints.push(where("userId", "!=", excludeUserId));
+            }
+            if (queryLimit) {
+                constraints.push(limit(queryLimit));
+            }
+            const fallbackQuery = query(collection(db, "news"), ...constraints);
+            const querySnapshot = await getDocs(fallbackQuery);
+            const articles = processSnapshot(querySnapshot);
+            // Manual sort as a final fallback.
+            return articles.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         } else {
             console.error("Error fetching user submitted news:", e);
         }
