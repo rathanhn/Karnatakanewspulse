@@ -22,6 +22,7 @@ export const UserProfileSchema = z.object({
 export type UserProfile = z.infer<typeof UserProfileSchema>;
 
 const AuthorSchema = z.object({
+    uid: z.string(),
     displayName: z.string().nullable(),
     photoURL: z.string().url().nullable(),
 });
@@ -324,6 +325,7 @@ export const fetchUserSubmittedNewsWithAuthors = async ({ district, limit: query
             return {
                 ...article,
                 author: author ? {
+                    uid: author.uid,
                     displayName: author.displayName,
                     photoURL: author.photoURL
                 } : undefined
@@ -382,4 +384,5 @@ export const getAdminDashboardStats = async (): Promise<{ totalArticles: number;
         throw new Error("Could not fetch admin dashboard stats.");
     }
 };
+
 
