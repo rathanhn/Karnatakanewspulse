@@ -15,7 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile, getUserProfile, updateUserProfile, karnatakaDistricts, newsCategories, deleteAllUserPosts, Category } from '@/lib/data';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, User, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { ArrowLeft, Moon, Sun, User as UserIcon, Bell, Trash2, LogOut, Loader2, Upload, CheckCircle } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import {
@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!user) return;
+        if (!user || !auth.currentUser) return;
         setIsSaving(true);
         
         let photoURL = profile?.photoURL;
@@ -106,19 +106,15 @@ export default function ProfilePage() {
             };
 
             // Only include preferredCategory if it has a valid value
-            if (preferredCategory && newsCategories.includes(preferredCategory)) {
+            if (preferredCategory) {
                 updatedProfileData.preferredCategory = preferredCategory;
-            } else {
-                // If it's an empty string or invalid, ensure it's not in the object
-                delete updatedProfileData.preferredCategory;
             }
-
 
             await updateUserProfile(user.uid, updatedProfileData);
 
             // Also update auth profile if display name or photo changed
             if (displayName !== user.displayName || photoURL !== user.photoURL) {
-                 await auth.currentUser?.updateProfile({ displayName, photoURL });
+                 await updateProfile(auth.currentUser, { displayName, photoURL });
             }
 
             toast({ title: 'Profile Updated', description: 'Your changes have been saved.' });
@@ -273,6 +269,7 @@ export default function ProfilePage() {
                                         <Select onValueChange={(v) => setPreferredCategory(v as Category)} value={preferredCategory}>
                                             <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                                             <SelectContent>
+                                                <SelectItem value="">None</SelectItem>
                                                 {newsCategories.filter(c => c !== 'User Submitted').map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}
                                             </SelectContent>
                                         </Select>
