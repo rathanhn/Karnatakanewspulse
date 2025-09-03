@@ -9,8 +9,8 @@ interface FetchNewsOptions {
   limit?: number;
 }
 
-const GNEWS_API_KEY = "41308949c66d428c9218a2ae7355fdd3";
-const NEWSDATA_API_KEY = "pub_3e231d27d02b413a804e6216d1b83058";
+const GNEWS_API_KEY = process.env.NEXT_PUBLIC_GNEWS_API_KEY;
+const NEWSDATA_API_KEY = process.env.NEXT_PUBLIC_NEWSDATA_API_KEY;
 
 
 // --- GNews API Fetcher (for broad categories) ---

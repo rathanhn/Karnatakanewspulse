@@ -4,13 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  projectId: "karnataka-news-pulse",
-  appId: "1:943034602473:web:f66a706788966b5be87178",
-  storageBucket: "karnataka-news-pulse.firebasestorage.app",
-  apiKey: "AIzaSyC1j8TG72O6K-ibOEdruCeLYQ8CBgacfB0",
-  authDomain: "karnataka-news-pulse.firebaseapp.com",
-  messagingSenderId: "943034602473",
-  measurementId: "G-XXXXXXXXXX" // Placeholder, replace with your actual Measurement ID from Firebase Console
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 

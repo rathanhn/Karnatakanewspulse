@@ -57,6 +57,7 @@ export default function CreateNewsPage() {
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
         }
 
         if (e.target.files && e.target.files[0]) {
@@ -66,7 +67,6 @@ export default function CreateNewsPage() {
             setPreviewUrl(URL.createObjectURL(selectedFile));
         } else {
             setFile(null);
-            setPreviewUrl(null);
         }
     };
     
@@ -79,8 +79,8 @@ export default function CreateNewsPage() {
         const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-        if (!cloudName || !uploadPreset) {
-            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up.', variant: 'destructive'});
+        if (!cloudName || !uploadPreset || cloudName === 'your_cloud_name') {
+            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up correctly.', variant: 'destructive'});
             console.error('Cloudinary environment variables NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME or NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET are not defined.');
             return;
         }
@@ -101,7 +101,7 @@ export default function CreateNewsPage() {
                 setUploadedUrl(data.secure_url);
                 toast({ title: "Upload Successful!", description: "Image is ready to be submitted with your post." });
             } else {
-                 throw new Error(data.error.message || 'Unknown error during upload.');
+                 throw new Error(data.error?.message || 'Unknown error during upload.');
             }
 
         } catch (error: any) {

@@ -47,7 +47,6 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     
-    // Cloudinary state
     const [file, setFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -141,6 +140,7 @@ export default function ProfilePage() {
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
         }
 
         if (e.target.files && e.target.files[0]) {
@@ -150,7 +150,6 @@ export default function ProfilePage() {
             setPreviewUrl(URL.createObjectURL(selectedFile));
         } else {
             setFile(null);
-            setPreviewUrl(null);
         }
     };
     
@@ -160,8 +159,8 @@ export default function ProfilePage() {
         const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
         const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-        if (!cloudName || !uploadPreset) {
-            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up.', variant: 'destructive'});
+        if (!cloudName || !uploadPreset || cloudName === 'your_cloud_name') {
+            toast({ title: 'Upload Configuration Missing', description: 'Cloudinary environment variables are not set up correctly.', variant: 'destructive'});
             console.error('Cloudinary environment variables NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME or NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET are not defined.');
             return;
         }
@@ -181,7 +180,7 @@ export default function ProfilePage() {
                 setUploadedUrl(data.secure_url);
                 toast({ title: "Upload Successful!", description: "New profile picture is ready." });
             } else {
-                 throw new Error(data.error.message || 'Unknown error during upload.');
+                 throw new Error(data.error?.message || 'Unknown error during upload.');
             }
         } catch (error: any) {
             toast({ title: 'Upload Failed', description: error.message, variant: 'destructive'});
