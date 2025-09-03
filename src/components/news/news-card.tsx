@@ -52,8 +52,13 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
   useEffect(() => {
     const fetchAuthor = async () => {
       if (article.userId) {
-        const profile = await getUserProfile(article.userId);
-        setAuthorProfile(profile);
+        try {
+            const profile = await getUserProfile(article.userId);
+            setAuthorProfile(profile);
+        } catch (error) {
+            console.error("Failed to fetch author profile", error);
+            setAuthorProfile(null);
+        }
       }
     };
     if (article.source === 'User Submitted') {
@@ -65,7 +70,7 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
     return (
       <div className="flex items-center gap-2">
         <Avatar className="w-6 h-6">
-            <AvatarImage src={authorProfile?.photoURL || ''} />
+            <AvatarImage src={authorProfile?.photoURL || ''} alt={authorProfile?.displayName || 'User'}/>
             <AvatarFallback>{getInitials(authorProfile?.displayName)}</AvatarFallback>
         </Avatar>
         <span className="text-sm font-medium">{authorProfile?.displayName || 'Community Contributor'}</span>
