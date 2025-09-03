@@ -121,7 +121,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
     <>
       <Card className={cn("flex flex-col h-full md:h-auto snap-start md:snap-align-none md:rounded-lg overflow-hidden transition-all duration-300 ease-in-out md:hover:shadow-xl md:hover:-translate-y-1 bg-card md:border-accent/20", isMyPost && 'border-primary border-2')}>
         {isMyPost && (
-            <Badge variant="default" className="absolute top-2 right-2 z-10">
+            <Badge variant="default" className="absolute top-2 right-2 z-10 bg-primary/80">
               <Star className="mr-1 h-3 w-3" />
               My Post
             </Badge>
@@ -166,7 +166,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                     </p>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 p-0 mt-4">
-                    {article.source === 'User Submitted' && !isMyPost && (
+                    {article.source === 'User Submitted' && (
                         <div className="w-full">
                             <SourceDisplay article={article} />
                         </div>
@@ -239,7 +239,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
             </p>
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
-                {article.source === 'User Submitted' && !isMyPost && (
+                {article.source === 'User Submitted' && (
                     <div className="w-full">
                         <SourceDisplay article={article} />
                     </div>
