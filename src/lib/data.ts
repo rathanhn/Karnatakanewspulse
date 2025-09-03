@@ -21,6 +21,10 @@ export const UserProfileSchema = z.object({
 
 export type UserProfile = z.infer<typeof UserProfileSchema>;
 
+const AuthorSchema = z.object({
+    displayName: z.string().nullable(),
+    photoURL: z.string().url().nullable(),
+});
 
 export const NewsArticleSchema = z.object({
   id: z.string(),
@@ -36,6 +40,7 @@ export const NewsArticleSchema = z.object({
   'data-ai-hint': z.string().optional(),
   // For user-submitted posts
   userId: z.string().optional(), 
+  author: AuthorSchema.optional(), // Embed author details
 });
 
 export type NewsArticle = z.infer<typeof NewsArticleSchema>;
@@ -228,7 +233,7 @@ export const getUserNewsFromFirestore = async (userId: string): Promise<NewsArti
     }
 }
 
-export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excludeUserId }: { district: string; limit?: number, excludeUserId?: string | null }): Promise<NewsArticle[]> => {
+export const fetchUserSubmittedNews = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
     const processSnapshot = (querySnapshot: any) => {
         const articles = querySnapshot.docs.map((doc: any) => {
             const data = doc.data();
@@ -252,10 +257,6 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excl
             constraints.push(where("district", "==", district));
         }
 
-        if (excludeUserId) {
-            constraints.push(where("userId", "!=", excludeUserId));
-        }
-
         if (queryLimit) {
             constraints.push(limit(queryLimit));
         }
@@ -272,9 +273,6 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excl
              if (district !== 'Karnataka') {
                 constraints.push(where("district", "==", district));
             }
-             if (excludeUserId) {
-                constraints.push(where("userId", "!=", excludeUserId));
-            }
             if (queryLimit) {
                 constraints.push(limit(queryLimit));
             }
@@ -289,6 +287,52 @@ export const fetchUserSubmittedNews = async ({ district, limit: queryLimit, excl
         return [];
     }
 };
+
+export const fetchUserSubmittedNewsWithAuthors = async ({ district, limit: queryLimit }: { district: string; limit?: number }): Promise<NewsArticle[]> => {
+    const news = await fetchUserSubmittedNews({ district, limit: queryLimit });
+    
+    // Create a unique set of author IDs to fetch
+    const authorIds = [...new Set(news.map(n => n.userId).filter(Boolean))];
+
+    if (authorIds.length === 0) {
+        return news;
+    }
+
+    // Fetch all author profiles in a single batch (more efficient)
+    const authorProfiles = new Map<string, UserProfile>();
+    // Firestore 'in' query can take at most 30 elements
+    const subqueries = [];
+    for (let i = 0; i < authorIds.length; i += 30) {
+      const subquery = getDocs(query(collection(db, 'users'), where('uid', 'in', authorIds.slice(i, i + 30))));
+      subqueries.push(subquery);
+    }
+
+    const subquerySnapshots = await Promise.all(subqueries);
+
+    for (const subquerySnapshot of subquerySnapshots) {
+      for (const doc of subquerySnapshot.docs) {
+        const profile = doc.data() as UserProfile;
+        authorProfiles.set(profile.uid, profile);
+      }
+    }
+
+
+    // Map author profiles back to news articles
+    return news.map(article => {
+        if (article.userId) {
+            const author = authorProfiles.get(article.userId);
+            return {
+                ...article,
+                author: author ? {
+                    displayName: author.displayName,
+                    photoURL: author.photoURL
+                } : undefined
+            };
+        }
+        return article;
+    });
+};
+
 
 export const deleteUserNews = async (postId: string): Promise<void> => {
     try {
@@ -338,3 +382,4 @@ export const getAdminDashboardStats = async (): Promise<{ totalArticles: number;
         throw new Error("Could not fetch admin dashboard stats.");
     }
 };
+

@@ -14,7 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNews } from '@/lib/data';
+import { karnatakaDistricts, newsCategories, NewsArticle as NewsArticleType, Category, fetchUserSubmittedNewsWithAuthors } from '@/lib/data';
 import { fetchNewsFromAPI } from '@/services/news';
 import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
@@ -41,7 +41,9 @@ function NewsContent() {
   
   // State for data and loading
   const [allNews, setAllNews] = useState<NewsArticleType[]>([]);
+  const [userNews, setUserNews] = useState<NewsArticleType[]>([]);
   const [filteredNews, setFilteredNews] = useState<NewsArticleType[]>([]);
+  const [filteredUserNews, setFilteredUserNews] = useState<NewsArticleType[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,32 +75,42 @@ function NewsContent() {
         setError(null);
         setAllNews([]);
         setFilteredNews([]);
+        setUserNews([]);
+        setFilteredUserNews([]);
         try {
             // Fetch API news and all user-submitted news in parallel
             const [apiNews, userSubmittedNews] = await Promise.all([
                 fetchNewsFromAPI({ district: initialDistrict, category: initialCategory }),
-                fetchUserSubmittedNews({ district: initialDistrict })
+                fetchUserSubmittedNewsWithAuthors({ district: initialDistrict })
             ]);
-
-            const combinedNews = [...userSubmittedNews, ...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            
+            const combinedNews = [...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             
             // Remove duplicates by URL or headline+source
             const uniqueNews = Array.from(new Map(combinedNews.map(item => [`${item.url || (item.headline+item.source)}`, item])).values());
 
             setAllNews(uniqueNews);
+            setUserNews(userSubmittedNews);
 
             if (initialSearchTerm) {
                 // If there's an initial search term, filter the results immediately
                 const lowerCaseSearchTerm = initialSearchTerm.toLowerCase();
-                const results = uniqueNews.filter(
+                const apiResults = uniqueNews.filter(
                     (article) =>
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
                 );
-                setFilteredNews(results);
+                 const userResults = userSubmittedNews.filter(
+                    (article) =>
+                        article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+                        (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+                );
+                setFilteredNews(apiResults);
+                setFilteredUserNews(userResults);
             } else {
                 // Otherwise, show all fetched news
                 setFilteredNews(uniqueNews);
+                setFilteredUserNews(userSubmittedNews);
             }
         } catch (err: any) {
             setError('Failed to fetch news. Please check your connection or API key and try again.');
@@ -114,27 +126,30 @@ function NewsContent() {
   const handleSearch = useCallback((currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
     if (currentSearchTerm.trim() === '') {
-        setFilteredNews(allNews); // Reset to all news if search is cleared
+        setFilteredNews(allNews); // Reset to all api news if search is cleared
+        setFilteredUserNews(userNews); // Reset to all user news if search is cleared
     } else {
-        const results = allNews.filter(
+        const apiResults = allNews.filter(
             (article) =>
                 article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                 (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
         );
-        setFilteredNews(results);
+         const userResults = userNews.filter(
+            (article) =>
+                article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
+                (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
+        );
+        setFilteredNews(apiResults);
+        setFilteredUserNews(userResults);
     }
-  }, [allNews]);
+  }, [allNews, userNews]);
 
   // Handle form submission and AI summary generation
   const handleSearchSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       handleSearch(searchTerm); // Perform client-side filtering
 
-      const currentResults = allNews.filter(
-        (article) =>
-          article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      const currentResults = [...filteredNews, ...filteredUserNews];
 
       if (searchTerm.trim() && currentResults.length > 0) {
         setIsAiSummaryLoading(true);
@@ -156,27 +171,22 @@ function NewsContent() {
         setAiSummary('');
         setAiSuggestions([]);
       }
-  }, [searchTerm, allNews, handleSearch]);
+  }, [searchTerm, filteredNews, filteredUserNews, handleSearch]);
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchTerm(suggestion);
     handleSearch(suggestion);
   };
-
-  const { userNews, apiNews } = useMemo(() => {
-    const userNews = filteredNews.filter(a => a.source === 'User Submitted');
-    const apiNews = filteredNews.filter(a => a.source !== 'User Submitted');
-    // For community feed, sort "My Posts" to the top
-    const sortedUserNews = userNews.sort((a, b) => {
+  
+  const sortedUserNews = useMemo(() => {
+    return filteredUserNews.sort((a, b) => {
         const aIsMyPost = a.userId === user?.uid;
         const bIsMyPost = b.userId === user?.uid;
         if (aIsMyPost && !bIsMyPost) return -1;
         if (!aIsMyPost && bIsMyPost) return 1;
         return 0;
     });
-
-    return { userNews: sortedUserNews, apiNews };
-  }, [filteredNews, user?.uid]);
+  }, [filteredUserNews, user?.uid]);
 
 
   const NewsContainer = ({ children }: { children: React.ReactNode }) => {
@@ -279,23 +289,23 @@ function NewsContent() {
                     <TabsTrigger value="community">Community News</TabsTrigger>
                 </TabsList>
                 <TabsContent value="latest" className="mt-6">
-                    {apiNews.length > 0 ? (
+                    {filteredNews.length > 0 ? (
                          <NewsContainer>
-                            {apiNews.map((article, index) => (
+                            {filteredNews.map((article, index) => (
                               <NewsCard key={article.id} article={article} priority={index < 4} />
                             ))}
                         </NewsContainer>
                     ) : (
                         <div className="text-center py-20">
-                            <h2 className="text-2xl font-bold">No API articles found</h2>
+                            <h2 className="text-2xl font-bold">No articles found</h2>
                             <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
                         </div>
                     )}
                 </TabsContent>
                 <TabsContent value="community" className="mt-6">
-                    {userNews.length > 0 ? (
+                    {sortedUserNews.length > 0 ? (
                         <NewsContainer>
-                            {userNews.map((article, index) => (
+                            {sortedUserNews.map((article, index) => (
                                 <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} />
                             ))}
                         </NewsContainer>

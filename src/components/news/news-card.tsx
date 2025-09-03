@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { NewsArticle, UserProfile, getUserProfile } from '@/lib/data';
+import { NewsArticle } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import {
   DailyHuntIcon,
@@ -46,31 +46,7 @@ const getInitials = (name: string | null | undefined) => {
     return name.split(' ').map(n => n[0]).join('');
 }
 
-
 const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
-  const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAuthor = async () => {
-      if (article.source !== 'User Submitted' || !article.userId) {
-          setIsLoading(false);
-          return;
-      }
-      setIsLoading(true);
-      try {
-          const profile = await getUserProfile(article.userId);
-          setAuthorProfile(profile);
-      } catch (error) {
-          console.error("Failed to fetch author profile", error);
-          setAuthorProfile(null);
-      } finally {
-          setIsLoading(false);
-      }
-    };
-    fetchAuthor();
-  }, [article.userId, article.source]);
-
   if (article.source !== 'User Submitted') {
     const props = { className: className || 'w-6 h-6' };
     const lowerSource = article.source.toLowerCase();
@@ -81,8 +57,9 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
     return <NewsIcon {...props} />;
   }
 
-  if (isLoading) {
-    return (
+  // For 'User Submitted' source, author details are passed directly in the article object
+  if (!article.author) {
+     return (
         <div className="flex items-center gap-2">
             <Skeleton className="w-6 h-6 rounded-full" />
             <Skeleton className="h-4 w-32" />
@@ -93,10 +70,10 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
   return (
     <div className="flex items-center gap-2">
       <Avatar className="w-6 h-6">
-          <AvatarImage src={authorProfile?.photoURL || ''} alt={authorProfile?.displayName || 'User'}/>
-          <AvatarFallback>{getInitials(authorProfile?.displayName)}</AvatarFallback>
+          <AvatarImage src={article.author.photoURL || ''} alt={article.author.displayName || 'User'}/>
+          <AvatarFallback>{getInitials(article.author.displayName)}</AvatarFallback>
       </Avatar>
-      <span className="text-sm font-medium">{authorProfile?.displayName || 'Community Contributor'}</span>
+      <span className="text-sm font-medium">{article.author.displayName || 'Community Contributor'}</span>
     </div>
   );
 };
