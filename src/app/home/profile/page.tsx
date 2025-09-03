@@ -102,9 +102,13 @@ export default function ProfilePage() {
                 displayName,
                 photoURL,
                 preferredDistrict,
-                preferredCategory: preferredCategory || undefined,
                 notifications,
             };
+
+            if (preferredCategory) {
+                updatedProfileData.preferredCategory = preferredCategory;
+            }
+
             await updateUserProfile(user.uid, updatedProfileData);
 
             // Also update auth profile if display name or photo changed
