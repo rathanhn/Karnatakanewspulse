@@ -47,37 +47,32 @@ const getInitials = (name: string | null | undefined) => {
 }
 
 const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
-  if (article.source !== 'User Submitted') {
-    const props = { className: className || 'w-6 h-6' };
-    const lowerSource = article.source.toLowerCase();
-    if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
-    if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
-    if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
-    if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
-    return <NewsIcon {...props} />;
-  }
+  const props = { className: className || 'w-6 h-6' };
 
-  // For 'User Submitted' source, author details are passed directly in the article object
-  if (!article.author) {
-     return (
+  if (article.source === 'User Submitted') {
+      // Logic for user-submitted posts
+      const authorName = article.author?.displayName || 'Community Contributor';
+      const authorImage = article.author?.photoURL || '';
+      const authorInitials = getInitials(authorName);
+
+      return (
         <div className="flex items-center gap-2">
-            <Avatar className="w-6 h-6">
-                <AvatarFallback>CC</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">Community Contributor</span>
+          <Avatar className="w-6 h-6">
+              <AvatarImage src={authorImage} alt={authorName}/>
+              <AvatarFallback>{authorInitials}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium">{authorName}</span>
         </div>
-    );
+      );
   }
 
-  return (
-    <div className="flex items-center gap-2">
-      <Avatar className="w-6 h-6">
-          <AvatarImage src={article.author.photoURL || ''} alt={article.author.displayName || 'User'}/>
-          <AvatarFallback>{getInitials(article.author.displayName)}</AvatarFallback>
-      </Avatar>
-      <span className="text-sm font-medium">{article.author.displayName || 'Community Contributor'}</span>
-    </div>
-  );
+  // Logic for API-sourced articles
+  const lowerSource = article.source.toLowerCase();
+  if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
+  if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
+  if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
+  if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
+  return <NewsIcon {...props} />;
 };
 
 
