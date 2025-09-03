@@ -32,6 +32,7 @@ import { ExternalLink, BookOpen, Share2, Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '../ui/skeleton';
 
 
 type NewsCardProps = {
@@ -48,43 +49,56 @@ const getInitials = (name: string | null | undefined) => {
 
 const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
   const [authorProfile, setAuthorProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchAuthor = async () => {
-      if (article.userId) {
-        try {
-            const profile = await getUserProfile(article.userId);
-            setAuthorProfile(profile);
-        } catch (error) {
-            console.error("Failed to fetch author profile", error);
-            setAuthorProfile(null);
-        }
+      if (article.source !== 'User Submitted' || !article.userId) {
+          setIsLoading(false);
+          return;
+      }
+      setIsLoading(true);
+      try {
+          const profile = await getUserProfile(article.userId);
+          setAuthorProfile(profile);
+      } catch (error) {
+          console.error("Failed to fetch author profile", error);
+          setAuthorProfile(null);
+      } finally {
+          setIsLoading(false);
       }
     };
-    if (article.source === 'User Submitted') {
-      fetchAuthor();
-    }
+    fetchAuthor();
   }, [article.userId, article.source]);
 
-  if (article.source === 'User Submitted') {
+  if (article.source !== 'User Submitted') {
+    const props = { className: className || 'w-6 h-6' };
+    const lowerSource = article.source.toLowerCase();
+    if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
+    if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
+    if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
+    if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
+    return <NewsIcon {...props} />;
+  }
+
+  if (isLoading) {
     return (
-      <div className="flex items-center gap-2">
-        <Avatar className="w-6 h-6">
-            <AvatarImage src={authorProfile?.photoURL || ''} alt={authorProfile?.displayName || 'User'}/>
-            <AvatarFallback>{getInitials(authorProfile?.displayName)}</AvatarFallback>
-        </Avatar>
-        <span className="text-sm font-medium">{authorProfile?.displayName || 'Community Contributor'}</span>
-      </div>
+        <div className="flex items-center gap-2">
+            <Skeleton className="w-6 h-6 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+        </div>
     );
   }
 
-  const props = { className: className || 'w-6 h-6' };
-  const lowerSource = article.source.toLowerCase();
-  if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
-  if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
-  if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
-  if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
-  return <NewsIcon {...props} />;
+  return (
+    <div className="flex items-center gap-2">
+      <Avatar className="w-6 h-6">
+          <AvatarImage src={authorProfile?.photoURL || ''} alt={authorProfile?.displayName || 'User'}/>
+          <AvatarFallback>{getInitials(authorProfile?.displayName)}</AvatarFallback>
+      </Avatar>
+      <span className="text-sm font-medium">{authorProfile?.displayName || 'Community Contributor'}</span>
+    </div>
+  );
 };
 
 
