@@ -47,6 +47,7 @@ function initializeFirebase() {
   }
 }
 
+// This function should be called before using 'auth' or 'db'
 initializeFirebase();
 
 export { app, db, auth };
