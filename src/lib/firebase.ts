@@ -1,6 +1,6 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getFirestore, Firestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -13,29 +13,16 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (typeof window !== 'undefined' && !getApps().length) {
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    enableIndexedDbPersistence(db).catch((err) => {
-      if (err.code == 'failed-precondition') {
-        console.warn('Firestore persistence failed: Multiple tabs open.');
-      } else if (err.code == 'unimplemented') {
-        console.warn('Firestore persistence failed: Browser does not support it.');
-      }
-    });
-  } catch (e) {
-    console.error("Firebase initialization error", e);
+// This function ensures Firebase is initialized only once.
+const getFirebaseApp = (): FirebaseApp => {
+  if (getApps().length > 0) {
+    return getApp();
   }
-} else if (getApps().length) {
-  app = getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
+  return initializeApp(firebaseConfig);
+};
+
+const app: FirebaseApp = getFirebaseApp();
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 
 export { app, db, auth };
