@@ -153,11 +153,7 @@ export const addUserNews = async (articleData: AddUserNewsData) => {
             source: 'User Submitted',
             url: '#', // User-submitted articles don't have an external source URL
         });
-        // Construct a URL for the new post
-        const newUrl = `${window.location.origin}/news/post/${docRef.id}`;
-        await updateDoc(docRef, { url: newUrl });
-
-        return { ...articleData, id: docRef.id, timestamp: new Date(), url: newUrl };
+        return { ...articleData, id: docRef.id, timestamp: new Date(), url: '#' };
     } catch (e) {
         console.error("Error adding document: ", e);
         throw new Error("Could not submit news article.");
