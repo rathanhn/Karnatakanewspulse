@@ -81,6 +81,11 @@ async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
   
+  if (!GNEWS_API_KEY) {
+    console.error("News API key (GNEWS_API_KEY) is not configured in environment variables.");
+    return [];
+  }
+
   if (category === 'User Submitted') {
       return fetchUserSubmittedNews({ district, limit: queryLimit });
   }
