@@ -17,37 +17,25 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-function initializeFirebase() {
-  if (typeof window !== 'undefined') { // Ensure this runs only on the client
-    if (!getApps().length) {
-      app = initializeApp(firebaseConfig);
-      auth = getAuth(app);
-      db = getFirestore(app);
-      try {
-        enableIndexedDbPersistence(db)
-          .catch((err) => {
-            if (err.code == 'failed-precondition') {
-              console.warn(
-                'Firestore persistence failed: Multiple tabs open, persistence can only be enabled in one tab at a time.'
-              );
-            } else if (err.code == 'unimplemented') {
-              console.warn(
-                'Firestore persistence failed: The current browser does not support all of the features required to enable persistence.'
-              );
-            }
-          });
-      } catch (error) {
-        console.error("Error enabling Firestore persistence: ", error);
+if (typeof window !== 'undefined' && !getApps().length) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code == 'failed-precondition') {
+        console.warn('Firestore persistence failed: Multiple tabs open.');
+      } else if (err.code == 'unimplemented') {
+        console.warn('Firestore persistence failed: Browser does not support it.');
       }
-    } else {
-      app = getApp();
-      auth = getAuth(app);
-      db = getFirestore(app);
-    }
+    });
+  } catch (e) {
+    console.error("Firebase initialization error", e);
   }
+} else if (getApps().length) {
+  app = getApp();
+  auth = getAuth(app);
+  db = getFirestore(app);
 }
-
-// This function should be called before using 'auth' or 'db'
-initializeFirebase();
 
 export { app, db, auth };
