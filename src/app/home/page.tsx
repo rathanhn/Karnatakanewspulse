@@ -1,9 +1,9 @@
 // src/app/home/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { fetchNewsFromAPI } from '@/services/news';
 import { NewsArticle, karnatakaDistricts, Category, UserProfile, getUserProfile } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper, Settings, Shield } from 'lucide-react';
+import { LogOut, User, Search, MapPin, TrendingUp, Star, ChevronsUpDown, Check, PlusCircle, Newspaper, Settings, Shield, Globe } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export default function HomePage() {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [recommendedNews, setRecommendedNews] = useState<NewsArticle[]>([]);
@@ -49,6 +50,13 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
   const [open, setOpen] = useState(false)
+  
+  const lang = useMemo(() => pathname.startsWith('/kn') ? 'kn' : 'en', [pathname]);
+
+  const handleLanguageChange = (newLang: 'en' | 'kn') => {
+    const newPath = `/${newLang}${pathname.replace(/^\/(en|kn)/, '')}`;
+    router.push(newPath);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -140,6 +148,18 @@ export default function HomePage() {
             <Button asChild variant="ghost">
               <Link href="/news">News Feed</Link>
             </Button>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <Globe />
+                        <span className="sr-only">Change language</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => handleLanguageChange('en')}>English</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleLanguageChange('kn')}>ಕನ್ನಡ</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -270,7 +290,7 @@ export default function HomePage() {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : recommendedNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} />
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={lang}/>
                   ))}
             </div>
         </section>
@@ -282,7 +302,7 @@ export default function HomePage() {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : trendingNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} />
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={lang}/>
                   ))}
             </div>
         </section>

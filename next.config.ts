@@ -20,6 +20,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  i18n: {
+    locales: ['en', 'kn'],
+    defaultLocale: 'en',
+  },
+   async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/home',
+        permanent: true,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

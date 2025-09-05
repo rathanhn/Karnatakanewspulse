@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Select,
@@ -11,6 +11,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -20,19 +26,24 @@ import { refineSearchSuggestions } from '@/ai/flows/refine-search-suggestions';
 import { NewsCard } from '@/components/news/news-card';
 import { NewsSkeleton } from '@/components/news/news-skeleton';
 import { AiSummary } from '@/components/ai-summary';
-import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users } from 'lucide-react';
+import { Search, MapPin, LayoutGrid, AlertCircle, Home, Users, Globe } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { getDictionary } from '@/lib/i18n';
 
 
 function NewsContent() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   
   const [user, setUser] = useState<User | null>(null);
+
+  const lang = useMemo(() => pathname.startsWith('/kn') ? 'kn' : 'en', [pathname]);
+  const [dict, setDict] = useState(getDictionary(lang));
 
   // State for UI controls
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
@@ -52,6 +63,15 @@ function NewsContent() {
   const [aiSummary, setAiSummary] = useState('');
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
+
+  useEffect(() => {
+    setDict(getDictionary(lang));
+  }, [lang]);
+  
+  const handleLanguageChange = (newLang: 'en' | 'kn') => {
+    const newPath = `/${newLang}${pathname.replace(/^\/(en|kn)/, '')}`;
+    router.push(newPath);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -232,7 +252,7 @@ function NewsContent() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Search within results..."
+                  placeholder={dict.searchPlaceholder}
                   className="pl-10 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -241,10 +261,10 @@ function NewsContent() {
               <Select value={selectedDistrict} onValueChange={val => {setSelectedDistrict(val); router.push(`/news?district=${val}&category=${selectedCategory}`)}}>
                 <SelectTrigger className="w-[280px]">
                   <MapPin className="w-5 h-5 mr-2" />
-                  <SelectValue placeholder="Select District" />
+                  <SelectValue placeholder={dict.selectDistrict} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Karnataka">All Karnataka</SelectItem>
+                  <SelectItem value="Karnataka">{dict.allKarnataka}</SelectItem>
                   {karnatakaDistricts.filter(d=> d !== 'Karnataka').map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
@@ -255,20 +275,34 @@ function NewsContent() {
                <Select value={selectedCategory} onValueChange={(value) => {setSelectedCategory(value as Category); router.push(`/news?district=${selectedDistrict}&category=${value}`)}}>
                 <SelectTrigger className="w-[220px]">
                   <LayoutGrid className="w-5 h-5 mr-2" />
-                  <SelectValue placeholder="Select Category" />
+                  <SelectValue placeholder={dict.selectCategory} />
                 </SelectTrigger>
                 <SelectContent>
                   {newsCategories.map((category) => (
                     <SelectItem key={category} value={category}>
-                      {category}
+                      {dict.categories[category as keyof typeof dict.categories] || category}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-             <Button asChild variant="ghost">
-              <Link href="/home">Home</Link>
-            </Button>
+             <div className="flex items-center gap-2">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Globe />
+                            <span className="sr-only">Change language</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => handleLanguageChange('en')}>English</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleLanguageChange('kn')}>ಕನ್ನಡ</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                <Button asChild variant="ghost">
+                    <Link href="/home">{dict.home}</Link>
+                </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -290,27 +324,27 @@ function NewsContent() {
         ) : error ? (
             <div className="flex flex-col items-center justify-center text-center py-20">
                 <AlertCircle className="w-16 h-16 text-destructive mb-4" />
-                <h2 className="text-2xl font-bold mb-2">An Error Occurred</h2>
+                <h2 className="text-2xl font-bold mb-2">{dict.errorOccurred}</h2>
                 <p className="text-muted-foreground max-w-md">{error}</p>
-                <Button onClick={() => router.refresh()} className="mt-6">Try Again</Button>
+                <Button onClick={() => router.refresh()} className="mt-6">{dict.tryAgain}</Button>
             </div>
         ) : (
              <Tabs defaultValue="latest" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 md:w-1/2 mx-auto">
-                    <TabsTrigger value="latest">Latest Headlines</TabsTrigger>
-                    <TabsTrigger value="community">Community News</TabsTrigger>
+                    <TabsTrigger value="latest">{dict.latestHeadlines}</TabsTrigger>
+                    <TabsTrigger value="community">{dict.communityNews}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="latest" className="mt-6">
                     {filteredNews.length > 0 ? (
                          <NewsContainer>
                             {filteredNews.map((article, index) => (
-                              <NewsCard key={article.id} article={article} priority={index < 4} />
+                              <NewsCard key={article.id} article={article} priority={index < 4} lang={lang} />
                             ))}
                         </NewsContainer>
                     ) : (
                         <div className="text-center py-20">
-                            <h2 className="text-2xl font-bold">No articles found</h2>
-                            <p className="text-muted-foreground">Try adjusting your filters or search term.</p>
+                            <h2 className="text-2xl font-bold">{dict.noArticlesFound}</h2>
+                            <p className="text-muted-foreground">{dict.adjustFilters}</p>
                         </div>
                     )}
                 </TabsContent>
@@ -318,13 +352,13 @@ function NewsContent() {
                     {sortedUserNews.length > 0 ? (
                         <NewsContainer>
                             {sortedUserNews.map((article, index) => (
-                                <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} />
+                                <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} lang={lang} />
                             ))}
                         </NewsContainer>
                     ) : (
                         <div className="text-center py-20">
-                            <h2 className="text-2xl font-bold">No community articles found</h2>
-                            <p className="text-muted-foreground">Be the first to post in this district!</p>
+                            <h2 className="text-2xl font-bold">{dict.noCommunityArticles}</h2>
+                            <p className="text-muted-foreground">{dict.beTheFirstToPost}</p>
                         </div>
                     )}
                 </TabsContent>

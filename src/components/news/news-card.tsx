@@ -32,13 +32,14 @@ import { ExternalLink, BookOpen, Share2, Star } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '../ui/skeleton';
+import { getDictionary, Dictionary } from '@/lib/i18n';
 
 
 type NewsCardProps = {
   article: NewsArticle;
   priority?: boolean;
   isMyPost?: boolean;
+  lang?: 'en' | 'kn';
 };
 
 const getInitials = (name: string | null | undefined) => {
@@ -46,13 +47,12 @@ const getInitials = (name: string | null | undefined) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 }
 
-const SourceDisplay = ({ article, className }: { article: NewsArticle, className?: string }) => {
+const SourceDisplay = ({ article, className, dict }: { article: NewsArticle, className?: string, dict: Dictionary }) => {
   const props = { className: className || 'w-6 h-6' };
 
-  // This is the corrected logic. It now robustly checks for the author object.
   if (article.source === 'User Submitted' && article.author) {
       const author = article.author;
-      const authorName = author.displayName || 'Community Contributor';
+      const authorName = author.displayName || dict.communityContributor;
       const authorImage = author.photoURL || '';
       const authorInitials = getInitials(authorName);
 
@@ -67,14 +67,13 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
       );
   }
 
-  // Fallback for user-submitted posts without an author for some reason
   if (article.source === 'User Submitted') {
      return (
         <div className="flex items-center gap-2">
           <Avatar className="w-6 h-6">
               <AvatarFallback>CC</AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">Community Contributor</span>
+          <span className="text-sm font-medium">{dict.communityContributor}</span>
         </div>
       );
   }
@@ -89,10 +88,11 @@ const SourceDisplay = ({ article, className }: { article: NewsArticle, className
 };
 
 
-export function NewsCard({ article, priority = false, isMyPost = false }: NewsCardProps) {
+export function NewsCard({ article, priority = false, isMyPost = false, lang = 'en' }: NewsCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formattedDate, setFormattedDate] = useState('');
   const { toast } = useToast();
+  const dict = getDictionary(lang);
 
   useEffect(() => {
     if (article.timestamp) {
@@ -125,7 +125,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
       }
     } else {
         navigator.clipboard.writeText(article.url);
-        toast({ title: "Link Copied!", description: "News article URL copied to your clipboard." });
+        toast({ title: dict.linkCopied, description: dict.linkCopiedDesc });
     }
   };
 
@@ -138,7 +138,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
         {isMyPost && (
             <Badge variant="default" className="absolute top-2 right-2 z-10 bg-primary/80">
               <Star className="mr-1 h-3 w-3" />
-              My Post
+              {dict.myPost}
             </Badge>
         )}
         {/* Mobile Reel View */}
@@ -184,7 +184,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                         <CardTitle className="text-2xl font-bold leading-tight font-headline text-primary">
                         {article.headline}
                         </CardTitle>
-                        <SourceDisplay article={article} />
+                        <SourceDisplay article={article} dict={dict} />
                     </div>
                  </CardHeader>
                 <CardContent className="p-0 mt-2 flex-grow">
@@ -205,17 +205,17 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                     disabled={!article.content}
                     >
                     <BookOpen />
-                    Read More
+                    {dict.readMore}
                     </Button>
                      <Button variant="outline" className="w-full" onClick={handleShare}>
                         <Share2 />
-                        Share
+                        {dict.share}
                     </Button>
                 </div>
                  <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
                     <a href={article.url} target="_blank" rel="noopener noreferrer">
                         <ExternalLink />
-                        View Source
+                        {dict.viewSource}
                     </a>
                 </Button>
                 </CardFooter>
@@ -261,7 +261,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
                 <div className="w-full">
-                    <SourceDisplay article={article} />
+                    <SourceDisplay article={article} dict={dict} />
                 </div>
             <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
                 <Badge variant="outline">{article.district}</Badge>
@@ -275,7 +275,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                 disabled={!article.content}
                 >
                 <BookOpen />
-                Read
+                {dict.read}
                 </Button>
                  <Button variant="outline" size="icon" onClick={handleShare}>
                     <Share2 />
@@ -283,7 +283,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                 <Button asChild variant="outline" className="w-full" disabled={article.url === '#'}>
                 <a href={article.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink />
-                    Source
+                    {dict.source}
                 </a>
                 </Button>
             </div>
@@ -298,7 +298,7 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
                  <DialogTitle className="text-2xl font-bold font-headline text-primary">
                     {article.headline}
                  </DialogTitle>
-                 <SourceDisplay article={article} />
+                 <SourceDisplay article={article} dict={dict} />
             </div>
             <DialogDescription asChild>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -343,12 +343,12 @@ export function NewsCard({ article, priority = false, isMyPost = false }: NewsCa
             </ScrollArea>
           </div>
            <div className="flex justify-end gap-2 mt-4">
-             <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>Close</Button>
-              <Button onClick={handleShare}><Share2 /> Share</Button>
+             <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>{dict.close}</Button>
+              <Button onClick={handleShare}><Share2 /> {dict.share}</Button>
              <Button asChild disabled={article.url === '#'}>
                <a href={article.url} target="_blank" rel="noopener noreferrer">
                  <ExternalLink />
-                 View Source
+                 {dict.viewSource}
                </a>
              </Button>
            </div>
