@@ -19,7 +19,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 
 const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
-export default function EditNewsPage({ params }: { id: string, lang: string }) {
+export default function EditNewsPage({ params }: { params: { id: string, lang: string } }) {
     const { toast } = useToast();
     const router = useRouter();
     const id = params.id as string;

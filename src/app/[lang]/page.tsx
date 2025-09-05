@@ -6,11 +6,10 @@ import { useRouter } from 'next/navigation';
 
 export default function RootPage({ params }: { params: { lang: string } }) {
   const router = useRouter();
-  const lang = params.lang;
 
   useEffect(() => {
-    router.replace(`/${lang}/home`);
-  }, [router, lang]);
+    router.replace(`/${params.lang}/home`);
+  }, [router, params.lang]);
 
   // Render a minimal loading state while redirecting
   return (
