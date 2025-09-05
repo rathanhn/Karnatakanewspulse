@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,10 +19,11 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 
 const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
-export default function EditNewsPage({ params }: { params: { id: string, lang: string } }) {
+export default function EditNewsPage({ params }: { id: string, lang: string }) {
     const { toast } = useToast();
     const router = useRouter();
     const id = params.id as string;
+    const lang = params.lang;
     
     const [user, setUser] = useState<User | null>(null);
     const [post, setPost] = useState<NewsArticle | null>(null);
@@ -39,11 +40,11 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${params.lang}/login`);
+                router.push(`/${lang}/login`);
             }
         });
         return () => unsubscribe();
-    }, [router, params.lang]);
+    }, [router, lang]);
 
     useEffect(() => {
         if (!id) return;
@@ -56,7 +57,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
                     if(user && fetchedPost.userId !== user.uid) {
                         setError("You are not authorized to edit this post.");
                         toast({ title: "Unauthorized", description: "You can only edit your own posts.", variant: "destructive"});
-                        router.push(`/${params.lang}/home/my-posts`);
+                        router.push(`/${lang}/home/my-posts`);
                         return;
                     }
                     setPost(fetchedPost);
@@ -81,7 +82,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
            fetchPost();
         }
 
-    }, [id, user, router, toast, params.lang]);
+    }, [id, user, router, toast, lang]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -94,7 +95,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
         try {
             await updateUserNews(id, { headline, content, district, category });
             toast({ title: 'Post Updated!', description: 'Your changes have been saved successfully.'});
-            router.push(`/${params.lang}/home/my-posts`);
+            router.push(`/${lang}/home/my-posts`);
         } catch (error) {
             toast({ title: 'Update Failed', description: 'Could not save your changes.', variant: 'destructive'});
         } finally {
@@ -115,7 +116,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
              <div className="flex flex-col justify-center items-center min-h-screen text-center">
                 <p className='text-destructive text-xl mb-4'>{error}</p>
                 <Button asChild>
-                    <Link href={`/${params.lang}/home/my-posts`}>Go Back</Link>
+                    <Link href={`/${lang}/home/my-posts`}>Go Back</Link>
                 </Button>
             </div>
         )
@@ -125,12 +126,12 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
         <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
                 <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                         <KarnatakaMapIcon className="w-10 h-10" />
                         <h1>Karnataka News Pulse</h1>
                     </Link>
                     <Button asChild variant="ghost">
-                        <Link href={`/${params.lang}/home/my-posts`}>
+                        <Link href={`/${lang}/home/my-posts`}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to My Posts
                         </Link>
