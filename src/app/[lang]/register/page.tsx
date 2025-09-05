@@ -29,7 +29,6 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
   const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const lang = params.lang;
 
   const handleSuccessfulLogin = async (user: User) => {
     // Check if a user profile already exists. This can happen with social logins.
@@ -44,10 +43,11 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
         title: 'Success!',
         description: `Welcome ${user.displayName || firstName}!`,
     });
-    router.push(`/${lang}/home`);
+    router.push(`/${params.lang}/home`);
   };
 
   useEffect(() => {
+    const lang = params.lang;
     const checkRedirect = async () => {
       setIsGoogleLoading(true);
       try {
@@ -67,7 +67,7 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
     };
     checkRedirect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang]);
+  }, [params.lang]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -151,12 +151,12 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href={`/${lang}/login`} className="underline">
+            <Link href={`/${params.lang}/login`} className="underline">
               Sign in
             </Link>
           </div>
            <div className="mt-4 text-center text-sm">
-            <Link href={`/${lang}/home`} className="underline">
+            <Link href={`/${params.lang}/home`} className="underline">
               &larr; Back to Home
             </Link>
           </div>

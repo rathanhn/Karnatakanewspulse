@@ -50,8 +50,6 @@ export default function HomePage({ params }: { params: { lang: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDistrict, setSelectedDistrict] = useState('Karnataka');
   const [open, setOpen] = useState(false)
-  
-  const lang = params.lang;
 
   const handleLanguageChange = (newLang: 'en' | 'kn') => {
     const newPath = `/${newLang}${pathname.replace(/^\/(en|kn)/, '')}`;
@@ -59,6 +57,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
   };
 
   useEffect(() => {
+    const lang = params.lang;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -75,7 +74,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
       }
     });
     return () => unsubscribe();
-  }, [router, lang]);
+  }, [router, params.lang]);
 
   useEffect(() => {
     const getNews = async () => {
@@ -110,7 +109,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           title: 'Logged out',
           description: 'You have been successfully logged out.',
         });
-        router.push(`/${lang}/login`);
+        router.push(`/${params.lang}/login`);
     } catch(error) {
          toast({
           title: 'Logout Error',
@@ -125,7 +124,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
       const formData = new FormData(e.currentTarget);
       const searchTerm = formData.get('search') as string;
       const district = selectedDistrict;
-      router.push(`/${lang}/news?q=${searchTerm}&district=${district}`);
+      router.push(`/${params.lang}/news?q=${searchTerm}&district=${district}`);
   }
   
   const getInitials = (name: string | null | undefined) => {
@@ -137,16 +136,16 @@ export default function HomePage({ params }: { params: { lang: string } }) {
     <div className="min-h-screen w-full bg-background font-sans text-foreground">
       <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
-           <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+           <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
             <KarnatakaMapIcon className="w-10 h-10" />
             <h1>Karnataka News Pulse</h1>
           </Link>
           <div className="flex items-center gap-4">
             <Button asChild>
-              <Link href={`/${lang}/news/create`}><PlusCircle /> Create Post</Link>
+              <Link href={`/${params.lang}/news/create`}><PlusCircle /> Create Post</Link>
             </Button>
             <Button asChild variant="ghost">
-              <Link href={`/${lang}/news`}>News Feed</Link>
+              <Link href={`/${params.lang}/news`}>News Feed</Link>
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -176,20 +175,20 @@ export default function HomePage({ params }: { params: { lang: string } }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {userProfile?.isAdmin && (
-                  <DropdownMenuItem onSelect={() => router.push(`/${lang}/admin`)}>
+                  <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/admin`)}>
                     <Shield className="mr-2 h-4 w-4" />
                     <span>Admin Dashboard</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={() => router.push(`/${lang}/home/profile`)}>
+                <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/home/profile`)}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.push(`/${lang}/home/my-posts`)}>
+                <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/home/my-posts`)}>
                   <Newspaper className="mr-2 h-4 w-4" />
                   <span>My Posts</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => router.push(`/${lang}/news/create`)}>
+                 <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/news/create`)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   <span>Create Post</span>
                 </DropdownMenuItem>
@@ -290,7 +289,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : recommendedNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} lang={lang as 'en' | 'kn'}/>
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={params.lang as 'en' | 'kn'}/>
                   ))}
             </div>
         </section>
@@ -302,7 +301,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : trendingNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} lang={lang as 'en' | 'kn'}/>
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={params.lang as 'en' | 'kn'}/>
                   ))}
             </div>
         </section>
