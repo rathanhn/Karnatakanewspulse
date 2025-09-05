@@ -28,11 +28,12 @@ import {
   YouTubeIcon,
   NewsIcon,
 } from '@/components/icons';
-import { ExternalLink, BookOpen, Share2, Star } from 'lucide-react';
+import { ExternalLink, BookOpen, Share2, Star, Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { getDictionary, Dictionary } from '@/lib/i18n';
+import { translateText } from '@/ai/flows/translate-text';
 
 
 type NewsCardProps = {
@@ -94,16 +95,46 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
   const { toast } = useToast();
   const dict = getDictionary(lang);
 
+  const [translatedHeadline, setTranslatedHeadline] = useState(article.headline);
+  const [translatedContent, setTranslatedContent] = useState(article.content);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  useEffect(() => {
+    if (lang === 'kn' && article.headline) {
+        const doTranslate = async () => {
+            setIsTranslating(true);
+            try {
+                const [headlineRes, contentRes] = await Promise.all([
+                    translateText({ text: article.headline, targetLanguage: 'kn'}),
+                    translateText({ text: article.content || '', targetLanguage: 'kn'})
+                ]);
+                setTranslatedHeadline(headlineRes.translatedText);
+                setTranslatedContent(contentRes.translatedText);
+            } catch (error) {
+                console.error("Translation failed:", error);
+                // Fallback to original text if translation fails
+                setTranslatedHeadline(article.headline);
+                setTranslatedContent(article.content);
+            } finally {
+                setIsTranslating(false);
+            }
+        };
+        doTranslate();
+    } else {
+        setTranslatedHeadline(article.headline);
+        setTranslatedContent(article.content);
+    }
+  }, [lang, article.headline, article.content]);
+
+
   useEffect(() => {
     if (article.timestamp) {
-        // Check if timestamp is a Firestore Timestamp object
         if (typeof article.timestamp.toDate === 'function') {
             setFormattedDate(
                 new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
                 .format(article.timestamp.toDate())
             );
         } else {
-            // Assume it's a JS Date object or a string
             setFormattedDate(
                 new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
                 .format(new Date(article.timestamp))
@@ -113,24 +144,31 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
   }, [article.timestamp]);
 
   const handleShare = async () => {
+    const urlToShare = (article.source === 'User Submitted' && typeof window !== 'undefined') 
+        ? `${window.location.origin}/${lang}/news/post/${article.id}` 
+        : article.url;
+
     if (navigator.share) {
       try {
         await navigator.share({
-          title: article.headline,
-          text: article.content?.substring(0, 100) + '...',
-          url: article.url,
+          title: translatedHeadline,
+          text: (translatedContent || '').substring(0, 100) + '...',
+          url: urlToShare,
         });
       } catch (error) {
         console.error('Error sharing:', error);
       }
     } else {
-        navigator.clipboard.writeText(article.url);
+        navigator.clipboard.writeText(urlToShare);
         toast({ title: dict.linkCopied, description: dict.linkCopiedDesc });
     }
   };
 
 
   const imageUrl = article.imageUrl;
+  
+  const headlineToShow = isTranslating ? <div className='flex items-center gap-2'><Loader2 className='animate-spin w-5 h-5'/> Translating...</div> : translatedHeadline;
+  const contentToShow = isTranslating ? '...' : translatedContent;
 
   return (
     <>
@@ -169,7 +207,7 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
-                        <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+                        <h3 className="font-bold text-lg text-secondary-foreground">{headlineToShow}</h3>
                     </div>
                 )}
                 {article.embedUrl && (
@@ -182,14 +220,14 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
                  <CardHeader className="p-0">
                     <div className="flex items-start justify-between gap-4">
                         <CardTitle className="text-2xl font-bold leading-tight font-headline text-primary">
-                        {article.headline}
+                        {headlineToShow}
                         </CardTitle>
                         <SourceDisplay article={article} dict={dict} />
                     </div>
                  </CardHeader>
                 <CardContent className="p-0 mt-2 flex-grow">
                     <p className="text-base text-muted-foreground line-clamp-5">
-                        {article.content}
+                        {contentToShow}
                     </p>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4 p-0 mt-4">
@@ -238,7 +276,7 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full bg-secondary text-center p-4">
-                        <h3 className="font-bold text-lg text-secondary-foreground">{article.headline}</h3>
+                        <h3 className="font-bold text-lg text-secondary-foreground">{headlineToShow}</h3>
                     </div>
                 )}
                 {article.embedUrl && (
@@ -250,13 +288,13 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
             <CardHeader className='pt-0'>
                 <div className="flex items-start justify-between gap-4">
                     <CardTitle className="text-lg font-bold leading-snug font-headline text-primary">
-                    {article.headline}
+                    {headlineToShow}
                     </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow">
             <p className="text-sm text-muted-foreground line-clamp-3">
-                {article.content}
+                {contentToShow}
             </p>
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
@@ -296,7 +334,7 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
           <DialogHeader>
             <div className="flex items-start justify-between gap-4 mb-4">
                  <DialogTitle className="text-2xl font-bold font-headline text-primary">
-                    {article.headline}
+                    {headlineToShow}
                  </DialogTitle>
                  <SourceDisplay article={article} dict={dict} />
             </div>
@@ -335,11 +373,11 @@ export function NewsCard({ article, priority = false, isMyPost = false, lang = '
                 </div>
             ) : (
                  <div className="flex items-center justify-center h-64 bg-secondary text-center p-4 mb-4 rounded-lg">
-                    <h3 className="font-bold text-2xl text-secondary-foreground">{article.headline}</h3>
+                    <h3 className="font-bold text-2xl text-secondary-foreground">{headlineToShow}</h3>
                 </div>
             )}
             <ScrollArea className="h-60 mt-4 pr-4">
-              <p className="text-base text-foreground whitespace-pre-wrap">{article.content}</p>
+              <p className="text-base text-foreground whitespace-pre-wrap">{contentToShow}</p>
             </ScrollArea>
           </div>
            <div className="flex justify-end gap-2 mt-4">
