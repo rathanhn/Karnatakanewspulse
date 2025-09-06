@@ -23,7 +23,6 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
     const { toast } = useToast();
     const router = useRouter();
     const id = params.id as string;
-    const lang = params.lang;
     
     const [user, setUser] = useState<User | null>(null);
     const [post, setPost] = useState<NewsArticle | null>(null);
@@ -36,6 +35,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
@@ -44,11 +44,11 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
             }
         });
         return () => unsubscribe();
-    }, [router, lang]);
+    }, [router, params.lang]);
 
     useEffect(() => {
         if (!id) return;
-
+        const lang = params.lang;
         const fetchPost = async () => {
             setIsLoading(true);
             try {
@@ -82,7 +82,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
            fetchPost();
         }
 
-    }, [id, user, router, toast, lang]);
+    }, [id, user, router, toast, params.lang]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -95,7 +95,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
         try {
             await updateUserNews(id, { headline, content, district, category });
             toast({ title: 'Post Updated!', description: 'Your changes have been saved successfully.'});
-            router.push(`/${lang}/home/my-posts`);
+            router.push(`/${params.lang}/home/my-posts`);
         } catch (error) {
             toast({ title: 'Update Failed', description: 'Could not save your changes.', variant: 'destructive'});
         } finally {
@@ -116,7 +116,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
              <div className="flex flex-col justify-center items-center min-h-screen text-center">
                 <p className='text-destructive text-xl mb-4'>{error}</p>
                 <Button asChild>
-                    <Link href={`/${lang}/home/my-posts`}>Go Back</Link>
+                    <Link href={`/${params.lang}/home/my-posts`}>Go Back</Link>
                 </Button>
             </div>
         )
@@ -126,12 +126,12 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
         <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
                 <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                         <KarnatakaMapIcon className="w-10 h-10" />
                         <h1>Karnataka News Pulse</h1>
                     </Link>
                     <Button asChild variant="ghost">
-                        <Link href={`/${lang}/home/my-posts`}>
+                        <Link href={`/${params.lang}/home/my-posts`}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to My Posts
                         </Link>
