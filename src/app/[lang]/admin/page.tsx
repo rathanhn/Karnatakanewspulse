@@ -47,7 +47,7 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
             }
         });
         return () => unsubscribe();
-    }, [router, toast, params.lang]);
+    }, [router, toast, params]);
 
     const fetchStats = useCallback(async () => {
         setIsLoading(true);

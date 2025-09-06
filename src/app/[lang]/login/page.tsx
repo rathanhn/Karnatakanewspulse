@@ -51,7 +51,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
       }
     };
     checkRedirect();
-  }, [router, toast, params.lang]);
+  }, [router, toast, params]);
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

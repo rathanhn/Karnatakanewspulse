@@ -67,7 +67,7 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
     };
     checkRedirect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params.lang]);
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

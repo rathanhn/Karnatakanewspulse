@@ -74,7 +74,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
       }
     });
     return () => unsubscribe();
-  }, [router, params.lang]);
+  }, [router, params]);
 
   useEffect(() => {
     const getNews = async () => {

@@ -69,7 +69,7 @@ export default function ProfilePage({ params }: { params: { lang: string } }) {
             unsubscribe();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, params.lang]);
+    }, [router, params]);
 
     const fetchProfile = useCallback(async (uid: string) => {
         setIsLoading(true);

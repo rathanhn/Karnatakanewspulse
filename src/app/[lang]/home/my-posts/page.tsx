@@ -111,7 +111,7 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
             }
         });
         return () => unsubscribe();
-    }, [router, params.lang]);
+    }, [router, params]);
 
     const fetchPosts = useCallback(async (uid: string) => {
         setIsLoading(true);

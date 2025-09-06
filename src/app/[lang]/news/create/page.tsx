@@ -53,7 +53,7 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
             unsubscribe();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, params.lang]);
+    }, [router, params]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (previewUrl) {

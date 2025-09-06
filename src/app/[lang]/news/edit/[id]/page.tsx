@@ -44,7 +44,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
             }
         });
         return () => unsubscribe();
-    }, [router, params.lang]);
+    }, [router, params]);
 
     useEffect(() => {
         if (!id) return;
@@ -82,7 +82,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
            fetchPost();
         }
 
-    }, [id, user, router, toast, params.lang]);
+    }, [id, user, router, toast, params]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();

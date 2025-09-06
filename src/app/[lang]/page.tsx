@@ -9,7 +9,7 @@ export default function RootPage({ params }: { params: { lang: string } }) {
 
   useEffect(() => {
     router.replace(`/${params.lang}/home`);
-  }, [router, params.lang]);
+  }, [router, params]);
 
   // Render a minimal loading state while redirecting
   return (
