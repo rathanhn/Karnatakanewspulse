@@ -25,9 +25,9 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const lang = params.lang;
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
@@ -47,7 +47,7 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
             }
         });
         return () => unsubscribe();
-    }, [router, toast, params]);
+    }, [router, toast, lang]);
 
     const fetchStats = useCallback(async () => {
         setIsLoading(true);
@@ -79,14 +79,14 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
          <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
                 <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                         <KarnatakaMapIcon className="w-10 h-10" />
                         <h1>Karnataka News Pulse</h1>
                     </Link>
                     <div className="flex items-center gap-4">
                          <h2 className="text-xl font-semibold flex items-center gap-2"><Shield /> Admin Dashboard</h2>
                         <Button asChild variant="ghost">
-                            <Link href={`/${params.lang}/home`}>
+                            <Link href={`/${lang}/home`}>
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Back to Home
                             </Link>
