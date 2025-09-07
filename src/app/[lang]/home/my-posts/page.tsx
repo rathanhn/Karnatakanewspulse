@@ -101,17 +101,18 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
     const [user, setUser] = useState<User | null>(null);
     const [posts, setPosts] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const lang = params.lang;
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${params.lang}/login`);
+                router.push(`/${lang}/login`);
             }
         });
         return () => unsubscribe();
-    }, [router, params]);
+    }, [router, lang]);
 
     const fetchPosts = useCallback(async (uid: string) => {
         setIsLoading(true);
@@ -143,12 +144,12 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
         <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
                 <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                         <KarnatakaMapIcon className="w-10 h-10" />
                         <h1>Karnataka News Pulse</h1>
                     </Link>
                     <Button asChild variant="ghost">
-                        <Link href={`/${params.lang}/home`}>
+                        <Link href={`/${lang}/home`}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to Home
                         </Link>
@@ -159,7 +160,7 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
                 <div className="flex justify-between items-center mb-8">
                     <h2 className="text-3xl font-bold font-headline">My Published Posts</h2>
                     <Button asChild>
-                        <Link href={`/${params.lang}/news/create`}>
+                        <Link href={`/${lang}/news/create`}>
                             <PlusCircle className="mr-2"/>
                             Create New Post
                         </Link>
@@ -194,7 +195,7 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
                 ) : (
                     <div className="grid gap-6">
                         {posts.map(post => (
-                            <PostCard key={post.id} post={post} onDelete={handlePostDeletion} lang={params.lang} />
+                            <PostCard key={post.id} post={post} onDelete={handlePostDeletion} lang={lang} />
                         ))}
                     </div>
                 )}
