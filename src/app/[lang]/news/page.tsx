@@ -132,7 +132,7 @@ function NewsContent({ lang }: { lang: 'en' | 'kn' }) {
                 setFilteredUserNews(userSubmittedNews);
             }
         } catch (err: any) {
-            setError('Failed to fetch news. Please check your connection or API key and try again.');
+            setError(`Failed to fetch news. Please check your connection or API key and try again. Error: ${err.message}`);
         } finally {
             setIsLoading(false);
         }

@@ -9,21 +9,29 @@ interface FetchNewsOptions {
   limit?: number;
 }
 
-const GNEWS_API_KEY = process.env.NEXT_PUBLIC_GNEWS_API_KEY;
-const NEWSDATA_API_KEY = process.env.NEXT_PUBLIC_NEWSDATA_API_KEY;
+const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY;
 
 
-// --- GNews API Fetcher (for broad categories) ---
-async function fetchFromGNews(query: string, category: string): Promise<NewsArticle[]> {
-  const categoryParam = category.toLowerCase() === 'trending' ? 'general' : category.toLowerCase();
-  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&apiKey=${GNEWS_API_KEY}`;
+// --- NewsAPI.org Fetcher ---
+async function fetchFromNewsAPI(query: string, category: string): Promise<NewsArticle[]> {
+  const categoryParam = category.toLowerCase() === 'trending' ? '' : `&category=${category.toLowerCase()}`;
+  let url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`;
+  
+  // NewsAPI requires a query for /everything, so if there's no query, we use top-headlines for general news
+  if (!query) {
+      url = `https://newsapi.org/v2/top-headlines?country=in${categoryParam}&apiKey=${NEWS_API_KEY}`;
+  }
   
   try {
     const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
     const data = await response.json();
 
     if (data.status !== 'ok') {
-        console.error("GNews/NewsAPI API Error Response:", data.message || response.statusText);
+        console.error("NewsAPI Error Response:", data.message || response.statusText);
+        // Provide a more specific error message if the key is invalid
+        if (data.code === 'apiKeyInvalid') {
+            throw new Error('The provided News API key is invalid or has expired.');
+        }
         return [];
     }
     
@@ -41,49 +49,23 @@ async function fetchFromGNews(query: string, category: string): Promise<NewsArti
     }));
 
   } catch (error) {
-    console.error('Failed to fetch from GNews/NewsAPI:', error);
-    return [];
-  }
-}
-
-// --- NewsData.io API Fetcher (for specific district/keyword searches) ---
-async function fetchFromNewsDataIO(query: string): Promise<NewsArticle[]> {
-  const url = `https://newsdata.io/api/1/news?apikey=${NEWSDATA_API_KEY}&country=in&language=en&q=${encodeURIComponent(query)}`;
-
-  try {
-    const response = await fetch(url, { next: { revalidate: 3600 } });
-    const data = await response.json();
-
-    if (data.status !== 'success') {
-        console.error("NewsData.io API Error Response:", data.results?.message || response.statusText);
-        return [];
+    console.error('Failed to fetch from NewsAPI:', error);
+    // Re-throw the specific error for the caller to handle
+    if (error instanceof Error) {
+        throw error;
     }
-
-    return (data.results || []).map((item: any): NewsArticle => ({
-      id: item.link,
-      headline: item.title,
-      content: item.content || item.description,
-      url: item.link,
-      imageUrl: item.image_url,
-      timestamp: new Date(item.pubDate),
-      source: item.source_id || 'Unknown Source',
-      district: "API Sourced", // Placeholder, will be replaced
-      category: 'General', // Default category
-      'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
-    }));
-
-  } catch (error) {
-    console.error('Failed to fetch from NewsData.io:', error);
     return [];
   }
 }
+
 
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
   
-  if (!GNEWS_API_KEY) {
-    console.error("News API key (GNEWS_API_KEY) is not configured in environment variables.");
-    return [];
+  if (!NEWS_API_KEY) {
+    const errorMessage = "News API key (NEXT_PUBLIC_NEWS_API_KEY) is not configured in environment variables.";
+    console.error(errorMessage);
+    throw new Error(errorMessage);
   }
 
   if (category === 'User Submitted') {
@@ -96,16 +78,13 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   if (district !== 'Karnataka') {
       queryParts.push(district);
   }
-  if (category !== 'Trending' && category !== 'General') {
+   // Add category to the query only if it's not a general one, to get more specific results
+  if (category !== 'Trending' && category !== 'General' && category) {
        queryParts.push(category);
   }
-  let query = queryParts.join(' ');
-
-  if (!query) {
-      query = 'Karnataka';
-  }
+  let query = queryParts.join(' AND ');
   
-  apiArticles = await fetchFromGNews(query, category);
+  apiArticles = await fetchFromNewsAPI(query, category);
   
   apiArticles = apiArticles.map(article => ({ ...article, district }));
 
