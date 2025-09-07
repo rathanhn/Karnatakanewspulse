@@ -1,3 +1,4 @@
+
 // src/app/[lang]/page.tsx
 'use client';
 

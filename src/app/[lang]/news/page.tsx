@@ -1,3 +1,4 @@
+
 // src/app/news/page.tsx
 'use client';
 

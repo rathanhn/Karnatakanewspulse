@@ -1,3 +1,4 @@
+
 // src/app/admin/page.tsx
 'use client';
 
@@ -54,7 +55,7 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
         try {
             const adminStats = await getAdminDashboardStats();
             setStats(adminStats);
-        } catch (error) => {
+        } catch (error) {
             toast({ title: 'Error', description: 'Failed to fetch admin statistics.', variant: 'destructive' });
         } finally {
             setIsLoading(false);
