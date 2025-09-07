@@ -2,7 +2,7 @@
 // src/app/register/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, sign
 import { createUserProfile } from '@/lib/data';
 
 export default function RegisterPage({ params }: { params: { lang: string } }) {
+  const unwrappedParams = use(params);
   const { toast } = useToast();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -44,7 +45,7 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
         title: 'Success!',
         description: `Welcome ${user.displayName || firstName}!`,
     });
-    router.push(`/${params.lang}/home`);
+    router.push(`/${unwrappedParams.lang}/home`);
   };
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
     };
     checkRedirect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  }, [unwrappedParams.lang]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -151,12 +152,12 @@ export default function RegisterPage({ params }: { params: { lang: string } }) {
           </form>
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
-            <Link href={`/${params.lang}/login`} className="underline">
+            <Link href={`/${unwrappedParams.lang}/login`} className="underline">
               Sign in
             </Link>
           </div>
            <div className="mt-4 text-center text-sm">
-            <Link href={`/${params.lang}/home`} className="underline">
+            <Link href={`/${unwrappedParams.lang}/home`} className="underline">
               &larr; Back to Home
             </Link>
           </div>

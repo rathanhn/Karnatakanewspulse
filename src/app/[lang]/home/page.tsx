@@ -2,7 +2,7 @@
 // src/app/home/page.tsx
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, use } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export default function HomePage({ params }: { params: { lang: string } }) {
+  const unwrappedParams = use(params);
   const { toast } = useToast();
   const router = useRouter();
   const pathname = usePathname();
@@ -70,11 +71,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             console.error("Failed to fetch user profile", error);
         }
       } else {
-        router.push(`/${params.lang}/login`);
+        router.push(`/${unwrappedParams.lang}/login`);
       }
     });
     return () => unsubscribe();
-  }, [router, params]);
+  }, [router, unwrappedParams.lang]);
 
   useEffect(() => {
     const getNews = async () => {
@@ -109,7 +110,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           title: 'Logged out',
           description: 'You have been successfully logged out.',
         });
-        router.push(`/${params.lang}/login`);
+        router.push(`/${unwrappedParams.lang}/login`);
     } catch(error) {
          toast({
           title: 'Logout Error',
@@ -124,7 +125,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
       const formData = new FormData(e.currentTarget);
       const searchTerm = formData.get('search') as string;
       const district = selectedDistrict;
-      router.push(`/${params.lang}/news?q=${searchTerm}&district=${district}`);
+      router.push(`/${unwrappedParams.lang}/news?q=${searchTerm}&district=${district}`);
   }
   
   const getInitials = (name: string | null | undefined) => {
@@ -136,16 +137,16 @@ export default function HomePage({ params }: { params: { lang: string } }) {
     <div className="min-h-screen w-full bg-background font-sans text-foreground">
       <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
-           <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+           <Link href={`/${unwrappedParams.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
             <KarnatakaMapIcon className="w-10 h-10" />
             <h1>Karnataka News Pulse</h1>
           </Link>
           <div className="flex items-center gap-4">
             <Button asChild>
-              <Link href={`/${params.lang}/news/create`}><PlusCircle /> Create Post</Link>
+              <Link href={`/${unwrappedParams.lang}/news/create`}><PlusCircle /> Create Post</Link>
             </Button>
             <Button asChild variant="ghost">
-              <Link href={`/${params.lang}/news`}>News Feed</Link>
+              <Link href={`/${unwrappedParams.lang}/news`}>News Feed</Link>
             </Button>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -175,20 +176,20 @@ export default function HomePage({ params }: { params: { lang: string } }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {userProfile?.isAdmin && (
-                  <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/admin`)}>
+                  <DropdownMenuItem onSelect={() => router.push(`/${unwrappedParams.lang}/admin`)}>
                     <Shield className="mr-2 h-4 w-4" />
                     <span>Admin Dashboard</span>
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/home/profile`)}>
+                <DropdownMenuItem onSelect={() => router.push(`/${unwrappedParams.lang}/home/profile`)}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Profile Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/home/my-posts`)}>
+                <DropdownMenuItem onSelect={() => router.push(`/${unwrappedParams.lang}/home/my-posts`)}>
                   <Newspaper className="mr-2 h-4 w-4" />
                   <span>My Posts</span>
                 </DropdownMenuItem>
-                 <DropdownMenuItem onSelect={() => router.push(`/${params.lang}/news/create`)}>
+                 <DropdownMenuItem onSelect={() => router.push(`/${unwrappedParams.lang}/news/create`)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   <span>Create Post</span>
                 </DropdownMenuItem>
@@ -289,7 +290,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : recommendedNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} lang={params.lang as 'en' | 'kn'}/>
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={unwrappedParams.lang as 'en' | 'kn'}/>
                   ))}
             </div>
         </section>
@@ -301,7 +302,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               {isLoading
                 ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
                 : trendingNews.map((article, index) => (
-                    <NewsCard key={article.id} article={article} priority={index < 2} lang={params.lang as 'en' | 'kn'}/>
+                    <NewsCard key={article.id} article={article} priority={index < 2} lang={unwrappedParams.lang as 'en' | 'kn'}/>
                   ))}
             </div>
         </section>

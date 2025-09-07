@@ -2,7 +2,7 @@
 // src/app/news/create/page.tsx
 'use client';
 
-import { useState, useEffect, ChangeEvent } from 'react';
+import { useState, useEffect, ChangeEvent, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import Image from 'next/image';
 const userSelectableCategories = newsCategories.filter(c => c !== 'Trending' && c !== 'User Submitted');
 
 export default function CreateNewsPage({ params }: { params: { lang: string } }) {
+    const unwrappedParams = use(params);
     const { toast } = useToast();
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
@@ -42,7 +43,7 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${params.lang}/login`);
+                router.push(`/${unwrappedParams.lang}/login`);
             }
         });
 
@@ -54,7 +55,7 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
             unsubscribe();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, params]);
+    }, [router, unwrappedParams.lang]);
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (previewUrl) {
@@ -143,7 +144,7 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
                 description: 'Thank you for your contribution. Your news is now live.',
             });
             
-            router.push(`/${params.lang}/home/my-posts`);
+            router.push(`/${unwrappedParams.lang}/home/my-posts`);
         } catch (error) {
             toast({
                 title: 'Submission Failed',
@@ -159,12 +160,12 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
         <div className="min-h-screen bg-background">
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm">
                 <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <Link href={`/${params.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                    <Link href={`/${unwrappedParams.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                         <KarnatakaMapIcon className="w-10 h-10" />
                         <h1>Karnataka News Pulse</h1>
                     </Link>
                     <Button asChild variant="ghost">
-                        <Link href={`/${params.lang}/home`}>
+                        <Link href={`/${unwrappedParams.lang}/home`}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back to Home
                         </Link>

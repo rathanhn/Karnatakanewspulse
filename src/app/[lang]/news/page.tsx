@@ -2,7 +2,7 @@
 // src/app/news/page.tsx
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense, use } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -35,11 +35,12 @@ import { auth } from '@/lib/firebase';
 import { getDictionary } from '@/lib/i18n';
 
 
-function NewsContent({ lang }: { lang: 'en' | 'kn' }) {
+function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
+  const { lang } = use(params);
   
   const [user, setUser] = useState<User | null>(null);
 
@@ -373,7 +374,7 @@ function NewsContent({ lang }: { lang: 'en' | 'kn' }) {
 export default function NewsPage({ params }: { params: { lang: 'en' | 'kn' } }) {
     return (
         <Suspense fallback={<div>Loading...</div>}>
-            <NewsContent lang={params.lang} />
+            <NewsContent params={params} />
         </Suspense>
     );
 }

@@ -2,7 +2,7 @@
 // src/app/login/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from 'firebase/auth';
 
 export default function LoginPage({ params }: { params: { lang: string } }) {
+  const unwrappedParams = use(params);
   const { toast } = useToast();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -38,7 +39,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
             title: 'Login successful!',
             description: 'Welcome back.',
           });
-          router.push(`/${params.lang}/home`);
+          router.push(`/${unwrappedParams.lang}/home`);
         }
       } catch (error: any) {
         toast({
@@ -51,7 +52,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
       }
     };
     checkRedirect();
-  }, [router, toast, params]);
+  }, [router, toast, unwrappedParams.lang]);
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -63,7 +64,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
         title: 'Login successful!',
         description: 'Welcome back.',
       });
-      router.push(`/${params.lang}/home`);
+      router.push(`/${unwrappedParams.lang}/home`);
     } catch (error: any) {
       toast({
         title: 'Login Failed',
@@ -137,12 +138,12 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
           </form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href={`/${params.lang}/register`} className="underline">
+            <Link href={`/${unwrappedParams.lang}/register`} className="underline">
               Sign up
             </Link>
           </div>
            <div className="mt-4 text-center text-sm">
-            <Link href={`/${params.lang}/home`} className="underline">
+            <Link href={`/${unwrappedParams.lang}/home`} className="underline">
               &larr; Back to Home
             </Link>
           </div>

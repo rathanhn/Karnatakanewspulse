@@ -2,15 +2,16 @@
 // src/app/[lang]/page.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function RootPage({ params }: { params: { lang: string } }) {
+  const unwrappedParams = use(params);
   const router = useRouter();
 
   useEffect(() => {
-    router.replace(`/${params.lang}/home`);
-  }, [router, params]);
+    router.replace(`/${unwrappedParams.lang}/home`);
+  }, [router, unwrappedParams]);
 
   // Render a minimal loading state while redirecting
   return (
