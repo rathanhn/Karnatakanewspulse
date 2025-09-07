@@ -24,7 +24,6 @@ import { useToast } from '@/hooks/use-toast';
 import {
   DailyHuntIcon,
   FacebookIcon,
-  XIcon,
   YouTubeIcon,
   NewsIcon,
 } from '@/components/icons';
@@ -83,7 +82,6 @@ const SourceDisplay = ({ article, className, dict }: { article: NewsArticle, cla
   const lowerSource = article.source.toLowerCase();
   if (lowerSource.includes('dailyhunt')) return <DailyHuntIcon {...props} />;
   if (lowerSource.includes('facebook')) return <FacebookIcon {...props} />;
-  if (lowerSource.includes('twitter') || lowerSource.includes('x.com')) return <XIcon {...props} />;
   if (lowerSource.includes('youtube')) return <YouTubeIcon {...props} />;
   return <NewsIcon {...props} />;
 };

@@ -47,16 +47,6 @@ export const FacebookIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <rect width="20" height="20" x="2" y="2" rx="4" ry="4" fill="black" />
-    <path
-      fill="white"
-      d="M16.338 5.432h-1.6l-3.326 4.74-3.79-4.74H5.405l5.02 6.26-5.02 6.308h1.6l3.54-5.048L14.4 18.002h2.217l-5.23-6.522 5.23-6.048z"
-    />
-  </svg>
-);
-
 export const YouTubeIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
     <rect width="20" height="20" x="2" y="2" rx="4" ry="4" fill="#FF0000" />
