@@ -55,7 +55,7 @@ async function fetchFromMediaStack(district: string, category: Category, queryLi
         }
         const data = await response.json();
 
-        return data.data.map((item: any): NewsArticle => ({
+        return data.data.filter((item: any) => item.title && item.url).map((item: any): NewsArticle => ({
             id: `mediastack-${item.url}`,
             headline: item.title,
             content: item.description,
@@ -104,7 +104,7 @@ async function fetchFromGNews(district: string, category: Category, queryLimit?:
         }
         const data = await response.json();
         
-        return data.articles.map((item: any): NewsArticle => ({
+        return data.articles.filter((item: any) => item.title && item.url).map((item: any): NewsArticle => ({
             id: `gnews-${item.url}`,
             headline: item.title,
             content: item.description,
@@ -122,6 +122,53 @@ async function fetchFromGNews(district: string, category: Category, queryLimit?:
     }
 }
 
+// --- NewsAPI.org Fetcher ---
+async function fetchFromNewsAPI(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
+    const apiKey = process.env.NEWSAPI_API_KEY;
+    if (!apiKey || apiKey === '68c617555ef247338b036afd2c6745d5') {
+        console.warn("NewsAPI.org key not found or is default. Skipping fetch.");
+        return [];
+    }
+
+    const q = district === 'Karnataka' ? 'Karnataka' : `"${district}" AND "Karnataka"`;
+    const language = 'en';
+    const pageSize = queryLimit || 20;
+
+    let categoryQuery = '';
+    if (category && category !== 'Trending' && category !== 'User Submitted') {
+      categoryQuery = `&category=${category.toLowerCase()}`;
+    }
+
+    const url = `https://newsapi.org/v2/top-headlines?q=${encodeURIComponent(q)}&language=${language}&pageSize=${pageSize}${categoryQuery}&apiKey=${apiKey}`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("NewsAPI.org API Error:", errorBody);
+            return [];
+        }
+        const data = await response.json();
+
+        return data.articles.filter((item: any) => item.title && item.url).map((item: any): NewsArticle => ({
+            id: `newsapi-${item.url}`,
+            headline: item.title,
+            content: item.description,
+            url: item.url,
+            imageUrl: item.urlToImage,
+            timestamp: new Date(item.publishedAt),
+            source: item.source.name,
+            district: district,
+            category: category || 'General',
+            'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
+        }));
+
+    } catch (error) {
+        console.error("Failed to fetch from NewsAPI.org:", error);
+        return [];
+    }
+}
+
 
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
@@ -131,13 +178,14 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   }
   
   // Fetch from all sources in parallel
-  const [mockArticles, mediaStackArticles, gnewsArticles] = await Promise.all([
+  const [mockArticles, mediaStackArticles, gnewsArticles, newsApiArticles] = await Promise.all([
     fetchFromMockAPI(district, category, queryLimit),
     fetchFromMediaStack(district, category, queryLimit),
     fetchFromGNews(district, category, queryLimit),
+    fetchFromNewsAPI(district, category, queryLimit),
   ]);
 
-  const combinedArticles = [...mockArticles, ...mediaStackArticles, ...gnewsArticles];
+  const combinedArticles = [...mockArticles, ...mediaStackArticles, ...gnewsArticles, ...newsApiArticles];
 
   // Remove duplicates based on URL
   const uniqueArticles = Array.from(new Map(combinedArticles.map(item => [item.url, item])).values());
