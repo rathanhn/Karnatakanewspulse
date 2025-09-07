@@ -29,7 +29,6 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   useEffect(() => {
-    const lang = params.lang;
     const checkRedirect = async () => {
       setIsLoading(true); // Use main loading state for redirect check
       try {
@@ -39,7 +38,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
             title: 'Login successful!',
             description: 'Welcome back.',
           });
-          router.push(`/${lang}/home`);
+          router.push(`/${params.lang}/home`);
         }
       } catch (error: any) {
         toast({

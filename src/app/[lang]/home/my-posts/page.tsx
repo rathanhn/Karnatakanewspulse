@@ -107,12 +107,11 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
     const [isTrendingLoading, setIsTrendingLoading] = useState(true);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
         return () => unsubscribe();

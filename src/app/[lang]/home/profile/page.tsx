@@ -54,12 +54,11 @@ export default function ProfilePage({ params }: { params: { lang: string } }) {
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
 

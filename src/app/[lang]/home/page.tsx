@@ -58,7 +58,6 @@ export default function HomePage({ params }: { params: { lang: string } }) {
   };
 
   useEffect(() => {
-    const lang = params.lang;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -71,7 +70,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             console.error("Failed to fetch user profile", error);
         }
       } else {
-        router.push(`/${lang}/login`);
+        router.push(`/${params.lang}/login`);
       }
     });
     return () => unsubscribe();

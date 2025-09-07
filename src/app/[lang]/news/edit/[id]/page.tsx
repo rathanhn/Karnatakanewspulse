@@ -37,12 +37,11 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
         return () => unsubscribe();
