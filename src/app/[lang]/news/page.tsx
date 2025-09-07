@@ -40,11 +40,11 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
-  const { lang } = use(params);
+  const unwrappedParams = use(params);
   
   const [user, setUser] = useState<User | null>(null);
 
-  const [dict, setDict] = useState(getDictionary(lang));
+  const [dict, setDict] = useState(getDictionary(unwrappedParams.lang));
 
   // State for UI controls
   const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'Karnataka');
@@ -66,8 +66,8 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
   const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
   useEffect(() => {
-    setDict(getDictionary(lang));
-  }, [lang]);
+    setDict(getDictionary(unwrappedParams.lang));
+  }, [unwrappedParams.lang]);
   
   const handleLanguageChange = (newLang: 'en' | 'kn') => {
     const newPath = `/${newLang}${pathname.replace(/^\/(en|kn)/, '')}`;
@@ -105,23 +105,21 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                 fetchUserSubmittedNewsWithAuthors({ district: initialDistrict })
             ]);
             
-            const combinedNews = [...apiNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            
-            // Remove duplicates by URL or headline+source
-            const uniqueNews = Array.from(new Map(combinedNews.map(item => [`${item.url || (item.headline+item.source)}`, item])).values());
+            // The service already sorts the API news, now sort the user news
+            const sortedUserNews = userSubmittedNews.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-            setAllNews(uniqueNews);
-            setUserNews(userSubmittedNews);
+            setAllNews(apiNews); // API news is pre-sorted
+            setUserNews(sortedUserNews);
 
             if (initialSearchTerm) {
                 // If there's an initial search term, filter the results immediately
                 const lowerCaseSearchTerm = initialSearchTerm.toLowerCase();
-                const apiResults = uniqueNews.filter(
+                const apiResults = apiNews.filter(
                     (article) =>
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
                 );
-                 const userResults = userSubmittedNews.filter(
+                 const userResults = sortedUserNews.filter(
                     (article) =>
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
@@ -130,8 +128,8 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                 setFilteredUserNews(userResults);
             } else {
                 // Otherwise, show all fetched news
-                setFilteredNews(uniqueNews);
-                setFilteredUserNews(userSubmittedNews);
+                setFilteredNews(apiNews);
+                setFilteredUserNews(sortedUserNews);
             }
         } catch (err: any) {
             setError(`Failed to fetch news. Please check your connection or API key and try again. Error: ${err.message}`);
@@ -211,13 +209,14 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
     handleSearch(suggestion);
   };
   
-  const sortedUserNews = useMemo(() => {
+  const sortedAndPrioritizedUserNews = useMemo(() => {
     return filteredUserNews.sort((a, b) => {
         const aIsMyPost = a.userId === user?.uid;
         const bIsMyPost = b.userId === user?.uid;
         if (aIsMyPost && !bIsMyPost) return -1;
         if (!aIsMyPost && bIsMyPost) return 1;
-        return 0;
+        // If both are the user's posts or neither are, sort by timestamp
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
     });
   }, [filteredUserNews, user?.uid]);
 
@@ -243,7 +242,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
              <div className="flex items-center gap-2">
-                <Link href={`/${lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
+                <Link href={`/${unwrappedParams.lang}/home`} className="flex items-center gap-2 text-2xl font-bold text-primary font-headline">
                     <KarnatakaMapIcon className="w-10 h-10"/>
                     <h1 className='hidden sm:block'>Karnataka News Pulse</h1>
                 </Link>
@@ -259,7 +258,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </form>
-              <Select value={selectedDistrict} onValueChange={val => {setSelectedDistrict(val); router.push(`/${lang}/news?district=${val}&category=${selectedCategory}`)}}>
+              <Select value={selectedDistrict} onValueChange={val => {setSelectedDistrict(val); router.push(`/${unwrappedParams.lang}/news?district=${val}&category=${selectedCategory}`)}}>
                 <SelectTrigger className="w-[280px]">
                   <MapPin className="w-5 h-5 mr-2" />
                   <SelectValue placeholder={dict.selectDistrict} />
@@ -273,7 +272,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                   ))}
                 </SelectContent>
               </Select>
-               <Select value={selectedCategory} onValueChange={(value) => {setSelectedCategory(value as Category); router.push(`/${lang}/news?district=${selectedDistrict}&category=${value}`)}}>
+               <Select value={selectedCategory} onValueChange={(value) => {setSelectedCategory(value as Category); router.push(`/${unwrappedParams.lang}/news?district=${selectedDistrict}&category=${value}`)}}>
                 <SelectTrigger className="w-[220px]">
                   <LayoutGrid className="w-5 h-5 mr-2" />
                   <SelectValue placeholder={dict.selectCategory} />
@@ -301,7 +300,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                     </DropdownMenuContent>
                 </DropdownMenu>
                 <Button asChild variant="ghost">
-                    <Link href={`/${lang}/home`}>{dict.home}</Link>
+                    <Link href={`/${unwrappedParams.lang}/home`}>{dict.home}</Link>
                 </Button>
             </div>
           </div>
@@ -339,7 +338,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                     {filteredNews.length > 0 ? (
                          <NewsContainer>
                             {filteredNews.map((article, index) => (
-                              <NewsCard key={article.id} article={article} priority={index < 4} lang={lang} />
+                              <NewsCard key={article.id} article={article} priority={index < 4} lang={unwrappedParams.lang} />
                             ))}
                         </NewsContainer>
                     ) : (
@@ -350,10 +349,10 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                     )}
                 </TabsContent>
                 <TabsContent value="community" className="mt-6">
-                    {sortedUserNews.length > 0 ? (
+                    {sortedAndPrioritizedUserNews.length > 0 ? (
                         <NewsContainer>
-                            {sortedUserNews.map((article, index) => (
-                                <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} lang={lang} />
+                            {sortedAndPrioritizedUserNews.map((article, index) => (
+                                <NewsCard key={article.id} article={article} priority={index < 4} isMyPost={article.userId === user?.uid} lang={unwrappedParams.lang} />
                             ))}
                         </NewsContainer>
                     ) : (

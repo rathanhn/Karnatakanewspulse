@@ -3,6 +3,7 @@
 
 import { NewsArticle, Category, fetchUserSubmittedNewsWithAuthors } from '@/lib/data';
 import { mockApiNews } from '@/lib/mock-data';
+import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
 
 interface FetchNewsOptions {
   district: string;
@@ -190,7 +191,22 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   // Remove duplicates based on URL
   const uniqueArticles = Array.from(new Map(combinedArticles.map(item => [item.url, item])).values());
   
-  const sortedArticles = uniqueArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  // Now, filter by district using the Genkit flow if a specific district is selected
+  let articlesToReturn;
+  if (district !== 'Karnataka' && uniqueArticles.length > 0) {
+      try {
+          const { articles: filteredArticles } = await filterNewsByDistrict({ articles: uniqueArticles, district: district as any });
+          articlesToReturn = filteredArticles;
+      } catch (e) {
+          console.error("AI filtering failed, returning unfiltered results:", e);
+          articlesToReturn = uniqueArticles;
+      }
+  } else {
+      articlesToReturn = uniqueArticles;
+  }
+  
+  // Sort the final list by timestamp in descending order
+  const sortedArticles = articlesToReturn.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
   return sortedArticles;
 }
