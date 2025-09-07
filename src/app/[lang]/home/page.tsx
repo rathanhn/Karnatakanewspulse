@@ -1,3 +1,4 @@
+
 // src/app/home/page.tsx
 'use client';
 
@@ -57,7 +58,6 @@ export default function HomePage({ params }: { params: { lang: string } }) {
   };
 
   useEffect(() => {
-    const lang = params.lang;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -70,11 +70,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             console.error("Failed to fetch user profile", error);
         }
       } else {
-        router.push(`/${lang}/login`);
+        router.push(`/${params.lang}/login`);
       }
     });
     return () => unsubscribe();
-  }, [router, params.lang]);
+  }, [router, params]);
 
   useEffect(() => {
     const getNews = async () => {
@@ -103,14 +103,13 @@ export default function HomePage({ params }: { params: { lang: string } }) {
   }, [toast, user, userProfile]);
   
   const handleLogout = async () => {
-    const lang = params.lang;
     try {
         await signOut(auth);
         toast({
           title: 'Logged out',
           description: 'You have been successfully logged out.',
         });
-        router.push(`/${lang}/login`);
+        router.push(`/${params.lang}/login`);
     } catch(error) {
          toast({
           title: 'Logout Error',

@@ -1,3 +1,4 @@
+
 // src/app/home/my-posts/page.tsx
 'use client';
 
@@ -102,16 +103,15 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
         return () => unsubscribe();
-    }, [router, params.lang]);
+    }, [router, params]);
 
     const fetchPosts = useCallback(async (uid: string) => {
         setIsLoading(true);

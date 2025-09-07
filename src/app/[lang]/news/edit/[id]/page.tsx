@@ -1,3 +1,4 @@
+
 // src/app/news/edit/[id]/page.tsx
 'use client';
 
@@ -35,20 +36,19 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
         return () => unsubscribe();
-    }, [router, params.lang]);
+    }, [router, params]);
 
     useEffect(() => {
         if (!id) return;
-        const lang = params.lang;
+        
         const fetchPost = async () => {
             setIsLoading(true);
             try {
@@ -57,7 +57,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
                     if(user && fetchedPost.userId !== user.uid) {
                         setError("You are not authorized to edit this post.");
                         toast({ title: "Unauthorized", description: "You can only edit your own posts.", variant: "destructive"});
-                        router.push(`/${lang}/home/my-posts`);
+                        router.push(`/${params.lang}/home/my-posts`);
                         return;
                     }
                     setPost(fetchedPost);
@@ -82,7 +82,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
            fetchPost();
         }
 
-    }, [id, user, router, toast, params.lang]);
+    }, [id, user, router, toast, params]);
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();

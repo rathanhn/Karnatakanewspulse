@@ -1,3 +1,4 @@
+
 // src/app/home/profile/page.tsx
 'use client';
 
@@ -53,12 +54,11 @@ export default function ProfilePage({ params }: { params: { lang: string } }) {
     const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
 
@@ -69,7 +69,7 @@ export default function ProfilePage({ params }: { params: { lang: string } }) {
             unsubscribe();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [router, params.lang]);
+    }, [router, params]);
 
     const fetchProfile = useCallback(async (uid: string) => {
         setIsLoading(true);

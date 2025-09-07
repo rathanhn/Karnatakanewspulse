@@ -1,3 +1,4 @@
+
 // src/app/admin/page.tsx
 'use client';
 
@@ -27,7 +28,6 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const lang = params.lang;
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 setUser(currentUser);
@@ -36,18 +36,18 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
                     setUserProfile(profile);
                     if (!profile?.isAdmin) {
                         toast({ title: 'Access Denied', description: 'You do not have permission to view this page.', variant: 'destructive' });
-                        router.push(`/${lang}/home`);
+                        router.push(`/${params.lang}/home`);
                     }
                 } catch (error) {
                      toast({ title: 'Error', description: 'Could not verify your permissions.', variant: 'destructive' });
-                     router.push(`/${lang}/home`);
+                     router.push(`/${params.lang}/home`);
                 }
             } else {
-                router.push(`/${lang}/login`);
+                router.push(`/${params.lang}/login`);
             }
         });
         return () => unsubscribe();
-    }, [router, toast, params.lang]);
+    }, [router, toast, params]);
 
     const fetchStats = useCallback(async () => {
         setIsLoading(true);

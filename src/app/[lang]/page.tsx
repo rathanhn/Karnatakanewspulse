@@ -1,3 +1,4 @@
+
 // src/app/[lang]/page.tsx
 'use client';
 
@@ -8,8 +9,7 @@ export default function RootPage({ params }: { params: { lang: string } }) {
   const router = useRouter();
 
   useEffect(() => {
-    const lang = params.lang;
-    router.replace(`/${lang}/home`);
+    router.replace(`/${params.lang}/home`);
   }, [router, params]);
 
   // Render a minimal loading state while redirecting
