@@ -26,9 +26,9 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const lang = params.lang;
 
   useEffect(() => {
+    const lang = params.lang;
     const checkRedirect = async () => {
       setIsLoading(true); // Use main loading state for redirect check
       try {
@@ -51,7 +51,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
       }
     };
     checkRedirect();
-  }, [router, toast, lang]);
+  }, [router, toast, params]);
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -63,7 +63,7 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
         title: 'Login successful!',
         description: 'Welcome back.',
       });
-      router.push(`/${lang}/home`);
+      router.push(`/${params.lang}/home`);
     } catch (error: any) {
       toast({
         title: 'Login Failed',
@@ -137,12 +137,12 @@ export default function LoginPage({ params }: { params: { lang: string } }) {
           </form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
-            <Link href={`/${lang}/register`} className="underline">
+            <Link href={`/${params.lang}/register`} className="underline">
               Sign up
             </Link>
           </div>
            <div className="mt-4 text-center text-sm">
-            <Link href={`/${lang}/home`} className="underline">
+            <Link href={`/${params.lang}/home`} className="underline">
               &larr; Back to Home
             </Link>
           </div>
