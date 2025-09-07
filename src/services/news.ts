@@ -29,6 +29,51 @@ async function fetchFromMockAPI(district: string, category: Category, queryLimit
   return results.map(article => ({ ...article, district }));
 }
 
+// --- MediaStack API Fetcher ---
+async function fetchFromMediaStack(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
+    const apiKey = process.env.MEDIASTACK_API_KEY;
+    if (!apiKey || apiKey === 'ef96651d9d2be78d6334fc728ac5e379') {
+        console.warn("MediaStack API key not found or is default. Skipping fetch.");
+        return [];
+    }
+
+    const keywords = district === 'Karnataka' ? 'Karnataka' : `${district} Karnataka`;
+    const languages = 'en'; // MediaStack has limited support for other languages
+    const limit = queryLimit || 25;
+    
+    // MediaStack uses different category slugs
+    const mediaStackCategory = category.toLowerCase() === 'trending' ? 'general' : category.toLowerCase();
+
+    const url = `http://api.mediastack.com/v1/news?access_key=${apiKey}&keywords=${encodeURIComponent(keywords)}&languages=${languages}&limit=${limit}&categories=${mediaStackCategory}&sort=published_desc`;
+
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("MediaStack API Error:", errorBody);
+            return [];
+        }
+        const data = await response.json();
+
+        return data.data.map((item: any): NewsArticle => ({
+            id: `mediastack-${item.url}`,
+            headline: item.title,
+            content: item.description,
+            url: item.url,
+            imageUrl: item.image,
+            timestamp: new Date(item.published_at),
+            source: item.source,
+            district: district, // Assign the queried district
+            category: item.category.charAt(0).toUpperCase() + item.category.slice(1) as Category,
+            'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
+        }));
+
+    } catch (error) {
+        console.error("Failed to fetch from MediaStack:", error);
+        return [];
+    }
+}
+
 
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
@@ -37,10 +82,18 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
       return fetchUserSubmittedNewsWithAuthors({ district, limit: queryLimit });
   }
   
-  let apiArticles: NewsArticle[] = [];
+  // Fetch from all sources in parallel
+  const [mockArticles, mediaStackArticles] = await Promise.all([
+    fetchFromMockAPI(district, category, queryLimit),
+    fetchFromMediaStack(district, category, queryLimit)
+  ]);
+
+  const combinedArticles = [...mockArticles, ...mediaStackArticles];
+
+  // Remove duplicates based on URL
+  const uniqueArticles = Array.from(new Map(combinedArticles.map(item => [item.url, item])).values());
   
-  apiArticles = await fetchFromMockAPI(district, category, queryLimit);
+  const sortedArticles = uniqueArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
-  const sortedArticles = apiArticles.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   return sortedArticles;
 }
