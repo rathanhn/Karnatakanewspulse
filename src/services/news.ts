@@ -74,6 +74,54 @@ async function fetchFromMediaStack(district: string, category: Category, queryLi
     }
 }
 
+// --- GNews API Fetcher ---
+async function fetchFromGNews(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
+    const apiKey = process.env.GNEWS_API_KEY;
+    if (!apiKey || apiKey === '5OHNMtdwDODB6n9lYFBfLHt9o') {
+        console.warn("GNews API key not found or is default. Skipping fetch.");
+        return [];
+    }
+    
+    const q = district === 'Karnataka' ? 'Karnataka' : `${district} Karnataka`;
+    const lang = 'en';
+    const limit = queryLimit || 10; // GNews limit is smaller
+    
+    let topic: string = '';
+    if (category && category !== 'Trending' && category !== 'General' && category !== 'User Submitted') {
+        topic = category.toLowerCase();
+    }
+    
+    const topicQuery = topic ? `&topic=${topic}` : '';
+
+    const url = `https://gnews.io/api/v4/top-headlines?q=${encodeURIComponent(q)}&lang=${lang}&max=${limit}${topicQuery}&apikey=${apiKey}`;
+
+    try {
+        const response = await fetch(url);
+         if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("GNews API Error:", errorBody);
+            return [];
+        }
+        const data = await response.json();
+        
+        return data.articles.map((item: any): NewsArticle => ({
+            id: `gnews-${item.url}`,
+            headline: item.title,
+            content: item.description,
+            url: item.url,
+            imageUrl: item.image,
+            timestamp: new Date(item.publishedAt),
+            source: item.source.name,
+            district: district,
+            category: category || 'General', // GNews doesn't return category in this endpoint
+            'data-ai-hint': item.title.split(' ').slice(0, 2).join(' '),
+        }));
+    } catch (error) {
+        console.error("Failed to fetch from GNews:", error);
+        return [];
+    }
+}
+
 
 // --- Main Exported Function ---
 export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
@@ -83,12 +131,13 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   }
   
   // Fetch from all sources in parallel
-  const [mockArticles, mediaStackArticles] = await Promise.all([
+  const [mockArticles, mediaStackArticles, gnewsArticles] = await Promise.all([
     fetchFromMockAPI(district, category, queryLimit),
-    fetchFromMediaStack(district, category, queryLimit)
+    fetchFromMediaStack(district, category, queryLimit),
+    fetchFromGNews(district, category, queryLimit),
   ]);
 
-  const combinedArticles = [...mockArticles, ...mediaStackArticles];
+  const combinedArticles = [...mockArticles, ...mediaStackArticles, ...gnewsArticles];
 
   // Remove duplicates based on URL
   const uniqueArticles = Array.from(new Map(combinedArticles.map(item => [item.url, item])).values());
