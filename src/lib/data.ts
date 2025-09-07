@@ -143,17 +143,43 @@ interface AddUserNewsData {
     userId: string;
     imageUrl?: string | null;
     category: Category;
+    embedUrl?: string;
 }
+
+const getYouTubeEmbedUrl = (url: string | undefined): string | undefined => {
+    if (!url) return undefined;
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            // Handles youtu.be/VIDEO_ID
+            return `https://www.youtube.com/embed/${urlObj.pathname.slice(1)}`;
+        }
+        if (urlObj.hostname.includes('youtube.com')) {
+            // Handles youtube.com/watch?v=VIDEO_ID
+            const videoId = urlObj.searchParams.get('v');
+            if (videoId) {
+                return `https://www.youtube.com/embed/${videoId}`;
+            }
+        }
+    } catch (e) {
+        // Not a valid URL
+        return undefined;
+    }
+    return undefined;
+}
+
 
 export const addUserNews = async (articleData: AddUserNewsData) => {
     try {
+        const embedUrl = getYouTubeEmbedUrl(articleData.embedUrl);
         const docRef = await addDoc(collection(db, "news"), {
             ...articleData,
+            embedUrl,
             timestamp: serverTimestamp(),
             source: 'User Submitted',
             url: '#', // User-submitted articles don't have an external source URL
         });
-        return { ...articleData, id: docRef.id, timestamp: new Date(), url: '#' };
+        return { ...articleData, id: docRef.id, timestamp: new Date(), url: '#', embedUrl };
     } catch (e) {
         console.error("Error adding document: ", e);
         throw new Error("Could not submit news article.");
@@ -185,8 +211,11 @@ export const getNewsArticleById = async (id: string): Promise<NewsArticle | null
 export const updateUserNews = async (id: string, data: Partial<AddUserNewsData>) => {
     try {
         const docRef = doc(db, "news", id);
+        const embedUrl = getYouTubeEmbedUrl(data.embedUrl);
+
         await updateDoc(docRef, {
             ...data,
+            embedUrl: embedUrl,
             timestamp: serverTimestamp() // Optionally update timestamp on edit
         });
     } catch (error) {

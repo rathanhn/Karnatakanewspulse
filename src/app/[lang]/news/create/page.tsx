@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { karnatakaDistricts, addUserNews, newsCategories, Category } from '@/lib/data';
-import { ArrowLeft, Send, Upload, Loader2, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Send, Upload, Loader2, CheckCircle, Image as ImageIcon, Youtube } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -28,6 +28,7 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
     const [content, setContent] = useState('');
     const [district, setDistrict] = useState('');
     const [category, setCategory] = useState<Category | ''>('');
+    const [embedUrl, setEmbedUrl] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     const [file, setFile] = useState<File | null>(null);
@@ -133,7 +134,8 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
                 district,
                 category,
                 userId: user.uid,
-                imageUrl: uploadedUrl
+                imageUrl: uploadedUrl,
+                embedUrl,
             });
 
             toast({
@@ -228,6 +230,18 @@ export default function CreateNewsPage({ params }: { params: { lang: string } })
                                     disabled={isSubmitting}
                                 />
                             </div>
+
+                             <div className="space-y-2">
+                                <Label htmlFor="embedUrl" className='flex items-center gap-2'><Youtube/> YouTube Video URL (Optional)</Label>
+                                <Input
+                                    id="embedUrl"
+                                    value={embedUrl}
+                                    onChange={(e) => setEmbedUrl(e.target.value)}
+                                    placeholder="e.g., https://www.youtube.com/watch?v=..."
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+
                             <div className="space-y-2">
                                 <Label>Thumbnail Image (Optional)</Label>
                                 {previewUrl && (

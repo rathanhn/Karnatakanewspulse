@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { karnatakaDistricts, getNewsArticleById, updateUserNews, NewsArticle, newsCategories, Category } from '@/lib/data';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Youtube } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -31,6 +31,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
     const [content, setContent] = useState('');
     const [district, setDistrict] = useState('');
     const [category, setCategory] = useState<Category | ''>('');
+    const [embedUrl, setEmbedUrl] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -65,6 +66,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
                     setContent(fetchedPost.content || '');
                     setDistrict(fetchedPost.district);
                     setCategory(fetchedPost.category);
+                    setEmbedUrl(fetchedPost.embedUrl || '');
                 } else {
                     setError("Post not found.");
                      toast({ title: "Error", description: "The requested post could not be found.", variant: "destructive"});
@@ -93,7 +95,7 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
 
         setIsSubmitting(true);
         try {
-            await updateUserNews(id, { headline, content, district, category });
+            await updateUserNews(id, { headline, content, district, category, embedUrl });
             toast({ title: 'Post Updated!', description: 'Your changes have been saved successfully.'});
             router.push(`/${lang}/home/my-posts`);
         } catch (error) {
@@ -194,6 +196,16 @@ export default function EditNewsPage({ params }: { params: { id: string, lang: s
                                     placeholder="Write the full news story here..."
                                     required
                                     rows={10}
+                                    disabled={isSubmitting}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="embedUrl" className='flex items-center gap-2'><Youtube /> YouTube Video URL (Optional)</Label>
+                                <Input
+                                    id="embedUrl"
+                                    value={embedUrl}
+                                    onChange={(e) => setEmbedUrl(e.target.value)}
+                                    placeholder="e.g., https://www.youtube.com/watch?v=..."
                                     disabled={isSubmitting}
                                 />
                             </div>
