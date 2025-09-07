@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { db } from './firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, orderBy, deleteDoc, doc, Timestamp, updateDoc, getDoc, setDoc, writeBatch, limit, QueryConstraint,getCountFromServer } from "firebase/firestore";
-
+import { fetchNewsFromAPI as fetchNewsService } from '@/services/news';
 
 export type Source = string;
 export const newsCategories = ['Trending', 'General', 'Politics', 'Sports', 'Crime', 'Technology', 'Business', 'Entertainment', 'User Submitted'] as const;
@@ -381,3 +381,12 @@ export const getAdminDashboardStats = async (): Promise<{ totalArticles: number;
         throw new Error("Could not fetch admin dashboard stats.");
     }
 };
+
+interface FetchNewsOptions {
+  district: string;
+  category?: Category;
+  limit?: number;
+}
+export async function fetchNewsFromAPI({ district, category = 'Trending', limit: queryLimit }: FetchNewsOptions): Promise<NewsArticle[]> {
+  return fetchNewsService({ district, category, limit: queryLimit });
+}

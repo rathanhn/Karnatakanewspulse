@@ -1,4 +1,3 @@
-
 // src/app/home/my-posts/page.tsx
 'use client';
 
@@ -7,9 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from '@/components/ui/card';
-import { NewsArticle, getUserNewsFromFirestore, deleteUserNews } from '@/lib/data';
+import { NewsArticle, getUserNewsFromFirestore, deleteUserNews, fetchNewsFromAPI } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, PlusCircle, Edit, Trash2, TrendingUp } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -25,6 +24,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Badge } from '@/components/ui/badge';
+import { NewsCard } from '@/components/news/news-card';
+import { NewsSkeleton } from '@/components/news/news-skeleton';
 
 function PostCard({ post, onDelete, lang }: { post: NewsArticle, onDelete: (id: string) => void, lang: string }) {
     const { toast } = useToast();
@@ -100,7 +101,9 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
     const { toast } = useToast();
     const [user, setUser] = useState<User | null>(null);
     const [posts, setPosts] = useState<NewsArticle[]>([]);
+    const [trendingNews, setTrendingNews] = useState<NewsArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isTrendingLoading, setIsTrendingLoading] = useState(true);
     const lang = params.lang;
 
     useEffect(() => {
@@ -119,6 +122,13 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
         try {
             const userPosts = await getUserNewsFromFirestore(uid);
             setPosts(userPosts);
+            if (userPosts.length > 0) {
+                // If user has posts, fetch trending news
+                setIsTrendingLoading(true);
+                const trending = await fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending' });
+                setTrendingNews(trending.slice(0, 4));
+                setIsTrendingLoading(false);
+            }
         } catch (error) {
             toast({
                 title: 'Error',
@@ -193,11 +203,27 @@ export default function MyPostsPage({ params }: { params: { lang: string } }) {
                         <p className="text-muted-foreground mt-2">Click "Create New Post" to share your first story.</p>
                     </div>
                 ) : (
-                    <div className="grid gap-6">
-                        {posts.map(post => (
-                            <PostCard key={post.id} post={post} onDelete={handlePostDeletion} lang={lang} />
-                        ))}
-                    </div>
+                    <>
+                        <section className="mb-12">
+                             <h3 className="text-2xl font-bold flex items-center gap-2 mb-4">
+                                <TrendingUp />
+                                Top Headlines
+                            </h3>
+                            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                {isTrendingLoading
+                                ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
+                                : trendingNews.map((article, index) => (
+                                    <NewsCard key={article.id} article={article} priority={index < 2} lang={lang as 'en' | 'kn'} />
+                                ))}
+                            </div>
+                        </section>
+
+                        <div className="grid gap-6">
+                            {posts.map(post => (
+                                <PostCard key={post.id} post={post} onDelete={handlePostDeletion} lang={lang} />
+                            ))}
+                        </div>
+                   </>
                 )}
             </main>
         </div>
