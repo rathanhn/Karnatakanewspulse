@@ -4,6 +4,7 @@
 import { NewsArticle, Category, fetchUserSubmittedNewsWithAuthors } from '@/lib/data';
 import { mockApiNews } from '@/lib/mock-data';
 import { filterNewsByDistrict } from '@/ai/flows/filter-news-by-district';
+import { filterNewsByCategory } from '@/ai/flows/filter-news-by-category';
 
 interface FetchNewsOptions {
   district: string;
@@ -17,17 +18,23 @@ async function fetchFromMockAPI(district: string, category: Category, queryLimit
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  let results = mockApiNews.filter(article => {
-    const categoryMatch = category === 'Trending' || category === 'General' || article.category === category;
-    const districtMatch = district === 'Karnataka' || article.district === district;
-    return categoryMatch && districtMatch;
-  });
+  let results = mockApiNews;
 
+  if (category && category !== 'Trending' && category !== 'General') {
+    results = results.filter(article => article.category === category);
+  }
+
+  // District filtering is less strict for mock data, more for demonstration.
+  // The AI filter will handle the precise filtering later.
+  if (district !== 'Karnataka') {
+     results = results.filter(article => article.district === district);
+  }
+  
   if (queryLimit) {
     results = results.slice(0, queryLimit);
   }
 
-  return results.map(article => ({ ...article, district }));
+  return results.map(article => ({ ...article }));
 }
 
 // --- MediaStack API Fetcher ---
@@ -126,7 +133,7 @@ async function fetchFromGNews(district: string, category: Category, queryLimit?:
 // --- NewsAPI.org Fetcher ---
 async function fetchFromNewsAPI(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
     const apiKey = process.env.NEXT_PUBLIC_GNEWS_API_KEY; // Using GNews key for NewsAPI as well, assuming it's the intended provider
-    if (!apiKey || apiKey === 'your_newsapi_api_key') {
+    if (!apiKey || apiKey === 'your_gnews_api_key' || apiKey === 'your_newsapi_api_key') {
         console.warn("NewsAPI.org key not found or is default. Skipping fetch.");
         return [];
     }
@@ -191,18 +198,26 @@ export async function fetchNewsFromAPI({ district, category = 'Trending', limit:
   // Remove duplicates based on URL
   const uniqueArticles = Array.from(new Map(combinedArticles.map(item => [item.url, item])).values());
   
-  // Now, filter by district using the Genkit flow if a specific district is selected
-  let articlesToReturn;
-  if (district !== 'Karnataka' && uniqueArticles.length > 0) {
+  let articlesToReturn = uniqueArticles;
+
+  // AI-based filtering for District if a specific one is selected
+  if (district !== 'Karnataka' && articlesToReturn.length > 0) {
       try {
-          const { articles: filteredArticles } = await filterNewsByDistrict({ articles: uniqueArticles, district: district as any });
+          const { articles: filteredArticles } = await filterNewsByDistrict({ articles: articlesToReturn, district: district as any });
           articlesToReturn = filteredArticles;
       } catch (e) {
-          console.error("AI filtering failed, returning unfiltered results:", e);
-          articlesToReturn = uniqueArticles;
+          console.error("AI district filtering failed, returning unfiltered results:", e);
       }
-  } else {
-      articlesToReturn = uniqueArticles;
+  }
+
+  // AI-based filtering for Category if a specific one is selected
+  if (category !== 'Trending' && category !== 'General' && articlesToReturn.length > 0) {
+    try {
+        const { articles: filteredArticles } = await filterNewsByCategory({ articles: articlesToReturn, category: category as any });
+        articlesToReturn = filteredArticles;
+    } catch (e) {
+        console.error("AI category filtering failed, returning unfiltered results:", e);
+    }
   }
   
   // Sort the final list by timestamp in descending order
