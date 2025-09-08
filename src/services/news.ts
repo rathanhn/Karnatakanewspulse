@@ -33,7 +33,7 @@ async function fetchFromMockAPI(district: string, category: Category, queryLimit
 // --- MediaStack API Fetcher ---
 async function fetchFromMediaStack(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
     const apiKey = process.env.MEDIASTACK_API_KEY;
-    if (!apiKey || apiKey === 'ef96651d9d2be78d6334fc728ac5e379') {
+    if (!apiKey || apiKey === 'your_mediastack_api_key') {
         console.warn("MediaStack API key not found or is default. Skipping fetch.");
         return [];
     }
@@ -77,8 +77,8 @@ async function fetchFromMediaStack(district: string, category: Category, queryLi
 
 // --- GNews API Fetcher ---
 async function fetchFromGNews(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
-    const apiKey = process.env.GNEWS_API_KEY;
-    if (!apiKey || apiKey === '5OHNMtdwDODB6n9lYFBfLHt9o') {
+    const apiKey = process.env.NEXT_PUBLIC_GNEWS_API_KEY;
+    if (!apiKey || apiKey === 'your_gnews_api_key') {
         console.warn("GNews API key not found or is default. Skipping fetch.");
         return [];
     }
@@ -125,8 +125,8 @@ async function fetchFromGNews(district: string, category: Category, queryLimit?:
 
 // --- NewsAPI.org Fetcher ---
 async function fetchFromNewsAPI(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
-    const apiKey = process.env.NEWSAPI_API_KEY;
-    if (!apiKey || apiKey === '68c617555ef247338b036afd2c6745d5') {
+    const apiKey = process.env.NEXT_PUBLIC_GNEWS_API_KEY; // Using GNews key for NewsAPI as well, assuming it's the intended provider
+    if (!apiKey || apiKey === 'your_newsapi_api_key') {
         console.warn("NewsAPI.org key not found or is default. Skipping fetch.");
         return [];
     }
@@ -136,7 +136,7 @@ async function fetchFromNewsAPI(district: string, category: Category, queryLimit
     const pageSize = queryLimit || 20;
 
     let categoryQuery = '';
-    if (category && category !== 'Trending' && category !== 'User Submitted') {
+    if (category && category !== 'Trending' && category !== 'User Submitted' && category !== 'General') {
       categoryQuery = `&category=${category.toLowerCase()}`;
     }
 
