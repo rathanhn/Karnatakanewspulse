@@ -82,11 +82,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
       setIsLoading(true);
       try {
         const [trending, recommended] = await Promise.all([
-          fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending' }),
-          fetchNewsFromAPI({ district: userProfile?.preferredDistrict || 'Bengaluru Urban', category: userProfile?.preferredCategory || 'General' }),
+          fetchNewsFromAPI({ district: 'Karnataka', category: 'Trending', limit: 4 }),
+          fetchNewsFromAPI({ district: userProfile?.preferredDistrict || 'Bengaluru Urban', category: userProfile?.preferredCategory || 'General', limit: 8 }),
         ]);
-        setTrendingNews(trending.slice(0, 4));
-        setRecommendedNews(recommended.slice(0, 4));
+        setTrendingNews(trending);
+        setRecommendedNews(recommended);
       } catch (error) {
         console.error("Failed to fetch news:", error);
         toast({
@@ -288,7 +288,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             <h2 className="text-2xl font-bold flex items-center gap-2 mb-4"><Star/> News For You in {userProfile?.preferredDistrict || 'Bengaluru Urban'}</h2>
              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {isLoading
-                ? [...Array(4)].map((_, i) => <NewsSkeleton key={i} />)
+                ? [...Array(8)].map((_, i) => <NewsSkeleton key={i} />)
                 : recommendedNews.map((article, index) => (
                     <NewsCard key={article.id} article={article} priority={index < 2} lang={unwrappedParams.lang as 'en' | 'kn'}/>
                   ))}

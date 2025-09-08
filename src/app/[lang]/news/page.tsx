@@ -105,16 +105,19 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                 fetchUserSubmittedNewsWithAuthors({ district: initialDistrict })
             ]);
             
-            // The service already sorts the API news, now sort the user news
+            // Combine API and user news, then sort and de-duplicate
+            const combinedNews = [...apiNews, ...userSubmittedNews].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            const uniqueNews = Array.from(new Map(combinedNews.map(item => [item.url || item.id, item])).values());
+            
             const sortedUserNews = userSubmittedNews.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-            setAllNews(apiNews); // API news is pre-sorted
+            setAllNews(uniqueNews);
             setUserNews(sortedUserNews);
 
             if (initialSearchTerm) {
                 // If there's an initial search term, filter the results immediately
                 const lowerCaseSearchTerm = initialSearchTerm.toLowerCase();
-                const apiResults = apiNews.filter(
+                const mainResults = uniqueNews.filter(
                     (article) =>
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
@@ -124,11 +127,11 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                         article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                         (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
                 );
-                setFilteredNews(apiResults);
+                setFilteredNews(mainResults);
                 setFilteredUserNews(userResults);
             } else {
                 // Otherwise, show all fetched news
-                setFilteredNews(apiNews);
+                setFilteredNews(uniqueNews);
                 setFilteredUserNews(sortedUserNews);
             }
         } catch (err: any) {
@@ -145,10 +148,10 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
   const handleSearch = useCallback((currentSearchTerm: string) => {
     const lowerCaseSearchTerm = currentSearchTerm.toLowerCase();
     if (currentSearchTerm.trim() === '') {
-        setFilteredNews(allNews); // Reset to all api news if search is cleared
+        setFilteredNews(allNews); // Reset to all news if search is cleared
         setFilteredUserNews(userNews); // Reset to all user news if search is cleared
     } else {
-        const apiResults = allNews.filter(
+        const mainResults = allNews.filter(
             (article) =>
                 article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                 (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
@@ -158,7 +161,7 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
                 article.headline.toLowerCase().includes(lowerCaseSearchTerm) ||
                 (article.content && article.content.toLowerCase().includes(lowerCaseSearchTerm))
         );
-        setFilteredNews(apiResults);
+        setFilteredNews(mainResults);
         setFilteredUserNews(userResults);
     }
   }, [allNews, userNews]);
@@ -169,18 +172,13 @@ function NewsContent({ params }: { params: { lang: 'en' | 'kn' } }) {
       handleSearch(searchTerm); // Perform client-side filtering
 
       // Re-filter the original sources to get current results for AI summary
-      const currentApiResults = allNews.filter(
+      const currentMainResults = allNews.filter(
             (article) =>
                 article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
         );
-      const currentUserResults = userNews.filter(
-            (article) =>
-                article.headline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-
-      const currentResults = [...currentApiResults, ...currentUserResults];
+      
+      const currentResults = [...currentMainResults];
 
       if (searchTerm.trim() && currentResults.length > 0) {
         setIsAiSummaryLoading(true);
