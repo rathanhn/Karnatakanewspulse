@@ -1,3 +1,4 @@
+
 // src/components/dashboard/articles-by-category-chart.tsx
 'use client';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';

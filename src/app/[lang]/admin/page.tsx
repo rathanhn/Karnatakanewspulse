@@ -8,16 +8,15 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { UserProfile, getUserProfile, getAdminDashboardStats } from '@/lib/data';
+import { UserProfile, getUserProfile } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Users, Newspaper, Shield } from 'lucide-react';
+import { Home, Shield } from 'lucide-react';
 import { KarnatakaMapIcon } from '@/components/icons';
-
-type AdminStats = {
-    totalArticles: number;
-    totalUsers: number;
-};
+import { OverviewStats } from '@/components/dashboard/overview-stats';
+import { ArticlesOverTimeChart } from '@/components/dashboard/articles-over-time-chart';
+import { TopDistrictsChart } from '@/components/dashboard/top-districts-chart';
+import { ArticlesByCategoryChart } from '@/components/dashboard/articles-by-category-chart';
+import { ArticlesBySourceChart } from '@/components/dashboard/articles-by-source-chart';
 
 export default function AdminPage({ params }: { params: { lang: string } }) {
     const unwrappedParams = use(params);
@@ -25,8 +24,6 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
     const { toast } = useToast();
     const [user, setUser] = useState<User | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-    const [stats, setStats] = useState<AdminStats | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -49,28 +46,11 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
         });
         return () => unsubscribe();
     }, [router, toast, unwrappedParams.lang]);
-
-    const fetchStats = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const adminStats = await getAdminDashboardStats();
-            setStats(adminStats);
-        } catch (error) {
-            toast({ title: 'Error', description: 'Failed to fetch admin statistics.', variant: 'destructive' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [toast]);
     
-    useEffect(() => {
-        if (userProfile?.isAdmin) {
-            fetchStats();
-        }
-    }, [userProfile, fetchStats]);
 
     if (!userProfile?.isAdmin) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
+            <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
                 <p>Verifying access...</p>
             </div>
         );
@@ -88,7 +68,7 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
                          <h2 className="text-xl font-semibold flex items-center gap-2"><Shield /> Admin Dashboard</h2>
                         <Button asChild variant="ghost">
                             <Link href={`/${unwrappedParams.lang}/home`}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                <Home className="mr-2 h-4 w-4" />
                                 Back to Home
                             </Link>
                         </Button>
@@ -96,34 +76,16 @@ export default function AdminPage({ params }: { params: { lang: string } }) {
                 </div>
             </header>
             <main className="container mx-auto p-4 md:p-8">
-                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Articles</CardTitle>
-                            <Newspaper className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{isLoading ? '...' : stats?.totalArticles}</div>
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{isLoading ? '...' : stats?.totalUsers}</div>
-                        </CardContent>
-                    </Card>
+                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                   <OverviewStats />
                 </div>
-
-                <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">Admin Actions</h3>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        <Card className="p-4 flex items-center justify-center">
-                            <p className="text-muted-foreground">More admin features coming soon...</p>
-                        </Card>
-                    </div>
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
+                  <ArticlesOverTimeChart />
+                  <TopDistrictsChart />
+                </div>
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-7">
+                  <ArticlesByCategoryChart />
+                  <ArticlesBySourceChart />
                 </div>
             </main>
         </div>

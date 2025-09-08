@@ -1,3 +1,4 @@
+
 // src/components/dashboard/articles-over-time-chart.tsx
 'use client';
 import {
