@@ -132,8 +132,8 @@ async function fetchFromGNews(district: string, category: Category, queryLimit?:
 
 // --- NewsAPI.org Fetcher ---
 async function fetchFromNewsAPI(district: string, category: Category, queryLimit?: number): Promise<NewsArticle[]> {
-    const apiKey = process.env.NEXT_PUBLIC_GNEWS_API_KEY; // Using GNews key for NewsAPI as well, assuming it's the intended provider
-    if (!apiKey || apiKey === 'your_gnews_api_key' || apiKey === 'your_newsapi_api_key') {
+    const apiKey = process.env.NEWSAPI_API_KEY;
+    if (!apiKey || apiKey === 'your_newsapi_org_key_here') {
         console.warn("NewsAPI.org key not found or is default. Skipping fetch.");
         return [];
     }
